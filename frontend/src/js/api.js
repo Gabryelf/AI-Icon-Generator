@@ -1,4 +1,5 @@
-const API_URL = "https://ai-icon-generator-1vy8.onrender.com";
+// API_URL убрал, так как все на одном сервере
+// Используем относительные пути с версии 0.0.2
 
 async function apiRequest(endpoint, method = "GET", body = null) {
     const token = localStorage.getItem("token");
@@ -7,11 +8,12 @@ async function apiRequest(endpoint, method = "GET", body = null) {
     };
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_URL}${endpoint}`, {
+    const res = await fetch(endpoint, {  // ← endpoint относительный
         method,
         headers,
         body: body ? JSON.stringify(body) : null,
     });
+    
     if (!res.ok) {
         const err = await res.json();
         throw new Error(err.detail || "Ошибка запроса");
