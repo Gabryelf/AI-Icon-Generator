@@ -27,33 +27,43 @@ export const PRESETS = {
             name: 'Искусство',
             colors: ['#ec4899', '#f472b6', '#f9a8d4', '#db2777', '#be185d'],
             description: 'Экспериментальные формы и яркие сочетания'
+        },
+        custom: {
+            name: 'Пользовательская',
+            colors: ['#ffffff', '#888888', '#555555'],
+            description: 'Свои настройки'
         }
     },
     styles: {
-        minimalist: {
+        minimal: {
             name: 'Минимализм',
             background: '#0f0f1a',
             description: 'Чистые линии, мало деталей'
         },
-        vibrant: {
-            name: 'Яркий неон',
+        detailed: {
+            name: 'Детализированный',
             background: '#0a0a0f',
-            description: 'Насыщенные цвета и свечение'
+            description: 'Много элементов и текстур'
         },
-        pastel: {
-            name: 'Пастель',
-            background: '#1a1a2e',
-            description: 'Мягкие, приглушенные тона'
+        geometric: {
+            name: 'Геометрический',
+            background: '#0f0f1a',
+            description: 'Строгие формы и углы'
         },
-        monochrome: {
-            name: 'Монохром',
-            background: '#111111',
-            description: 'Оттенки одного цвета'
-        },
-        gradient: {
-            name: 'Градиент',
+        organic: {
+            name: 'Органический',
             background: '#0a0a0f',
-            description: 'Плавные переходы цвета'
+            description: 'Плавные линии и природные формы'
+        },
+        neon: {
+            name: 'Неоновый',
+            background: '#0a0a0f',
+            description: 'Яркое свечение и насыщенные цвета'
+        },
+        vintage: {
+            name: 'Винтаж',
+            background: '#1a1410',
+            description: 'Ретро-стиль и теплые тона'
         }
     }
 };
