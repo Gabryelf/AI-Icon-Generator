@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000"; // В деплое менять на URL бекенда
+const API_URL = "https://ai-icon-generator-1vy8.onrender.com";
 
 async function apiRequest(endpoint, method = "GET", body = null) {
     const token = localStorage.getItem("token");
