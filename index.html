@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neural Icon Forge</title>
+    <title>Neural Icon Forge — Генератор иконок</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -51,8 +51,8 @@
                 <section id="page-dashboard" class="page active-page">
                     <div class="stats-grid">
                         <div class="stat-card"><i class="fas fa-icons"></i><span id="stat-total">0</span><p>Сгенерировано</p></div>
-                        <div class="stat-card"><i class="fas fa-palette"></i><span id="stat-styles">6</span><p>Стилей в библиотеке</p></div>
-                        <div class="stat-card"><i class="fas fa-microchip"></i><span>v2.0</span><p>Версия ядра</p></div>
+                        <div class="stat-card"><i class="fas fa-palette"></i><span id="stat-styles">8</span><p>Стилей в библиотеке</p></div>
+                        <div class="stat-card"><i class="fas fa-microchip"></i><span>v3.0</span><p>Версия ядра</p></div>
                     </div>
                     <div class="recent-section">
                         <h3>Последние иконки</h3>
@@ -62,116 +62,95 @@
 
                 <!-- ГЕНЕРАТОР -->
                 <section id="page-generator" class="page">
-                    <div class="generator-layout">
-                        <!-- Панель настроек -->
-                        <div class="control-panel" id="control-panel">
-                            <h3><i class="fas fa-sliders-h"></i> Конструктор иконки</h3>
-                            
-                            <!-- Основные параметры -->
-                            <div class="control-group">
-                                <label>Тематика</label>
-                                <select id="theme-select">
-                                    <option value="abstract">Абстракция</option>
-                                    <option value="nature">Природа</option>
-                                    <option value="tech">Технологии</option>
-                                    <option value="business">Бизнес</option>
-                                    <option value="art">Искусство</option>
-                                    <option value="custom">Пользовательская</option>
-                                </select>
+                    <div class="generator-container">
+                        <!-- ШАГ 1: ДОМЕН -->
+                        <div class="setup-step" id="step-domain">
+                            <h2><i class="fas fa-rocket"></i> Для чего нужна иконка?</h2>
+                            <p class="step-desc">Выберите сферу применения — это определит доступные стили и элементы</p>
+                            <div class="domain-grid" id="domain-grid">
+                                <button class="domain-card" data-domain="gaming">
+                                    <i class="fas fa-gamepad"></i>
+                                    <span>Игры</span>
+                                    <small>Иконки, кнопки, аватары для игр</small>
+                                </button>
+                                <button class="domain-card" data-domain="branding">
+                                    <i class="fas fa-trademark"></i>
+                                    <span>Брендинг</span>
+                                    <small>Логотипы, эмблемы, фирменные знаки</small>
+                                </button>
+                                <button class="domain-card" data-domain="web">
+                                    <i class="fas fa-globe"></i>
+                                    <span>Веб & UI</span>
+                                    <small>Кнопки, иконки интерфейса, элементы</small>
+                                </button>
+                                <button class="domain-card" data-domain="social">
+                                    <i class="fas fa-share-alt"></i>
+                                    <span>Соцсети</span>
+                                    <small>Аватары, обложки, стикеры</small>
+                                </button>
+                                <button class="domain-card" data-domain="presentation">
+                                    <i class="fas fa-presentation"></i>
+                                    <span>Презентации</span>
+                                    <small>Инфографика, диаграммы, иллюстрации</small>
+                                </button>
                             </div>
+                        </div>
 
-                            <div class="control-group">
-                                <label>Стиль</label>
-                                <select id="style-select">
-                                    <option value="minimal">Минимализм</option>
-                                    <option value="detailed">Детализированный</option>
-                                    <option value="geometric">Геометрический</option>
-                                    <option value="organic">Органический</option>
-                                    <option value="neon">Неоновый</option>
-                                    <option value="vintage">Винтаж</option>
-                                </select>
+                        <!-- ШАГ 2: СТИЛЬ -->
+                        <div class="setup-step" id="step-style" style="display:none;">
+                            <h2><i class="fas fa-palette"></i> Выберите стиль</h2>
+                            <p class="step-desc">Стиль определит визуальный язык вашей иконки</p>
+                            <div class="style-grid" id="style-grid">
+                                <!-- Динамически заполняется -->
                             </div>
+                            <button class="back-btn" data-back="step-domain">← Назад</button>
+                        </div>
 
-                            <!-- Фон -->
-                            <div class="control-group">
-                                <label>Фон</label>
-                                <div class="color-picker-group">
-                                    <input type="color" id="bg-color" value="#0a0a0f">
-                                    <select id="bg-style">
-                                        <option value="solid">Сплошной</option>
-                                        <option value="gradient">Градиент</option>
-                                        <option value="none">Прозрачный</option>
-                                    </select>
-                                </div>
+                        <!-- ШАГ 3: КАТЕГОРИЯ ЭЛЕМЕНТА -->
+                        <div class="setup-step" id="step-category" style="display:none;">
+                            <h2><i class="fas fa-th-list"></i> Какой элемент нужен?</h2>
+                            <p class="step-desc">Выберите тип элемента, который хотите создать</p>
+                            <div class="category-grid" id="category-grid">
+                                <!-- Динамически заполняется -->
                             </div>
+                            <button class="back-btn" data-back="step-style">← Назад</button>
+                        </div>
 
-                            <!-- Детали (динамические) -->
-                            <div id="details-container">
-                                <div class="control-group">
-                                    <label>Основная фигура</label>
-                                    <select id="main-shape">
-                                        <option value="circle">Круг</option>
-                                        <option value="square">Квадрат</option>
-                                        <option value="triangle">Треугольник</option>
-                                        <option value="star">Звезда</option>
-                                        <option value="hexagon">Шестиугольник</option>
-                                        <option value="custom">Своя форма</option>
-                                    </select>
-                                </div>
+                        <!-- ШАГ 4: НАСТРОЙКИ И ГЕНЕРАЦИЯ -->
+                        <div class="setup-step" id="step-config" style="display:none;">
+                            <div class="config-layout">
+                                <div class="config-panel">
+                                    <h2><i class="fas fa-sliders-h"></i> Тонкая настройка</h2>
+                                    <p class="step-desc">Настройте каждую деталь для идеального результата</p>
+                                    
+                                    <div id="config-container">
+                                        <!-- Динамические настройки -->
+                                    </div>
 
-                                <div class="control-group">
-                                    <label>Цвет основной фигуры</label>
-                                    <input type="color" id="main-color" value="#7c3aed">
-                                </div>
-
-                                <div class="control-group">
-                                    <label>Размер основной фигуры</label>
-                                    <input type="range" id="main-size" min="40" max="200" value="120">
-                                    <span id="main-size-value">120px</span>
-                                </div>
-
-                                <div class="control-group">
-                                    <label>Дополнительные элементы</label>
-                                    <div class="checkbox-group">
-                                        <label><input type="checkbox" class="detail-check" value="dots"> Точки</label>
-                                        <label><input type="checkbox" class="detail-check" value="lines"> Линии</label>
-                                        <label><input type="checkbox" class="detail-check" value="glow"> Свечение</label>
-                                        <label><input type="checkbox" class="detail-check" value="shadow"> Тень</label>
-                                        <label><input type="checkbox" class="detail-check" value="pattern"> Узор</label>
+                                    <div class="config-actions">
+                                        <button id="generate-btn" class="primary-btn">
+                                            <i class="fas fa-bolt"></i> Сгенерировать
+                                        </button>
+                                        <button id="randomize-btn" class="secondary-btn">
+                                            <i class="fas fa-dice"></i> Рандомизировать
+                                        </button>
+                                        <button class="back-btn" data-back="step-category">← Назад</button>
                                     </div>
                                 </div>
 
-                                <div class="control-group" id="pattern-controls" style="display:none;">
-                                    <label>Тип узора</label>
-                                    <select id="pattern-type">
-                                        <option value="stripes">Полосы</option>
-                                        <option value="grid">Сетка</option>
-                                        <option value="waves">Волны</option>
-                                        <option value="dots">Точечный</option>
-                                    </select>
+                                <div class="preview-panel">
+                                    <div class="icon-preview" id="icon-preview">
+                                        <canvas id="generation-canvas" width="500" height="500"></canvas>
+                                    </div>
+                                    <div class="preview-actions">
+                                        <button id="download-png-btn" class="secondary-btn"><i class="fas fa-download"></i> PNG</button>
+                                        <button id="download-svg-btn" class="secondary-btn"><i class="fas fa-code"></i> SVG</button>
+                                        <button id="copy-svg-btn" class="secondary-btn"><i class="fas fa-copy"></i> Копировать SVG</button>
+                                    </div>
+                                    <div class="preview-info" id="preview-info">
+                                        <span id="preview-settings">Выберите параметры для генерации</span>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <button id="generate-btn" class="primary-btn">
-                                <i class="fas fa-bolt"></i> Сгенерировать
-                            </button>
-                            <button id="reset-defaults-btn" class="secondary-btn" style="width:100%;margin-top:10px;">
-                                <i class="fas fa-undo"></i> Сбросить настройки
-                            </button>
-                        </div>
-
-                        <!-- Область предпросмотра -->
-                        <div class="preview-area">
-                            <div class="icon-preview" id="icon-preview">
-                                <canvas id="generation-canvas" width="400" height="400"></canvas>
-                            </div>
-                            <div class="preview-actions">
-                                <button id="download-png-btn" class="secondary-btn"><i class="fas fa-download"></i> PNG</button>
-                                <button id="download-svg-btn" class="secondary-btn"><i class="fas fa-code"></i> SVG</button>
-                                <button id="copy-svg-btn" class="secondary-btn"><i class="fas fa-copy"></i> Копировать SVG</button>
-                            </div>
-                            <div class="preview-info" id="preview-info">
-                                <small>Настройки: <span id="preview-settings">Тема: Абстракция, Стиль: Минимализм</span></small>
                             </div>
                         </div>
                     </div>
@@ -200,11 +179,9 @@
                         </select>
                     </div>
                     <div class="settings-group">
-                        <label>Экспорт по умолчанию</label>
-                        <select id="default-export">
-                            <option value="png">PNG</option>
-                            <option value="svg">SVG</option>
-                        </select>
+                        <label>Авто-генерация при изменении</label>
+                        <input type="checkbox" id="auto-generate" checked>
+                        <small style="color:var(--text-secondary);display:block;margin-top:4px;">Автоматически генерировать при изменении параметров</small>
                     </div>
                 </section>
             </div>

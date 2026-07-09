@@ -11,7 +11,7 @@ export class UIManager {
 
     updateStats(stats) {
         if (this.statsEl.total) this.statsEl.total.textContent = stats?.total || 0;
-        if (this.statsEl.styles) this.statsEl.styles.textContent = stats?.styles || 6;
+        if (this.statsEl.styles) this.statsEl.styles.textContent = stats?.styles || 8;
     }
 
     renderHistory(history) {
@@ -24,15 +24,14 @@ export class UIManager {
         }
 
         container.innerHTML = history.map((item, index) => {
-            // Безопасная проверка данных
             if (!item || !item.data) return '';
             const dataStr = encodeURIComponent(JSON.stringify(item.data));
             return `
                 <div class="history-item">
                     <canvas width="60" height="60" data-icon="${dataStr}"></canvas>
                     <div class="info">
-                        <h4>${item.params?.theme || 'abstract'} / ${item.params?.style || 'minimal'}</h4>
-                        <p>${item.timestamp || 'Нет даты'} • Размер: ${item.params?.mainSize || 120}px</p>
+                        <h4>${item.params?.domain || 'unknown'} / ${item.params?.category || 'unknown'}</h4>
+                        <p>${item.timestamp || 'Нет даты'} • ${item.params?.style || 'default'}</p>
                     </div>
                     <div class="actions">
                         <button class="icon-btn" data-action="download-png" data-icon="${dataStr}">
@@ -46,7 +45,7 @@ export class UIManager {
             `;
         }).join('');
 
-        // Отрисовываем миниатюры и добавляем обработчики
+        // Отрисовываем миниатюры
         container.querySelectorAll('.history-item canvas').forEach(canvas => {
             try {
                 const data = JSON.parse(decodeURIComponent(canvas.dataset.icon));
@@ -59,7 +58,7 @@ export class UIManager {
             }
         });
 
-        // Добавляем обработчики для кнопок скачивания
+        // Обработчики для кнопок скачивания
         container.querySelectorAll('[data-action="download-png"]').forEach(btn => {
             btn.addEventListener('click', () => {
                 try {
@@ -118,7 +117,6 @@ export class UIManager {
             }
         });
 
-        // Клик по миниатюре - загружаем в превью
         grid.querySelectorAll('.recent-item').forEach(item => {
             item.addEventListener('click', () => {
                 try {
