@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дашборд</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard">
+        <nav>
+            <span>🎨 AI Icon Generator</span>
+            <button onclick="logout()">Выйти</button>
+        </nav>
+        <div class="main-area">
+            <div class="controls">
+                <h3>Настройки</h3>
+                <label>Стиль</label>
+                <select id="style">
+                    <option value="minimal">Минимализм</option>
+                    <option value="colorful">Яркий</option>
+                    <option value="outline">Контурный</option>
+                </select>
+                <label>Форма</label>
+                <select id="shape">
+                    <option value="circle">Круг</option>
+                    <option value="square">Квадрат</option>
+                    <option value="hexagon">Шестиугольник</option>
+                </select>
+                <label>Цвет</label>
+                <input type="color" id="color" value="#3B82F6">
+                <button onclick="generateIcon()">🚀 Сгенерировать</button>
+            </div>
+            <div class="preview">
+                <div id="result">
+                    <p>Ваша иконка появится здесь</p>
+                </div>
+                <div class="history">
+                    <h4>История</h4>
+                    <div id="history-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
