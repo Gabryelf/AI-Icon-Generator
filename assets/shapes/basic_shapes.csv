@@ -1,0 +1,9 @@
+name,type,path,defaultColor,tags
+circle,basic,"M0,0 a1,1 0 1,0 2,0 a1,1 0 1,0 -2,0",#7c3aed,basic,geometric
+square,basic,"M-1,-1 L1,-1 L1,1 L-1,1 Z",#3b82f6,basic,geometric
+triangle,basic,"M0,-1 L-1,1 L1,1 Z",#ef4444,basic,geometric
+star,basic,"M0,-1 L0.3,-0.3 L1,-0.3 L0.4,0.1 L0.6,0.8 L0,0.4 L-0.6,0.8 L-0.4,0.1 L-1,-0.3 L-0.3,-0.3",#f59e0b,basic,geometric
+hexagon,basic,"M0,-1 L0.866,-0.5 L0.866,0.5 L0,1 L-0.866,0.5 L-0.866,-0.5 Z",#10b981,basic,geometric
+diamond,basic,"M0,-1 L1,0 L0,1 L-1,0 Z",#8b5cf6,basic,geometric
+shield,basic,"M0,-1 L1,-0.6 L0.8,0.6 L0,1 L-0.8,0.6 L-1,-0.6 Z",#7c3aed,basic,geometric
+crest,basic,"M0,-1 L0.8,-0.6 L0.6,0.6 L0,1 L-0.6,0.6 L-0.8,-0.6 Z",#d97706,basic,geometric

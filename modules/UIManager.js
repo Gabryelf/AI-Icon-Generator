@@ -1,6 +1,7 @@
 // ============================================
 // UI МЕНЕДЖЕР - Рендеринг и обновление DOM
 // ============================================
+
 export class UIManager {
     constructor() {
         this.statsEl = {
@@ -56,33 +57,6 @@ export class UIManager {
             } catch (e) {
                 console.warn('Не удалось отрисовать миниатюру:', e);
             }
-        });
-
-        // Обработчики для кнопок скачивания
-        container.querySelectorAll('[data-action="download-png"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                try {
-                    const data = JSON.parse(decodeURIComponent(btn.dataset.icon));
-                    if (window.app && window.app.generator) {
-                        window.app.generator.download('png', data);
-                    }
-                } catch (e) {
-                    console.error('Ошибка скачивания PNG:', e);
-                }
-            });
-        });
-
-        container.querySelectorAll('[data-action="download-svg"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                try {
-                    const data = JSON.parse(decodeURIComponent(btn.dataset.icon));
-                    if (window.app && window.app.generator) {
-                        window.app.generator.download('svg', data);
-                    }
-                } catch (e) {
-                    console.error('Ошибка скачивания SVG:', e);
-                }
-            });
         });
     }
 

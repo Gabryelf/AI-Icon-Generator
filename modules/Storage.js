@@ -1,6 +1,7 @@
 // ============================================
 // ХРАНИЛИЩЕ - Абстракция над LocalStorage
 // ============================================
+
 export class Storage {
     constructor(prefix = 'nif_') {
         this.prefix = prefix;

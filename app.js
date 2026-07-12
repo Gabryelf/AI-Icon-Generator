@@ -1,546 +1,688 @@
 // ============================================
-// ГЛАВНЫЙ КОНТРОЛЛЕР v3.0
+// ГЛАВНЫЙ ФАЙЛ ПРИЛОЖЕНИЯ - Инициализация и роутинг
 // ============================================
+
 import { UIManager } from './modules/UIManager.js';
 import { Generator } from './modules/Generator.js';
 import { Storage } from './modules/Storage.js';
 import { DOMAINS, STYLES, CATEGORIES } from './modules/presets.js';
+import { ShapeLibrary } from './modules/ShapeLibrary.js';
+import { ColorPalette } from './modules/ColorPalette.js';
+import { TextureGenerator } from './modules/TextureGenerator.js';
+import { IconComposer } from './modules/IconComposer.js';
 
 class App {
     constructor() {
-        this.ui = new UIManager();
+        // Инициализация модулей
+        this.storage = new Storage('nif_');
         this.generator = new Generator();
-        this.storage = new Storage();
-        this.currentTab = 'dashboard';
-        this.currentIconData = null;
-        
-        // Состояние генератора
+        this.ui = new UIManager();
+        this.shapeLibrary = new ShapeLibrary();
+        this.colorPalette = new ColorPalette();
+        this.textureGenerator = new TextureGenerator();
+        this.iconComposer = new IconComposer();
+
+        // Состояние
         this.state = {
-            domain: null,
-            style: null,
-            category: null,
-            config: {}
+            currentTab: 'dashboard',
+            selectedDomain: null,
+            selectedStyle: null,
+            selectedCategory: null,
+            config: {},
+            history: this.storage.load('history', []),
+            recent: this.storage.load('recent', [])
         };
-        
+
+        // Ссылка на текущие данные иконки
+        this.currentIconData = null;
+
+        // Инициализация
         this.init();
     }
 
-    init() {
-        // Загружаем данные из localStorage
-        const saved = this.storage.load('appState');
-        if (saved) {
-            this.ui.updateStats(saved.stats);
-            this.ui.renderHistory(saved.history);
-            if (saved.settings) {
-                document.getElementById('username-input').value = saved.settings.username || '';
-            }
-            // Восстанавливаем состояние генератора
-            if (saved.generatorState) {
-                this.state = saved.generatorState;
-            }
-        } else {
-            this.storage.save('appState', {
-                stats: { total: 0, styles: 8 },
-                history: [],
-                settings: { username: 'Дизайнер', theme: 'dark' },
-                generatorState: this.state
+    async init() {
+        // Загружаем данные из CSV
+        await this.loadShapeData();
+        
+        // Настройка UI
+        this.setupUI();
+        
+        // Обновление статистики
+        this.updateStats();
+        
+        // Рендеринг истории и последних иконок
+        this.ui.renderHistory(this.state.history);
+        this.ui.renderRecent(this.state.recent);
+        
+        // Генерация превью для дашборда
+        this.generateDashboardPreview();
+
+        // Обработчики событий
+        this.setupEventListeners();
+
+        console.log('🧠 Neural Icon Forge v3.0 инициализирован');
+    }
+
+    async loadShapeData() {
+        try {
+            // Загрузка CSV файлов
+            const basicShapes = await this.loadCSV('/assets/shapes/basic_shapes.csv');
+            const organicShapes = await this.loadCSV('/assets/shapes/organic_shapes.csv');
+            const geometricShapes = await this.loadCSV('/assets/shapes/geometric_shapes.csv');
+            
+            this.shapeLibrary.loadShapes({
+                basic: basicShapes,
+                organic: organicShapes,
+                geometric: geometricShapes
             });
+            
+            console.log('✅ Загружены фигуры из CSV');
+        } catch (error) {
+            console.warn('⚠️ Не удалось загрузить CSV файлы, используем встроенные фигуры');
+            // Используем встроенные фигуры как fallback
+            this.shapeLibrary.loadDefaultShapes();
+        }
+    }
+
+    loadCSV(url) {
+        return fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error('CSV not found');
+                return response.text();
+            })
+            .then(text => {
+                const lines = text.split('\n').filter(line => line.trim());
+                const headers = lines[0].split(',').map(h => h.trim());
+                const data = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',').map(v => v.trim());
+                    if (values.length === headers.length) {
+                        const obj = {};
+                        headers.forEach((h, idx) => {
+                            obj[h] = values[idx];
+                        });
+                        data.push(obj);
+                    }
+                }
+                return data;
+            });
+    }
+
+    setupUI() {
+        // Настройка панелей
+        this.renderStyles();
+        this.renderCategories();
+        this.renderDomainGrid();
+    }
+
+    renderStyles() {
+        const grid = document.getElementById('style-grid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+        Object.entries(STYLES).forEach(([key, style]) => {
+            const card = document.createElement('button');
+            card.className = 'style-card';
+            card.dataset.style = key;
+            card.innerHTML = `
+                <i class="${style.icon}"></i>
+                <span>${style.name}</span>
+                <small>${style.description}</small>
+            `;
+            card.addEventListener('click', () => this.selectStyle(key));
+            grid.appendChild(card);
+        });
+    }
+
+    renderCategories() {
+        const grid = document.getElementById('category-grid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+        Object.entries(CATEGORIES).forEach(([key, cat]) => {
+            const card = document.createElement('button');
+            card.className = 'category-card';
+            card.dataset.category = key;
+            card.innerHTML = `
+                <i class="${cat.icon}"></i>
+                <span>${cat.name}</span>
+                <small>${cat.description}</small>
+            `;
+            card.addEventListener('click', () => this.selectCategory(key));
+            grid.appendChild(card);
+        });
+    }
+
+    renderDomainGrid() {
+        const grid = document.getElementById('domain-grid');
+        if (!grid) return;
+
+        grid.querySelectorAll('.domain-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const domain = card.dataset.domain;
+                this.selectDomain(domain);
+            });
+        });
+    }
+
+    // ===== ВЫБОР ПАРАМЕТРОВ =====
+
+    selectDomain(domain) {
+        this.state.selectedDomain = domain;
+        document.querySelectorAll('.domain-card').forEach(c => c.classList.remove('selected'));
+        document.querySelector(`.domain-card[data-domain="${domain}"]`)?.classList.add('selected');
+        
+        // Показать следующий шаг
+        this.showStep('step-style');
+    }
+
+    selectStyle(style) {
+        this.state.selectedStyle = style;
+        document.querySelectorAll('.style-card').forEach(c => c.classList.remove('selected'));
+        document.querySelector(`.style-card[data-style="${style}"]`)?.classList.add('selected');
+        
+        // Фильтруем категории по домену
+        this.filterCategoriesByDomain();
+        
+        // Показать следующий шаг
+        this.showStep('step-category');
+    }
+
+    selectCategory(category) {
+        this.state.selectedCategory = category;
+        document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
+        document.querySelector(`.category-card[data-category="${category}"]`)?.classList.add('selected');
+        
+        // Загрузить настройки для категории
+        this.loadCategoryConfig(category);
+        
+        // Показать следующий шаг
+        this.showStep('step-config');
+    }
+
+    filterCategoriesByDomain() {
+        const domain = this.state.selectedDomain;
+        if (!domain) return;
+
+        const domainData = DOMAINS[domain];
+        if (!domainData) return;
+
+        const allowedCategories = domainData.categories || [];
+        const grid = document.getElementById('category-grid');
+        
+        grid.querySelectorAll('.category-card').forEach(card => {
+            const catKey = card.dataset.category;
+            const show = allowedCategories.includes(catKey);
+            card.style.display = show ? '' : 'none';
+        });
+    }
+
+    loadCategoryConfig(category) {
+        const catData = CATEGORIES[category];
+        if (!catData) return;
+
+        const container = document.getElementById('config-container');
+        if (!container) return;
+
+        // Очищаем контейнер
+        container.innerHTML = '';
+
+        // Создаем группы настроек
+        const groups = this.groupConfigFields(catData.config);
+
+        groups.forEach(group => {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'config-group';
+            
+            if (group.title) {
+                const title = document.createElement('div');
+                title.className = 'config-group-title';
+                title.innerHTML = `<i class="fas fa-${group.icon || 'sliders'}"></i> ${group.title}`;
+                groupDiv.appendChild(title);
+            }
+
+            group.fields.forEach(field => {
+                const row = this.createConfigRow(field, catData.defaults);
+                groupDiv.appendChild(row);
+            });
+
+            container.appendChild(groupDiv);
+        });
+
+        // Устанавливаем значения по умолчанию
+        this.setConfigDefaults(catData.defaults);
+    }
+
+    groupConfigFields(config) {
+        // Группируем настройки по логическим блокам
+        const groups = [];
+        
+        // Базовая группа
+        const basicFields = ['shape', 'size', 'color', 'bgColor'];
+        const basic = {
+            title: 'Основные параметры',
+            icon: 'pencil',
+            fields: []
+        };
+        
+        // Стиль
+        const styleFields = ['style', 'glow', 'hasBorder', 'borderColor'];
+        const style = {
+            title: 'Стиль и эффекты',
+            icon: 'paintbrush',
+            fields: []
+        };
+        
+        // Детали
+        const detailFields = ['complexity', 'stars', 'details', 'hasRibbon'];
+        const details = {
+            title: 'Детализация',
+            icon: 'layer-group',
+            fields: []
+        };
+        
+        // Текст
+        const textFields = ['text', 'letter'];
+        const text = {
+            title: 'Текст',
+            icon: 'font',
+            fields: []
+        };
+
+        Object.entries(config).forEach(([key, field]) => {
+            if (basicFields.includes(key)) basic.fields.push({key, ...field});
+            else if (styleFields.includes(key)) style.fields.push({key, ...field});
+            else if (detailFields.includes(key)) details.fields.push({key, ...field});
+            else if (textFields.includes(key)) text.fields.push({key, ...field});
+            else {
+                // Остальные поля в базовую группу
+                basic.fields.push({key, ...field});
+            }
+        });
+
+        if (basic.fields.length) groups.push(basic);
+        if (style.fields.length) groups.push(style);
+        if (details.fields.length) groups.push(details);
+        if (text.fields.length) groups.push(text);
+
+        return groups;
+    }
+
+    createConfigRow(field, defaults) {
+        const row = document.createElement('div');
+        row.className = 'config-row';
+
+        const label = document.createElement('label');
+        label.textContent = field.label;
+        row.appendChild(label);
+
+        const value = field.default || defaults[field.key] || '';
+        this.state.config[field.key] = value;
+
+        let input;
+        switch (field.type) {
+            case 'select':
+                input = document.createElement('select');
+                field.options.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.label;
+                    if (opt.value === value) option.selected = true;
+                    input.appendChild(option);
+                });
+                break;
+            case 'color':
+                input = document.createElement('input');
+                input.type = 'color';
+                input.value = value;
+                break;
+            case 'range':
+                input = document.createElement('input');
+                input.type = 'range';
+                input.min = field.min || 0;
+                input.max = field.max || 100;
+                input.value = value;
+                
+                const display = document.createElement('span');
+                display.className = 'config-value';
+                display.textContent = value;
+                row.appendChild(display);
+                
+                input.addEventListener('input', () => {
+                    display.textContent = input.value;
+                    this.state.config[field.key] = parseFloat(input.value);
+                });
+                break;
+            case 'checkbox':
+                input = document.createElement('input');
+                input.type = 'checkbox';
+                input.checked = value === true || value === 'true';
+                break;
+            case 'text':
+            default:
+                input = document.createElement('input');
+                input.type = 'text';
+                input.value = value;
+                break;
         }
 
+        input.id = `config-${field.key}`;
+        input.addEventListener('change', () => {
+            const val = input.type === 'checkbox' ? input.checked : input.value;
+            this.state.config[field.key] = val;
+            
+            // Авто-генерация
+            if (document.getElementById('auto-generate')?.checked) {
+                this.generateIcon();
+            }
+        });
+
+        row.appendChild(input);
+        return row;
+    }
+
+    setConfigDefaults(defaults) {
+        if (!defaults) return;
+        Object.entries(defaults).forEach(([key, value]) => {
+            if (!(key in this.state.config)) {
+                this.state.config[key] = value;
+            }
+            const input = document.getElementById(`config-${key}`);
+            if (input) {
+                if (input.type === 'checkbox') {
+                    input.checked = value === true || value === 'true';
+                } else if (input.type === 'range') {
+                    input.value = value;
+                } else {
+                    input.value = value;
+                }
+            }
+        });
+    }
+
+    // ===== ШАГИ =====
+
+    showStep(stepId) {
+        document.querySelectorAll('.setup-step').forEach(el => el.style.display = 'none');
+        const step = document.getElementById(stepId);
+        if (step) step.style.display = 'block';
+        
+        // Если переходим на шаг конфигурации, генерируем иконку
+        if (stepId === 'step-config') {
+            setTimeout(() => this.generateIcon(), 300);
+        }
+    }
+
+    // ===== ГЕНЕРАЦИЯ ИКОНКИ =====
+
+    generateIcon() {
+        const params = {
+            domain: this.state.selectedDomain,
+            style: this.state.selectedStyle,
+            category: this.state.selectedCategory,
+            config: this.state.config
+        };
+
+        // Проверяем, что все параметры выбраны
+        if (!params.domain || !params.style || !params.category) {
+            document.getElementById('preview-info').textContent = 'Выберите все параметры для генерации';
+            return;
+        }
+
+        // Генерируем иконку
+        const iconData = this.generator.generate(params);
+        this.currentIconData = iconData;
+
+        // Отрисовываем на canvas
+        const canvas = document.getElementById('generation-canvas');
+        const ctx = canvas.getContext('2d');
+        this.generator.drawIcon(ctx, canvas.width, canvas.height, iconData);
+
+        // Обновляем информацию
+        const info = document.getElementById('preview-settings');
+        info.textContent = `${params.domain} / ${params.style} / ${params.category}`;
+
+        // Сохраняем в историю
+        this.saveToHistory(iconData, params);
+        this.updateStats();
+    }
+
+    randomizeConfig() {
+        // Рандомизация настроек
+        const categoryData = CATEGORIES[this.state.selectedCategory];
+        if (!categoryData) return;
+
+        const config = this.state.config;
+        Object.keys(categoryData.config).forEach(key => {
+            const field = categoryData.config[key];
+            if (field.type === 'range') {
+                const min = field.min || 0;
+                const max = field.max || 100;
+                config[key] = Math.floor(Math.random() * (max - min + 1)) + min;
+            } else if (field.type === 'color') {
+                const colors = ['#7c3aed', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+                config[key] = colors[Math.floor(Math.random() * colors.length)];
+            } else if (field.type === 'select') {
+                const options = field.options || [];
+                if (options.length) {
+                    config[key] = options[Math.floor(Math.random() * options.length)].value;
+                }
+            } else if (field.type === 'checkbox') {
+                config[key] = Math.random() > 0.5;
+            } else if (field.type === 'text') {
+                const texts = ['Star', 'Hero', 'Pro', 'Max', 'Ultra', 'Prime', 'Core'];
+                config[key] = texts[Math.floor(Math.random() * texts.length)];
+            }
+        });
+
+        // Обновляем UI
+        Object.keys(categoryData.config).forEach(key => {
+            const input = document.getElementById(`config-${key}`);
+            if (input) {
+                const val = config[key];
+                if (input.type === 'checkbox') {
+                    input.checked = val;
+                } else if (input.type === 'range') {
+                    input.value = val;
+                    const display = input.parentElement.querySelector('.config-value');
+                    if (display) display.textContent = val;
+                } else {
+                    input.value = val;
+                }
+            }
+        });
+
+        this.generateIcon();
+    }
+
+    // ===== СОХРАНЕНИЕ =====
+
+    saveToHistory(iconData, params) {
+        const entry = {
+            id: Date.now(),
+            timestamp: new Date().toLocaleString(),
+            data: iconData,
+            params: params
+        };
+
+        // Добавляем в историю (максимум 50)
+        this.state.history.unshift(entry);
+        if (this.state.history.length > 50) {
+            this.state.history = this.state.history.slice(0, 50);
+        }
+        this.storage.save('history', this.state.history);
+
+        // Добавляем в последние (максимум 6)
+        this.state.recent.unshift(entry);
+        if (this.state.recent.length > 6) {
+            this.state.recent = this.state.recent.slice(0, 6);
+        }
+        this.storage.save('recent', this.state.recent);
+
+        // Обновляем UI
+        this.ui.renderHistory(this.state.history);
+        this.ui.renderRecent(this.state.recent);
+    }
+
+    // ===== СТАТИСТИКА =====
+
+    updateStats() {
+        const stats = {
+            total: this.state.history.length,
+            styles: Object.keys(STYLES).length
+        };
+        this.ui.updateStats(stats);
+    }
+
+    // ===== ДАШБОРД =====
+
+    generateDashboardPreview() {
+        // Если есть иконки в истории, показываем первую как превью на дашборде
+        if (this.state.history.length > 0) {
+            const canvas = document.querySelector('#page-dashboard canvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                this.generator.drawIcon(ctx, canvas.width, canvas.height, this.state.history[0].data);
+            }
+        }
+    }
+
+    // ===== ОБРАБОТЧИКИ СОБЫТИЙ =====
+
+    setupEventListeners() {
         // Навигация
-        document.querySelectorAll('.nav-item').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tab = btn.dataset.tab;
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const tab = item.dataset.tab;
                 this.switchTab(tab);
             });
         });
 
-        // Шаг 1: Выбор домена
-        document.querySelectorAll('.domain-card').forEach(card => {
-            card.addEventListener('click', () => {
-                this.selectDomain(card.dataset.domain);
-            });
-        });
-
-        // Шаг 2: Выбор стиля (динамические)
-        // Шаг 3: Выбор категории (динамические)
-        // Обработчики для back кнопок
-        document.querySelectorAll('[data-back]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const step = btn.dataset.back;
-                this.goToStep(step);
-            });
-        });
-
         // Генерация
-        document.getElementById('generate-btn').addEventListener('click', () => {
-            this.handleGenerate();
+        document.getElementById('generate-btn')?.addEventListener('click', () => {
+            this.generateIcon();
         });
 
         // Рандомизация
-        document.getElementById('randomize-btn').addEventListener('click', () => {
+        document.getElementById('randomize-btn')?.addEventListener('click', () => {
             this.randomizeConfig();
         });
 
-        // Очистка
-        document.getElementById('clear-storage-btn').addEventListener('click', () => {
-            if (confirm('Очистить всю историю?')) {
-                this.storage.clear();
-                location.reload();
-            }
-        });
-
-        // Настройки
-        document.getElementById('username-input')?.addEventListener('change', (e) => {
-            const state = this.storage.load('appState');
-            if (!state.settings) state.settings = {};
-            state.settings.username = e.target.value;
-            this.storage.save('appState', state);
+        // Кнопки назад
+        document.querySelectorAll('.back-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.dataset.back;
+                if (target) {
+                    this.showStep(target);
+                }
+            });
         });
 
         // Экспорт
-        document.getElementById('download-png-btn').addEventListener('click', () => {
+        document.getElementById('download-png-btn')?.addEventListener('click', () => {
             if (this.currentIconData) {
                 this.generator.download('png', this.currentIconData);
             }
         });
 
-        document.getElementById('download-svg-btn').addEventListener('click', () => {
+        document.getElementById('download-svg-btn')?.addEventListener('click', () => {
             if (this.currentIconData) {
                 this.generator.download('svg', this.currentIconData);
             }
         });
 
-        document.getElementById('copy-svg-btn').addEventListener('click', () => {
+        document.getElementById('copy-svg-btn')?.addEventListener('click', () => {
             if (this.currentIconData) {
                 this.generator.copySVG(this.currentIconData);
             }
         });
 
-        // Восстанавливаем превью
-        this.restorePreview();
-
-        // Показываем первый шаг или восстанавливаем состояние
-        if (this.state.domain) {
-            this.goToStep('step-config');
-            this.renderConfig();
-            if (this.state.config && Object.keys(this.state.config).length > 0) {
-                this.handleGenerate();
+        // Очистка кэша
+        document.getElementById('clear-storage-btn')?.addEventListener('click', () => {
+            if (confirm('Очистить все данные?')) {
+                this.storage.clear();
+                this.state.history = [];
+                this.state.recent = [];
+                this.ui.renderHistory([]);
+                this.ui.renderRecent([]);
+                this.updateStats();
+                document.getElementById('generation-canvas').getContext('2d').clearRect(0, 0, 500, 500);
             }
-        }
+        });
 
-        console.log('🚀 Neural Icon Forge v3.0 запущен!');
+        // Глобальные обработчики для истории
+        document.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-action]');
+            if (target) {
+                const action = target.dataset.action;
+                if (action === 'download-png' || action === 'download-svg') {
+                    try {
+                        const data = JSON.parse(decodeURIComponent(target.dataset.icon));
+                        const format = action === 'download-png' ? 'png' : 'svg';
+                        this.generator.download(format, data);
+                    } catch (error) {
+                        console.error('Ошибка скачивания:', error);
+                    }
+                }
+            }
+        });
+
+        // Настройки
+        document.getElementById('username-input')?.addEventListener('change', (e) => {
+            this.storage.save('username', e.target.value);
+        });
+
+        document.getElementById('theme-ui-select')?.addEventListener('change', (e) => {
+            // Логика смены темы (будет добавлена позже)
+        });
+
+        // Загрузка сохраненных настроек
+        const savedUsername = this.storage.load('username', '');
+        if (savedUsername) {
+            document.getElementById('username-input').value = savedUsername;
+        }
     }
 
-    switchTab(tab) {
-        this.currentTab = tab;
-        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-        document.querySelector(`.nav-item[data-tab="${tab}"]`)?.classList.add('active');
-        
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-        document.getElementById(`page-${tab}`)?.classList.add('active-page');
+    // ===== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК =====
 
+    switchTab(tab) {
+        this.state.currentTab = tab;
+        
+        // Обновляем навигацию
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.tab === tab);
+        });
+
+        // Обновляем страницы
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.toggle('active-page', page.id === `page-${tab}`);
+        });
+
+        // Обновляем заголовок
         const titles = {
             dashboard: 'Дашборд',
-            generator: 'Генератор иконок',
+            generator: 'Генератор',
             history: 'История',
             settings: 'Настройки'
         };
         document.getElementById('page-title').textContent = titles[tab] || tab;
-    }
 
-    // ===== ШАГИ ГЕНЕРАТОРА =====
-    selectDomain(domain) {
-        this.state.domain = domain;
-        
-        // Обновляем UI
-        document.querySelectorAll('.domain-card').forEach(c => c.classList.remove('selected'));
-        document.querySelector(`.domain-card[data-domain="${domain}"]`)?.classList.add('selected');
-
-        // Показываем шаг со стилями
-        const styles = DOMAINS[domain]?.styles || Object.keys(STYLES);
-        this.renderStyles(styles);
-        this.goToStep('step-style');
-        
-        // Сохраняем состояние
-        this.saveGeneratorState();
-    }
-
-    selectStyle(style) {
-        this.state.style = style;
-        
-        document.querySelectorAll('.style-card').forEach(c => c.classList.remove('selected'));
-        document.querySelector(`.style-card[data-style="${style}"]`)?.classList.add('selected');
-
-        // Показываем категории
-        const domainData = DOMAINS[this.state.domain];
-        const categories = domainData?.categories || Object.keys(CATEGORIES);
-        this.renderCategories(categories);
-        this.goToStep('step-category');
-        
-        this.saveGeneratorState();
-    }
-
-    selectCategory(category) {
-        this.state.category = category;
-        
-        document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
-        document.querySelector(`.category-card[data-category="${category}"]`)?.classList.add('selected');
-
-        // Переходим к настройкам
-        this.goToStep('step-config');
-        this.renderConfig();
-        
-        // Авто-генерация
-        const autoGen = document.getElementById('auto-generate')?.checked;
-        if (autoGen !== false) {
-            setTimeout(() => this.handleGenerate(), 300);
-        }
-        
-        this.saveGeneratorState();
-    }
-
-    goToStep(stepId) {
-        // Скрываем все шаги
-        document.querySelectorAll('.setup-step').forEach(s => s.style.display = 'none');
-        
-        // Показываем нужный
-        const target = document.getElementById(stepId);
-        if (target) {
-            target.style.display = 'block';
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }
-
-    renderStyles(styles) {
-        const grid = document.getElementById('style-grid');
-        grid.innerHTML = styles.map(styleKey => {
-            const style = STYLES[styleKey];
-            if (!style) return '';
-            return `
-                <button class="style-card" data-style="${styleKey}">
-                    <i class="${style.icon || 'fas fa-palette'}"></i>
-                    <span>${style.name}</span>
-                    <small>${style.description || ''}</small>
-                </button>
-            `;
-        }).join('');
-
-        grid.querySelectorAll('.style-card').forEach(card => {
-            card.addEventListener('click', () => {
-                this.selectStyle(card.dataset.style);
-            });
-        });
-
-        // Если стиль уже выбран
-        if (this.state.style) {
-            const selected = grid.querySelector(`[data-style="${this.state.style}"]`);
-            if (selected) selected.classList.add('selected');
-        }
-    }
-
-    renderCategories(categories) {
-        const grid = document.getElementById('category-grid');
-        grid.innerHTML = categories.map(catKey => {
-            const cat = CATEGORIES[catKey];
-            if (!cat) return '';
-            return `
-                <button class="category-card" data-category="${catKey}">
-                    <i class="${cat.icon || 'fas fa-shapes'}"></i>
-                    <span>${cat.name}</span>
-                    <small>${cat.description || ''}</small>
-                </button>
-            `;
-        }).join('');
-
-        grid.querySelectorAll('.category-card').forEach(card => {
-            card.addEventListener('click', () => {
-                this.selectCategory(card.dataset.category);
-            });
-        });
-
-        if (this.state.category) {
-            const selected = grid.querySelector(`[data-category="${this.state.category}"]`);
-            if (selected) selected.classList.add('selected');
-        }
-    }
-
-    renderConfig() {
-        const container = document.getElementById('config-container');
-        const domainData = DOMAINS[this.state.domain];
-        const styleData = STYLES[this.state.style];
-        const categoryData = CATEGORIES[this.state.category];
-        
-        if (!categoryData) {
-            container.innerHTML = '<p style="color:var(--text-secondary);">Выберите категорию для настройки</p>';
-            return;
-        }
-
-        // Получаем параметры для категории
-        const config = categoryData.config || {};
-        const defaultConfig = categoryData.defaults || {};
-
-        // Строим UI настроек
-        let html = `
-            <div class="config-group">
-                <div class="config-group-title">
-                    <i class="fas fa-info-circle"></i> 
-                    ${categoryData.name} — ${styleData?.name || 'Стандартный'} стиль
-                </div>
-                <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">
-                    ${categoryData.description || 'Настройте детали вашего элемента'}
-                </div>
-            </div>
-        `;
-
-        // Генерируем элементы настроек
-        for (const [key, param] of Object.entries(config)) {
-            const value = this.state.config[key] || defaultConfig[key] || param.default || '';
-            
-            html += `<div class="config-group">`;
-            html += `<div class="config-group-title"><i class="${param.icon || 'fas fa-sliders-h'}"></i> ${param.label}</div>`;
-            
-            if (param.type === 'color') {
-                html += `
-                    <div class="config-row">
-                        <label>Цвет</label>
-                        <input type="color" id="cfg-${key}" value="${value || '#7c3aed'}" 
-                               data-config-key="${key}">
-                        <span class="config-value">${value || '#7c3aed'}</span>
-                    </div>
-                `;
-            } else if (param.type === 'range') {
-                html += `
-                    <div class="config-row">
-                        <label>${param.label}</label>
-                        <input type="range" id="cfg-${key}" 
-                               min="${param.min || 0}" max="${param.max || 100}" 
-                               value="${value || param.default || 50}"
-                               data-config-key="${key}">
-                        <span class="config-value" id="cfg-${key}-value">${value || param.default || 50}</span>
-                    </div>
-                `;
-            } else if (param.type === 'select') {
-                html += `
-                    <div class="config-row">
-                        <label>${param.label}</label>
-                        <select id="cfg-${key}" data-config-key="${key}">
-                            ${(param.options || []).map(opt => 
-                                `<option value="${opt.value}" ${opt.value === value ? 'selected' : ''}>${opt.label}</option>`
-                            ).join('')}
-                        </select>
-                    </div>
-                `;
-            } else if (param.type === 'checkbox') {
-                html += `
-                    <div class="config-row">
-                        <label>${param.label}</label>
-                        <input type="checkbox" id="cfg-${key}" 
-                               ${value ? 'checked' : ''}
-                               data-config-key="${key}">
-                    </div>
-                `;
+        // Специальная логика для некоторых вкладок
+        if (tab === 'generator') {
+            // Проверяем, все ли параметры выбраны
+            if (this.state.selectedDomain && this.state.selectedStyle && this.state.selectedCategory) {
+                this.showStep('step-config');
+            } else if (this.state.selectedDomain && this.state.selectedStyle) {
+                this.showStep('step-category');
+            } else if (this.state.selectedDomain) {
+                this.showStep('step-style');
             } else {
-                // text, number
-                html += `
-                    <div class="config-row">
-                        <label>${param.label}</label>
-                        <input type="${param.type || 'text'}" id="cfg-${key}" 
-                               value="${value || ''}"
-                               data-config-key="${key}"
-                               style="flex:1;padding:6px 10px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:6px;color:#fff;">
-                    </div>
-                `;
-            }
-            
-            html += `</div>`;
-        }
-
-        container.innerHTML = html;
-
-        // Добавляем обработчики
-        container.querySelectorAll('[data-config-key]').forEach(el => {
-            const key = el.dataset.configKey;
-            
-            const handler = () => {
-                let value;
-                if (el.type === 'checkbox') {
-                    value = el.checked;
-                } else if (el.type === 'range') {
-                    value = parseInt(el.value);
-                    const valueDisplay = document.getElementById(`cfg-${key}-value`);
-                    if (valueDisplay) valueDisplay.textContent = value;
-                } else if (el.type === 'color') {
-                    value = el.value;
-                    const sibling = el.parentElement.querySelector('.config-value');
-                    if (sibling) sibling.textContent = value;
-                } else {
-                    value = el.value;
-                }
-                
-                this.state.config[key] = value;
-                this.saveGeneratorState();
-                
-                // Авто-генерация
-                const autoGen = document.getElementById('auto-generate')?.checked;
-                if (autoGen !== false) {
-                    clearTimeout(this._genTimeout);
-                    this._genTimeout = setTimeout(() => this.handleGenerate(), 300);
-                }
-            };
-            
-            el.addEventListener('input', handler);
-            el.addEventListener('change', handler);
-        });
-
-        // Восстанавливаем значения
-        for (const [key, value] of Object.entries(this.state.config)) {
-            const el = document.getElementById(`cfg-${key}`);
-            if (el) {
-                if (el.type === 'checkbox') el.checked = value;
-                else if (el.type === 'range') {
-                    el.value = value;
-                    const display = document.getElementById(`cfg-${key}-value`);
-                    if (display) display.textContent = value;
-                } else if (el.type === 'color') {
-                    el.value = value;
-                    const sibling = el.parentElement?.querySelector('.config-value');
-                    if (sibling) sibling.textContent = value;
-                } else {
-                    el.value = value;
-                }
-            }
-        }
-    }
-
-    // ===== ГЕНЕРАЦИЯ =====
-    handleGenerate() {
-        // Собираем все параметры
-        const params = {
-            domain: this.state.domain,
-            style: this.state.style,
-            category: this.state.category,
-            config: { ...this.state.config }
-        };
-
-        // Добавляем настройки из UI
-        document.querySelectorAll('[data-config-key]').forEach(el => {
-            const key = el.dataset.configKey;
-            if (el.type === 'checkbox') {
-                params.config[key] = el.checked;
-            } else if (el.type === 'range') {
-                params.config[key] = parseInt(el.value);
-            } else {
-                params.config[key] = el.value;
-            }
-        });
-
-        this.state.config = params.config;
-        this.saveGeneratorState();
-
-        // Генерируем
-        this.currentIconData = this.generator.generate(params);
-        
-        // Отрисовываем
-        const canvas = document.getElementById('generation-canvas');
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        this.generator.drawIcon(ctx, canvas.width, canvas.height, this.currentIconData);
-
-        // Обновляем информацию
-        const domainName = DOMAINS[this.state.domain]?.name || this.state.domain;
-        const styleName = STYLES[this.state.style]?.name || this.state.style;
-        const categoryName = CATEGORIES[this.state.category]?.name || this.state.category;
-        document.getElementById('preview-settings').textContent = 
-            `${domainName} • ${styleName} • ${categoryName}`;
-
-        // Сохраняем в историю
-        const state = this.storage.load('appState') || { stats: { total: 0 }, history: [] };
-        state.stats.total += 1;
-        state.history.unshift({
-            id: Date.now(),
-            params: params,
-            data: this.currentIconData,
-            timestamp: new Date().toLocaleString()
-        });
-        if (state.history.length > 50) state.history.pop();
-        
-        this.storage.save('appState', state);
-        this.ui.updateStats(state.stats);
-        this.ui.renderHistory(state.history);
-        this.ui.renderRecent(state.history.slice(0, 6));
-
-        // Анимация
-        const btn = document.getElementById('generate-btn');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Генерация...';
-        setTimeout(() => {
-            btn.innerHTML = '<i class="fas fa-bolt"></i> Сгенерировать';
-        }, 400);
-    }
-
-    randomizeConfig() {
-        // Случайные значения для всех параметров
-        document.querySelectorAll('[data-config-key]').forEach(el => {
-            const key = el.dataset.configKey;
-            const param = CATEGORIES[this.state.category]?.config?.[key];
-            if (!param) return;
-            
-            if (param.type === 'color') {
-                const color = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-                el.value = color;
-                const sibling = el.parentElement?.querySelector('.config-value');
-                if (sibling) sibling.textContent = color;
-            } else if (param.type === 'range') {
-                const min = param.min || 0;
-                const max = param.max || 100;
-                const val = Math.floor(Math.random() * (max - min + 1)) + min;
-                el.value = val;
-                const display = document.getElementById(`cfg-${key}-value`);
-                if (display) display.textContent = val;
-            } else if (param.type === 'checkbox') {
-                el.checked = Math.random() > 0.5;
-            } else if (param.type === 'select') {
-                const options = param.options || [];
-                if (options.length > 0) {
-                    const rand = options[Math.floor(Math.random() * options.length)];
-                    el.value = rand.value;
-                }
-            }
-            
-            // Триггерим событие
-            el.dispatchEvent(new Event('change'));
-        });
-    }
-
-    // ===== СОХРАНЕНИЕ СОСТОЯНИЯ =====
-    saveGeneratorState() {
-        const state = this.storage.load('appState') || {};
-        state.generatorState = {
-            domain: this.state.domain,
-            style: this.state.style,
-            category: this.state.category,
-            config: this.state.config
-        };
-        this.storage.save('appState', state);
-    }
-
-    restorePreview() {
-        const state = this.storage.load('appState');
-        if (state && state.history && state.history.length > 0) {
-            const last = state.history[0];
-            if (last && last.data) {
-                const canvas = document.getElementById('generation-canvas');
-                const ctx = canvas.getContext('2d');
-                this.currentIconData = last.data;
-                this.generator.drawIcon(ctx, canvas.width, canvas.height, last.data);
-                document.getElementById('preview-settings').textContent = 
-                    last.params?.domain || 'Неизвестно';
+                this.showStep('step-domain');
             }
         }
     }
 }
 
-// Запуск
-document.addEventListener('DOMContentLoaded', () => {
-    window.app = new App();
-});
+// Инициализация приложения
+const app = new App();
+window.app = app;

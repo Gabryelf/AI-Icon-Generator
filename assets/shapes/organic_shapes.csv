@@ -1,0 +1,6 @@
+name,type,path,defaultColor,tags
+leaf,organic,"M0,-1 Q1,-0.5 0.5,0 Q0,0.5 -0.5,0 Q-1,-0.5 0,-1",#10b981,organic,nature
+drop,organic,"M0,-1 Q1,0 0,1 Q-1,0 0,-1",#3b82f6,organic,nature
+cloud,organic,"M-1.2,0.4 Q-1.2,-0.4 -0.6,-0.6 Q-0.4,-1.2 0.2,-1.2 Q0.8,-1.2 1.0,-0.6 Q1.6,-0.4 1.6,0.2 Q1.6,0.6 1.2,0.8 Q0.8,1.2 0.2,1.2 Q-0.4,1.2 -0.8,0.8 Q-1.2,0.6 -1.2,0.4",#9ca3af,organic,nature
+flower,organic,"M0,-1 Q0.5,-0.8 0.8,-0.3 Q1,0.2 0.5,0.5 Q0,0.8 -0.5,0.5 Q-1,0.2 -0.8,-0.3 Q-0.5,-0.8 0,-1",#ec4899,organic,nature
+heart,organic,"M0,0.3 Q-1,-0.5 -1,-1.2 Q-1,-1.8 -0.3,-1.8 Q0,-1.8 0,-1.2 Q0,-1.8 0.3,-1.8 Q1,-1.8 1,-1.2 Q1,-0.5 0,0.3",#ef4444,organic,nature

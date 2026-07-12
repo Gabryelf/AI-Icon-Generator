@@ -1,5 +1,5 @@
 // ============================================
-// БИБЛИОТЕКА ПРЕСЕТОВ v3.0
+// БИБЛИОТЕКА ПРЕСЕТОВ v4.0
 // ============================================
 
 // ДОМЕНЫ (сферы применения)
@@ -8,35 +8,35 @@ export const DOMAINS = {
         name: 'Игры',
         icon: 'fas fa-gamepad',
         description: 'Иконки, кнопки, аватары для игр',
-        styles: ['neon', 'pixel', 'fantasy', 'minimal', 'vibrant'],
-        categories: ['game_icon', 'game_button', 'game_avatar', 'game_emblem', 'game_ui']
+        styles: ['neon', 'pixel', 'fantasy', 'minimal', 'vibrant', 'cyberpunk'],
+        categories: ['game_icon', 'game_button', 'game_avatar', 'game_emblem', 'game_ui', 'game_character', 'game_item']
     },
     branding: {
         name: 'Брендинг',
         icon: 'fas fa-trademark',
         description: 'Логотипы, эмблемы, фирменные знаки',
-        styles: ['minimal', 'luxury', 'vintage', 'geometric', 'organic'],
+        styles: ['minimal', 'luxury', 'vintage', 'geometric', 'organic', 'flat'],
         categories: ['logo', 'emblem', 'badge', 'monogram', 'icon']
     },
     web: {
         name: 'Веб & UI',
         icon: 'fas fa-globe',
         description: 'Кнопки, иконки интерфейса, элементы',
-        styles: ['minimal', 'flat', 'gradient', 'material', 'neon'],
-        categories: ['ui_icon', 'ui_button', 'ui_nav', 'ui_media', 'ui_data']
+        styles: ['minimal', 'flat', 'gradient', 'material', 'neon', 'cyberpunk'],
+        categories: ['ui_icon', 'ui_button', 'ui_nav', 'ui_media', 'ui_data', 'web_illustration']
     },
     social: {
         name: 'Соцсети',
         icon: 'fas fa-share-alt',
         description: 'Аватары, обложки, стикеры',
-        styles: ['vibrant', 'pastel', 'gradient', 'cartoon', 'minimal'],
-        categories: ['avatar', 'cover', 'sticker', 'reaction', 'badge']
+        styles: ['vibrant', 'pastel', 'gradient', 'cartoon', 'minimal', 'watercolor'],
+        categories: ['avatar', 'cover', 'sticker', 'reaction', 'badge', 'social_template']
     },
     presentation: {
         name: 'Презентации',
         icon: 'fas fa-presentation',
         description: 'Инфографика, диаграммы, иллюстрации',
-        styles: ['flat', 'gradient', 'minimal', 'vibrant', 'organic'],
+        styles: ['flat', 'gradient', 'minimal', 'vibrant', 'organic', 'geometric'],
         categories: ['chart', 'diagram', 'infographic', 'icon_set', 'flow']
     }
 };
@@ -112,6 +112,26 @@ export const STYLES = {
         name: 'Мультяшный',
         icon: 'fas fa-face-smile',
         description: 'Яркий, дружелюбный стиль'
+    },
+    cyberpunk: {
+        name: 'Киберпанк',
+        icon: 'fas fa-microchip',
+        description: 'Неон, футуризм, технологичный стиль'
+    },
+    steampunk: {
+        name: 'Стимпанк',
+        icon: 'fas fa-cog',
+        description: 'Викторианский стиль + механизмы'
+    },
+    watercolor: {
+        name: 'Акварель',
+        icon: 'fas fa-tint',
+        description: 'Мягкие, размытые переходы'
+    },
+    low_poly: {
+        name: 'Low Poly',
+        icon: 'fas fa-cube',
+        description: 'Полигональный стиль'
     }
 };
 
@@ -126,7 +146,7 @@ export const CATEGORIES = {
             shape: 'circle',
             size: 120,
             color: '#7c3aed',
-            bgColor: '#0a0a0f',
+            bgColor: 'transparent',
             glow: true,
             strokeWidth: 3,
             complexity: 5
@@ -158,8 +178,14 @@ export const CATEGORIES = {
             },
             bgColor: {
                 label: 'Фон',
-                type: 'color',
-                default: '#0a0a0f'
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' },
+                    { value: '#ffffff', label: 'Белый' },
+                    { value: 'gradient', label: 'Градиент' }
+                ],
+                default: 'transparent'
             },
             glow: {
                 label: 'Свечение',
@@ -182,6 +208,107 @@ export const CATEGORIES = {
             }
         }
     },
+    game_character: {
+        name: 'Игровой персонаж',
+        icon: 'fas fa-user-astronaut',
+        description: 'Персонажи для игр',
+        defaults: {
+            style: 'fantasy',
+            color: '#7c3aed',
+            bgColor: 'transparent',
+            hasWeapon: false,
+            hasArmor: false
+        },
+        config: {
+            style: {
+                label: 'Стиль персонажа',
+                type: 'select',
+                options: [
+                    { value: 'fantasy', label: 'Фэнтези' },
+                    { value: 'sci-fi', label: 'Sci-Fi' },
+                    { value: 'cartoon', label: 'Мультяшный' },
+                    { value: 'realistic', label: 'Реалистичный' }
+                ],
+                default: 'fantasy'
+            },
+            color: {
+                label: 'Основной цвет',
+                type: 'color',
+                default: '#7c3aed'
+            },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' },
+                    { value: 'gradient', label: 'Градиент' }
+                ],
+                default: 'transparent'
+            },
+            hasWeapon: {
+                label: 'Оружие',
+                type: 'checkbox',
+                default: false
+            },
+            hasArmor: {
+                label: 'Доспехи',
+                type: 'checkbox',
+                default: false
+            }
+        }
+    },
+    game_item: {
+        name: 'Игровой предмет',
+        icon: 'fas fa-sword',
+        description: 'Предметы, оружие, артефакты',
+        defaults: {
+            type: 'weapon',
+            color: '#7c3aed',
+            bgColor: 'transparent',
+            rarity: 'common'
+        },
+        config: {
+            type: {
+                label: 'Тип предмета',
+                type: 'select',
+                options: [
+                    { value: 'weapon', label: 'Оружие' },
+                    { value: 'armor', label: 'Броня' },
+                    { value: 'potion', label: 'Зелье' },
+                    { value: 'artifact', label: 'Артефакт' },
+                    { value: 'resource', label: 'Ресурс' }
+                ],
+                default: 'weapon'
+            },
+            color: {
+                label: 'Цвет',
+                type: 'color',
+                default: '#7c3aed'
+            },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' }
+                ],
+                default: 'transparent'
+            },
+            rarity: {
+                label: 'Редкость',
+                type: 'select',
+                options: [
+                    { value: 'common', label: 'Обычный' },
+                    { value: 'uncommon', label: 'Необычный' },
+                    { value: 'rare', label: 'Редкий' },
+                    { value: 'epic', label: 'Эпический' },
+                    { value: 'legendary', label: 'Легендарный' }
+                ],
+                default: 'common'
+            }
+        }
+    },
     game_button: {
         name: 'Игровая кнопка',
         icon: 'fas fa-gamepad',
@@ -189,7 +316,7 @@ export const CATEGORIES = {
         defaults: {
             shape: 'rounded',
             color: '#7c3aed',
-            bgColor: '#0a0a0f',
+            bgColor: 'transparent',
             glow: true,
             cornerRadius: 20,
             text: 'PLAY'
@@ -210,6 +337,16 @@ export const CATEGORIES = {
                 label: 'Цвет кнопки',
                 type: 'color',
                 default: '#7c3aed'
+            },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' },
+                    { value: 'gradient', label: 'Градиент' }
+                ],
+                default: 'transparent'
             },
             text: {
                 label: 'Текст',
@@ -237,10 +374,11 @@ export const CATEGORIES = {
         defaults: {
             shape: 'circle',
             color: '#7c3aed',
-            bgColor: '#0a0a0f',
+            bgColor: 'transparent',
             hasBorder: true,
             borderColor: '#ffffff',
-            details: ['eyes', 'mouth']
+            eyes: 'anime',
+            mouth: 'smile'
         },
         config: {
             shape: {
@@ -249,7 +387,8 @@ export const CATEGORIES = {
                 options: [
                     { value: 'circle', label: 'Круг' },
                     { value: 'square', label: 'Квадрат' },
-                    { value: 'hexagon', label: 'Шестиугольник' }
+                    { value: 'hexagon', label: 'Шестиугольник' },
+                    { value: 'diamond', label: 'Ромб' }
                 ],
                 default: 'circle'
             },
@@ -259,9 +398,14 @@ export const CATEGORIES = {
                 default: '#7c3aed'
             },
             bgColor: {
-                label: 'Цвет фона',
-                type: 'color',
-                default: '#0a0a0f'
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' },
+                    { value: 'gradient', label: 'Градиент' }
+                ],
+                default: 'transparent'
             },
             hasBorder: {
                 label: 'Рамка',
@@ -272,6 +416,28 @@ export const CATEGORIES = {
                 label: 'Цвет рамки',
                 type: 'color',
                 default: '#ffffff'
+            },
+            eyes: {
+                label: 'Глаза',
+                type: 'select',
+                options: [
+                    { value: 'anime', label: 'Аниме' },
+                    { value: 'realistic', label: 'Реалистичные' },
+                    { value: 'cartoon', label: 'Мультяшные' },
+                    { value: 'simple', label: 'Простые' }
+                ],
+                default: 'anime'
+            },
+            mouth: {
+                label: 'Рот',
+                type: 'select',
+                options: [
+                    { value: 'smile', label: 'Улыбка' },
+                    { value: 'open', label: 'Открытый' },
+                    { value: 'neutral', label: 'Нейтральный' },
+                    { value: 'none', label: 'Без рта' }
+                ],
+                default: 'smile'
             }
         }
     },
@@ -282,7 +448,7 @@ export const CATEGORIES = {
         defaults: {
             shape: 'shield',
             color: '#7c3aed',
-            bgColor: '#0a0a0f',
+            bgColor: 'transparent',
             stars: 3,
             hasRibbon: true
         },
@@ -302,6 +468,15 @@ export const CATEGORIES = {
                 label: 'Основной цвет',
                 type: 'color',
                 default: '#7c3aed'
+            },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' }
+                ],
+                default: 'transparent'
             },
             stars: {
                 label: 'Количество звезд',
@@ -324,7 +499,7 @@ export const CATEGORIES = {
         defaults: {
             style: 'neon',
             color: '#7c3aed',
-            bgColor: '#0a0a0f',
+            bgColor: 'transparent',
             healthBar: true
         },
         config: {
@@ -334,7 +509,8 @@ export const CATEGORIES = {
                 options: [
                     { value: 'neon', label: 'Неон' },
                     { value: 'flat', label: 'Плоский' },
-                    { value: 'futuristic', label: 'Футуристичный' }
+                    { value: 'futuristic', label: 'Футуристичный' },
+                    { value: 'minimal', label: 'Минималистичный' }
                 ],
                 default: 'neon'
             },
@@ -342,6 +518,15 @@ export const CATEGORIES = {
                 label: 'Цвет',
                 type: 'color',
                 default: '#7c3aed'
+            },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' }
+                ],
+                default: 'transparent'
             },
             healthBar: {
                 label: 'Полоса здоровья',
@@ -387,7 +572,13 @@ export const CATEGORIES = {
             },
             bgColor: {
                 label: 'Фон',
-                type: 'color',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' },
+                    { value: '#ffffff', label: 'Белый' },
+                    { value: 'gradient', label: 'Градиент' }
+                ],
                 default: 'transparent'
             }
         }
@@ -399,7 +590,7 @@ export const CATEGORIES = {
         defaults: {
             shape: 'shield',
             color: '#7c3aed',
-            bgColor: '#0a0a0f',
+            bgColor: 'transparent',
             borderWidth: 4
         },
         config: {
@@ -417,6 +608,15 @@ export const CATEGORIES = {
                 label: 'Цвет',
                 type: 'color',
                 default: '#7c3aed'
+            },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' }
+                ],
+                default: 'transparent'
             },
             borderWidth: {
                 label: 'Толщина рамки',
@@ -462,6 +662,16 @@ export const CATEGORIES = {
                 min: 16,
                 max: 128,
                 default: 64
+            },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' },
+                    { value: '#ffffff', label: 'Белый' }
+                ],
+                default: 'transparent'
             }
         }
     },
@@ -472,6 +682,7 @@ export const CATEGORIES = {
         defaults: {
             style: 'flat',
             color: '#7c3aed',
+            bgColor: 'transparent',
             text: 'Button',
             cornerRadius: 8
         },
@@ -483,7 +694,8 @@ export const CATEGORIES = {
                     { value: 'flat', label: 'Плоская' },
                     { value: 'gradient', label: 'Градиентная' },
                     { value: 'material', label: 'Material' },
-                    { value: 'neon', label: 'Неоновая' }
+                    { value: 'neon', label: 'Неоновая' },
+                    { value: 'minimal', label: 'Минималистичная' }
                 ],
                 default: 'flat'
             },
@@ -491,6 +703,16 @@ export const CATEGORIES = {
                 label: 'Цвет',
                 type: 'color',
                 default: '#7c3aed'
+            },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' },
+                    { value: '#ffffff', label: 'Белый' }
+                ],
+                default: 'transparent'
             },
             text: {
                 label: 'Текст',
@@ -515,8 +737,10 @@ export const CATEGORIES = {
         defaults: {
             style: 'vibrant',
             color: '#7c3aed',
-            bgColor: '#0a0a0f',
-            hasGlow: false
+            bgColor: 'transparent',
+            hasGlow: false,
+            eyes: 'simple',
+            mouth: 'smile'
         },
         config: {
             style: {
@@ -526,7 +750,8 @@ export const CATEGORIES = {
                     { value: 'vibrant', label: 'Яркий' },
                     { value: 'pastel', label: 'Пастельный' },
                     { value: 'minimal', label: 'Минималистичный' },
-                    { value: 'cartoon', label: 'Мультяшный' }
+                    { value: 'cartoon', label: 'Мультяшный' },
+                    { value: 'watercolor', label: 'Акварель' }
                 ],
                 default: 'vibrant'
             },
@@ -535,10 +760,40 @@ export const CATEGORIES = {
                 type: 'color',
                 default: '#7c3aed'
             },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' },
+                    { value: 'gradient', label: 'Градиент' }
+                ],
+                default: 'transparent'
+            },
             hasGlow: {
                 label: 'Свечение',
                 type: 'checkbox',
                 default: false
+            },
+            eyes: {
+                label: 'Глаза',
+                type: 'select',
+                options: [
+                    { value: 'simple', label: 'Простые' },
+                    { value: 'anime', label: 'Аниме' },
+                    { value: 'cartoon', label: 'Мультяшные' }
+                ],
+                default: 'simple'
+            },
+            mouth: {
+                label: 'Рот',
+                type: 'select',
+                options: [
+                    { value: 'smile', label: 'Улыбка' },
+                    { value: 'neutral', label: 'Нейтральный' },
+                    { value: 'none', label: 'Без рта' }
+                ],
+                default: 'smile'
             }
         }
     },
@@ -559,7 +814,8 @@ export const CATEGORIES = {
                 options: [
                     { value: 'cartoon', label: 'Мультяшный' },
                     { value: 'minimal', label: 'Минималистичный' },
-                    { value: 'vibrant', label: 'Яркий' }
+                    { value: 'vibrant', label: 'Яркий' },
+                    { value: 'watercolor', label: 'Акварель' }
                 ],
                 default: 'cartoon'
             },
@@ -567,6 +823,15 @@ export const CATEGORIES = {
                 label: 'Цвет',
                 type: 'color',
                 default: '#7c3aed'
+            },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' }
+                ],
+                default: 'transparent'
             },
             hasOutline: {
                 label: 'Контур',
@@ -585,7 +850,8 @@ export const CATEGORIES = {
             count: 4,
             style: 'flat',
             color: '#7c3aed',
-            size: 48
+            size: 48,
+            bgColor: 'transparent'
         },
         config: {
             count: {
@@ -601,7 +867,8 @@ export const CATEGORIES = {
                 options: [
                     { value: 'flat', label: 'Flat' },
                     { value: 'outline', label: 'Контур' },
-                    { value: 'gradient', label: 'Градиент' }
+                    { value: 'gradient', label: 'Градиент' },
+                    { value: 'minimal', label: 'Минимализм' }
                 ],
                 default: 'flat'
             },
@@ -616,6 +883,16 @@ export const CATEGORIES = {
                 min: 24,
                 max: 96,
                 default: 48
+            },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' },
+                    { value: '#ffffff', label: 'Белый' }
+                ],
+                default: 'transparent'
             }
         }
     },
@@ -626,7 +903,7 @@ export const CATEGORIES = {
         defaults: {
             type: 'chart',
             color: '#7c3aed',
-            bgColor: '#0a0a0f',
+            bgColor: 'transparent',
             dataPoints: 5
         },
         config: {
@@ -645,6 +922,16 @@ export const CATEGORIES = {
                 label: 'Основной цвет',
                 type: 'color',
                 default: '#7c3aed'
+            },
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' },
+                    { value: '#ffffff', label: 'Белый' }
+                ],
+                default: 'transparent'
             },
             dataPoints: {
                 label: 'Количество точек',
