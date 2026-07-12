@@ -1,5 +1,5 @@
 // ============================================
-// ГЕНЕРАТОР v4.0 - С поддержкой CSV и расширенными возможностями
+// ГЕНЕРАТОР v3.0 - С поддержкой CSV и расширенными возможностями
 // ============================================
 
 import { DOMAINS, STYLES, CATEGORIES } from './presets.js';
@@ -17,7 +17,29 @@ export class Generator {
         this.cache = new Map();
         
         // Загружаем встроенные фигуры как резерв
-        this.shapeLibrary.loadDefaultShapes();
+        // Убедимся, что метод существует
+        if (typeof this.shapeLibrary.loadDefaultShapes === 'function') {
+            this.shapeLibrary.loadDefaultShapes();
+        } else {
+            console.warn('ShapeLibrary.loadDefaultShapes not available, using fallback');
+            // Ручная загрузка базовых фигур
+            this.loadFallbackShapes();
+        }
+    }
+
+    // Ручная загрузка фигур на случай, если метод недоступен
+    loadFallbackShapes() {
+        const defaultShapes = [
+            { name: 'circle', type: 'basic', path: 'M0,0 a1,1 0 1,0 2,0 a1,1 0 1,0 -2,0', defaultColor: '#7c3aed', tags: 'basic,geometric' },
+            { name: 'square', type: 'basic', path: 'M-1,-1 L1,-1 L1,1 L-1,1 Z', defaultColor: '#3b82f6', tags: 'basic,geometric' },
+            { name: 'triangle', type: 'basic', path: 'M0,-1 L-1,1 L1,1 Z', defaultColor: '#ef4444', tags: 'basic,geometric' },
+            { name: 'star', type: 'basic', path: 'M0,-1 L0.3,-0.3 L1,-0.3 L0.4,0.1 L0.6,0.8 L0,0.4 L-0.6,0.8 L-0.4,0.1 L-1,-0.3 L-0.3,-0.3', defaultColor: '#f59e0b', tags: 'basic,geometric' },
+            { name: 'hexagon', type: 'basic', path: 'M0,-1 L0.866,-0.5 L0.866,0.5 L0,1 L-0.866,0.5 L-0.866,-0.5 Z', defaultColor: '#10b981', tags: 'basic,geometric' }
+        ];
+        
+        this.shapeLibrary.shapes = this.shapeLibrary.shapes || { basic: [], organic: [], geometric: [] };
+        this.shapeLibrary.shapes.basic = defaultShapes;
+        this.shapeLibrary.loaded = true;
     }
 
     generate(params) {
@@ -131,13 +153,23 @@ export class Generator {
                 this.drawGlow(ctx, layer, width, height);
                 break;
             case 'star':
-                this.shapeLibrary.drawStar(ctx, layer);
+                if (typeof this.shapeLibrary.drawStar === 'function') {
+                    this.shapeLibrary.drawStar(ctx, layer);
+                } else {
+                    this.drawStarFallback(ctx, layer);
+                }
                 break;
             case 'healthbar':
                 this.drawHealthBar(ctx, layer);
                 break;
             case 'bar':
                 this.drawBar(ctx, layer);
+                break;
+            case 'stroke':
+                this.drawStroke(ctx, layer, cx, cy);
+                break;
+            case 'dot':
+                this.drawDot(ctx, layer);
                 break;
             default:
                 // Игнорируем неизвестные слои
@@ -281,6 +313,52 @@ export class Generator {
         ctx.globalAlpha = bar.opacity || 0.8;
         ctx.fillStyle = bar.color || '#7c3aed';
         ctx.fillRect(bar.x - bar.width/2, bar.y, bar.width, bar.height);
+        ctx.restore();
+    }
+
+    drawStroke(ctx, stroke, cx, cy) {
+        ctx.save();
+        ctx.strokeStyle = stroke.color || '#ffffff';
+        ctx.lineWidth = stroke.width || 3;
+        ctx.beginPath();
+        ctx.arc(stroke.x || cx, stroke.y || cy, (stroke.size || 180) / 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    drawDot(ctx, dot) {
+        ctx.save();
+        ctx.globalAlpha = dot.opacity || 0.8;
+        ctx.fillStyle = dot.color || '#7c3aed';
+        ctx.shadowColor = dot.color + '60';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, dot.size || 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    drawStarFallback(ctx, params) {
+        const { x, y, size, points, color } = params;
+        const outerRadius = size || 20;
+        const innerRadius = outerRadius * 0.4;
+        const spikes = points || 5;
+        
+        ctx.save();
+        ctx.translate(x || 0, y || 0);
+        ctx.fillStyle = color || '#f59e0b';
+        ctx.shadowColor = (color || '#f59e0b') + '60';
+        ctx.shadowBlur = 15;
+        
+        ctx.beginPath();
+        for (let i = 0; i < spikes * 2; i++) {
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const angle = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+            if (i === 0) ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+            else ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+        }
+        ctx.closePath();
+        ctx.fill();
         ctx.restore();
     }
 
