@@ -1,0 +1,6 @@
+name,type,defaultColor,description
+dots,pattern,#7c3aed,Точечный паттерн
+grid,pattern,#3b82f6,Сетка
+diagonal,pattern,#ef4444,Диагональные линии
+noise,pattern,#10b981,Шум
+gradient,pattern,#8b5cf6,Градиент

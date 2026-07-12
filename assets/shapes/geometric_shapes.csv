@@ -1,0 +1,6 @@
+name,type,path,defaultColor,tags
+octagon,geometric,"M-0.7,-1 L0.7,-1 L1,-0.7 L1,0.7 L0.7,1 L-0.7,1 L-1,0.7 L-1,-0.7 Z",#8b5cf6,geometric
+cross,geometric,"M-0.3,-1 L0.3,-1 L0.3,-0.3 L1,-0.3 L1,0.3 L0.3,0.3 L0.3,1 L-0.3,1 L-0.3,0.3 L-1,0.3 L-1,-0.3 L-0.3,-0.3 Z",#3b82f6,geometric
+arrow,geometric,"M-0.5,-0.5 L0.5,-0.5 L0.5,-1 L1,0 L0.5,1 L0.5,0.5 L-0.5,0.5 Z",#f59e0b,geometric
+chevron,geometric,"M-1,-0.5 L0,-1 L1,-0.5 L0.7,0 L0,0.7 L-0.7,0 Z",#10b981,geometric
+pentagon,geometric,"M0,-1 L0.951,-0.309 L0.588,0.809 L-0.588,0.809 L-0.951,-0.309 Z",#ec4899,geometric
