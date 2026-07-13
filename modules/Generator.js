@@ -1,12 +1,15 @@
-// ============================================
-// ГЕНЕРАТОР v3.0 - С поддержкой CSV и расширенными возможностями
-// ============================================
+// =============================================================
+// ГЕНЕРАТОР v0.0.3 - Полная дифференциация стилей
+//           v0.0.4 - Расширение функционала тематик
+// =============================================================
 
 import { DOMAINS, STYLES, CATEGORIES } from './presets.js';
 import { ShapeLibrary } from './ShapeLibrary.js';
 import { ColorPalette } from './ColorPalette.js';
 import { TextureGenerator } from './TextureGenerator.js';
 import { IconComposer } from './IconComposer.js';
+import { PixelGenerator } from './PixelGenerator.js';
+import { CharacterGenerator } from './CharacterGenerator.js';
 
 export class Generator {
     constructor() {
@@ -14,20 +17,19 @@ export class Generator {
         this.colorPalette = new ColorPalette();
         this.textureGenerator = new TextureGenerator();
         this.iconComposer = new IconComposer();
+        this.pixelGenerator = new PixelGenerator();
+        this.characterGenerator = new CharacterGenerator();
         this.cache = new Map();
         
         // Загружаем встроенные фигуры как резерв
-        // Убедимся, что метод существует
         if (typeof this.shapeLibrary.loadDefaultShapes === 'function') {
             this.shapeLibrary.loadDefaultShapes();
         } else {
             console.warn('ShapeLibrary.loadDefaultShapes not available, using fallback');
-            // Ручная загрузка базовых фигур
             this.loadFallbackShapes();
         }
     }
 
-    // Ручная загрузка фигур на случай, если метод недоступен
     loadFallbackShapes() {
         const defaultShapes = [
             { name: 'circle', type: 'basic', path: 'M0,0 a1,1 0 1,0 2,0 a1,1 0 1,0 -2,0', defaultColor: '#7c3aed', tags: 'basic,geometric' },
@@ -45,48 +47,95 @@ export class Generator {
     generate(params) {
         const { domain, style, category, config } = params;
         
-        // Получаем данные о категории
         const categoryData = CATEGORIES[category];
         if (!categoryData) {
             return this.generateFallback(config);
         }
 
-        // Получаем данные о стиле
         const styleData = STYLES[style] || STYLES.minimal;
-
-        // Получаем цветовую палитру
         const palette = this.colorPalette.getPalette(style, domain);
 
-        // Создаем иконку через композитор
-        const icon = this.iconComposer.compose({
-            category: category,
-            style: style,
-            domain: domain,
-            config: config,
-            palette: palette,
-            styleData: styleData
-        });
+        let icon = null;
 
-        // Применяем финальные эффекты
-        this.applyEffects(icon, config);
+        // Специальные генераторы для разных стилей и категорий
+        if (style === 'pixel' && (category === 'game_avatar' || category === 'avatar' || category === 'game_character')) {
+            icon = this.pixelGenerator.generateAvatar({
+                color: config.color || palette.primary || '#7c3aed',
+                size: config.size || 16,
+                shape: config.shape || 'human',
+                skinColor: config.skinColor || '#f5d0b8',
+                accessories: this.getAccessories(config)
+            });
+        }
+        else if (category === 'game_character' || category === 'game_avatar') {
+            icon = this.characterGenerator.generate({
+                style: style,
+                color: config.color || palette.primary || '#7c3aed',
+                skinColor: config.skinColor || '#f5d0b8',
+                eyes: config.eyes || 'simple',
+                mouth: config.mouth || 'smile',
+                hair: config.hair || 'short',
+                accessories: this.getAccessories(config),
+                hasWeapon: config.hasWeapon || false,
+                hasArmor: config.hasArmor || false
+            });
+        }
+        else {
+            icon = this.iconComposer.compose({
+                category: category,
+                style: style,
+                domain: domain,
+                config: config,
+                palette: palette,
+                styleData: styleData
+            });
+        }
+
+        // Применяем эффекты в зависимости от стиля
+        this.applyStyleEffects(icon, style, config);
 
         return icon;
     }
 
-    applyEffects(icon, config) {
-        // Добавляем тени и свечения в зависимости от конфигурации
-        if (config.glow) {
-            icon.effects = icon.effects || [];
+    getAccessories(config) {
+        const accessories = [];
+        if (config.hasGlasses) accessories.push('glasses');
+        if (config.hasHat) accessories.push('hat');
+        if (config.hasCape) accessories.push('cape');
+        if (config.hasWeapon) accessories.push('weapon');
+        return accessories;
+    }
+
+    applyStyleEffects(icon, style, config) {
+        if (!icon.effects) icon.effects = [];
+
+        if (style === 'neon' && config.glow) {
             icon.effects.push({
                 type: 'glow',
                 color: config.color || '#7c3aed',
-                intensity: 0.4
+                intensity: 0.6,
+                size: 250
             });
         }
 
-        // Добавляем текстуру если нужно
-        if (config.texture) {
-            icon.texture = this.textureGenerator.generate(config.texture);
+        if (style === 'vintage') {
+            icon.effects.push({
+                type: 'vintage',
+                intensity: 0.3
+            });
+        }
+
+        if (style === 'cyberpunk') {
+            icon.effects.push({
+                type: 'glow',
+                color: '#ff00ff',
+                intensity: 0.5,
+                size: 200
+            });
+            icon.effects.push({
+                type: 'scanline',
+                intensity: 0.2
+            });
         }
 
         return icon;
@@ -112,7 +161,6 @@ export class Generator {
         
         ctx.clearRect(0, 0, width, height);
         
-        // Отрисовываем каждый слой
         data.layers.forEach(layer => {
             if (Array.isArray(layer)) {
                 layer.forEach(item => this.drawLayer(ctx, item, width, height));
@@ -121,7 +169,6 @@ export class Generator {
             }
         });
 
-        // Применяем эффекты
         if (data.effects) {
             data.effects.forEach(effect => {
                 this.applyEffect(ctx, effect, width, height);
@@ -171,8 +218,10 @@ export class Generator {
             case 'dot':
                 this.drawDot(ctx, layer);
                 break;
+            case 'pixel_avatar':
+                this.drawPixelAvatar(ctx, layer);
+                break;
             default:
-                // Игнорируем неизвестные слои
                 break;
         }
     }
@@ -204,7 +253,6 @@ export class Generator {
         ctx.shadowBlur = 20;
         ctx.fillStyle = color;
 
-        // Рисуем скругленный прямоугольник
         ctx.beginPath();
         ctx.moveTo(x - w/2 + r, y - h/2);
         ctx.lineTo(x + w/2 - r, y - h/2);
@@ -218,7 +266,6 @@ export class Generator {
         ctx.closePath();
         ctx.fill();
 
-        // Текст
         if (button.text) {
             ctx.shadowColor = 'transparent';
             ctx.fillStyle = '#ffffff';
@@ -240,7 +287,6 @@ export class Generator {
         ctx.shadowBlur = 20;
         ctx.fillStyle = color;
 
-        // Основная форма
         this.shapeLibrary.drawShape(ctx, {
             shape: avatar.shape || 'circle',
             size: size,
@@ -289,18 +335,15 @@ export class Generator {
         const color = healthbar.color || '#7c3aed';
         const value = healthbar.value || 0.7;
 
-        // Фон полосы
         ctx.fillStyle = '#333';
         ctx.fillRect(x - w/2, y - h/2, w, h);
         
-        // Заполненная часть
         const grad = ctx.createLinearGradient(x - w/2, y - h/2, x - w/2 + w * value, y - h/2);
         grad.addColorStop(0, color);
         grad.addColorStop(1, color + '80');
         ctx.fillStyle = grad;
         ctx.fillRect(x - w/2, y - h/2, w * value, h);
 
-        // Рамка
         ctx.strokeStyle = '#666';
         ctx.lineWidth = 1;
         ctx.strokeRect(x - w/2, y - h/2, w, h);
@@ -338,6 +381,28 @@ export class Generator {
         ctx.restore();
     }
 
+    drawPixelAvatar(ctx, layer) {
+        // Отрисовка пиксельного аватара
+        const { pixels, pixelSize, size } = layer;
+        if (!pixels) return;
+
+        ctx.save();
+        const totalSize = pixelSize * size;
+        const offsetX = (500 - totalSize) / 2;
+        const offsetY = (500 - totalSize) / 2;
+
+        for (let y = 0; y < pixels.length; y++) {
+            for (let x = 0; x < pixels[y].length; x++) {
+                const color = pixels[y][x];
+                if (color && color !== 0 && color !== 'transparent') {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(offsetX + x * pixelSize, offsetY + y * pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+        ctx.restore();
+    }
+
     drawStarFallback(ctx, params) {
         const { x, y, size, points, color } = params;
         const outerRadius = size || 20;
@@ -367,13 +432,33 @@ export class Generator {
             case 'glow':
                 this.drawGlow(ctx, effect, width, height);
                 break;
-            case 'shadow':
-                // Применение тени
+            case 'vintage':
+                this.applyVintageEffect(ctx, width, height, effect.intensity);
                 break;
-            case 'blur':
-                // Применение размытия
+            case 'scanline':
+                this.applyScanlineEffect(ctx, width, height, effect.intensity);
                 break;
         }
+    }
+
+    applyVintageEffect(ctx, width, height, intensity = 0.3) {
+        // Эффект старения
+        ctx.save();
+        ctx.globalAlpha = intensity * 0.2;
+        ctx.fillStyle = '#8b7355';
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+    }
+
+    applyScanlineEffect(ctx, width, height, intensity = 0.2) {
+        // Эффект сканирующих линий
+        ctx.save();
+        ctx.globalAlpha = intensity;
+        for (let y = 0; y < height; y += 4) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, y, width, 1);
+        }
+        ctx.restore();
     }
 
     // ===== ЭКСПОРТ =====
@@ -440,6 +525,24 @@ export class Generator {
         }
         if (item.type === 'text') {
             return `<text x="${item.x}" y="${item.y}" fill="${item.color}" font-size="${item.size}" font-weight="${item.weight}" text-anchor="middle" dominant-baseline="middle">${item.text}</text>`;
+        }
+        if (item.type === 'pixel_avatar') {
+            // Для пиксельных аватаров SVG экспорт
+            let svg = '';
+            const { pixels, pixelSize, size: avatarSize } = item;
+            if (!pixels) return '';
+            
+            for (let y = 0; y < pixels.length; y++) {
+                for (let x = 0; x < pixels[y].length; x++) {
+                    const color = pixels[y][x];
+                    if (color && color !== 0 && color !== 'transparent') {
+                        const px = x * pixelSize + (size - avatarSize * pixelSize) / 2;
+                        const py = y * pixelSize + (size - avatarSize * pixelSize) / 2;
+                        svg += `<rect x="${px}" y="${py}" width="${pixelSize}" height="${pixelSize}" fill="${color}" />`;
+                    }
+                }
+            }
+            return svg;
         }
         return '';
     }

@@ -13,6 +13,7 @@ body {
     overflow: hidden;
 }
 
+/* ===== ТЕМЫ ===== */
 :root {
     --bg-primary: #0f0f1a;
     --bg-secondary: #1a1a2e;
@@ -20,12 +21,28 @@ body {
     --border-color: #2a2a4a;
     --accent: #7c3aed;
     --accent-glow: #7c3aed80;
+    --accent-light: #8b5cf6;
+    --accent-dark: #6d28d9;
     --text-primary: #f0f0ff;
     --text-secondary: #a0a0c0;
     --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
+}
+
+[data-theme="orange"] {
+    --accent: #f97316;
+    --accent-glow: #f9731680;
+    --accent-light: #fb923c;
+    --accent-dark: #ea580c;
+}
+
+[data-theme="green"] {
+    --accent: #22c55e;
+    --accent-glow: #22c55e80;
+    --accent-light: #4ade80;
+    --accent-dark: #16a34a;
 }
 
 /* ===== SCROLLBAR ===== */
@@ -448,6 +465,53 @@ body {
     border-radius: 16px;
     border: 1px dashed var(--border-color);
 }
+
+/* ===== PROFILE ===== */
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.saved-icons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.saved-item {
+    aspect-ratio: 1;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+}
+.saved-item:hover { border-color: var(--accent); transform: scale(1.05); }
+.saved-item canvas { width: 100%; height: 100%; object-fit: contain; }
+.saved-item .remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: var(--danger);
+    border: none;
+    color: #fff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    cursor: pointer;
+    opacity: 0;
+    transition: 0.2s;
+}
+.saved-item:hover .remove-btn { opacity: 1; }
 
 /* ===== SETTINGS ===== */
 .settings-group {
