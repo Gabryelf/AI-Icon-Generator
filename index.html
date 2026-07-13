@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neural Icon Forge v3.0 — Генератор иконок</title>
+    <title>Neural Icon Forge — Генератор иконок</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -13,7 +13,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <i class="fas fa-brain"></i>
-                <span>IconForge v3.0</span>
+                <span>IconForge v3.1</span>
             </div>
             <nav class="nav-menu">
                 <button class="nav-item active" data-tab="dashboard">
@@ -24,6 +24,9 @@
                 </button>
                 <button class="nav-item" data-tab="history">
                     <i class="fas fa-clock-rotate-left"></i> <span>История</span>
+                </button>
+                <button class="nav-item" data-tab="profile">
+                    <i class="fas fa-user"></i> <span>Профиль</span>
                 </button>
                 <button class="nav-item" data-tab="settings">
                     <i class="fas fa-sliders"></i> <span>Настройки</span>
@@ -51,8 +54,9 @@
                 <section id="page-dashboard" class="page active-page">
                     <div class="stats-grid">
                         <div class="stat-card"><i class="fas fa-icons"></i><span id="stat-total">0</span><p>Сгенерировано</p></div>
-                        <div class="stat-card"><i class="fas fa-palette"></i><span id="stat-styles">8</span><p>Стилей в библиотеке</p></div>
-                        <div class="stat-card"><i class="fas fa-microchip"></i><span>v3.0</span><p>Версия ядра</p></div>
+                        <div class="stat-card"><i class="fas fa-palette"></i><span id="stat-styles">18</span><p>Стилей в библиотеке</p></div>
+                        <div class="stat-card"><i class="fas fa-microchip"></i><span>v3.1</span><p>Версия ядра</p></div>
+                        <div class="stat-card"><i class="fas fa-star"></i><span id="stat-saved">0</span><p>Сохранено</p></div>
                     </div>
                     <div class="recent-section">
                         <h3>Последние иконки</h3>
@@ -134,6 +138,9 @@
                                         <button id="randomize-btn" class="secondary-btn">
                                             <i class="fas fa-dice"></i> Рандомизировать
                                         </button>
+                                        <button id="save-to-profile-btn" class="secondary-btn">
+                                            <i class="fas fa-bookmark"></i> Сохранить
+                                        </button>
                                         <button class="back-btn" data-back="step-category">← Назад</button>
                                     </div>
                                 </div>
@@ -164,24 +171,53 @@
                     </div>
                 </section>
 
+                <!-- ПРОФИЛЬ -->
+                <section id="page-profile" class="page">
+                    <h3>Мой профиль</h3>
+                    <div class="profile-stats">
+                        <div class="stat-card"><i class="fas fa-icons"></i><span id="profile-total">0</span><p>Всего иконок</p></div>
+                        <div class="stat-card"><i class="fas fa-star"></i><span id="profile-saved">0</span><p>Сохранено</p></div>
+                        <div class="stat-card"><i class="fas fa-clock"></i><span id="profile-last">-</span><p>Последняя активность</p></div>
+                    </div>
+                    <div class="saved-icons-grid" id="saved-icons-grid">
+                        <div class="empty-state">Нет сохраненных иконок</div>
+                    </div>
+                    <button id="export-all-btn" class="primary-btn" style="margin-top:20px;">
+                        <i class="fas fa-file-archive"></i> Экспортировать все
+                    </button>
+                </section>
+
                 <!-- НАСТРОЙКИ -->
                 <section id="page-settings" class="page">
-                    <h3>Настройки профиля</h3>
+                    <h3>Настройки</h3>
+                    
                     <div class="settings-group">
                         <label>Имя пользователя</label>
                         <input type="text" id="username-input" placeholder="Введите имя...">
                     </div>
+                    
                     <div class="settings-group">
                         <label>Тема интерфейса</label>
-                        <select id="theme-ui-select">
-                            <option value="dark">Темная (по умолчанию)</option>
-                            <option value="light">Светлая</option>
+                        <select id="theme-select">
+                            <option value="purple">Фиолетовая (по умолчанию)</option>
+                            <option value="orange">Оранжевая</option>
+                            <option value="green">Зеленая</option>
                         </select>
                     </div>
+                    
                     <div class="settings-group">
                         <label>Авто-генерация при изменении</label>
                         <input type="checkbox" id="auto-generate" checked>
                         <small style="color:var(--text-secondary);display:block;margin-top:4px;">Автоматически генерировать при изменении параметров</small>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <label>Качество экспорта</label>
+                        <select id="export-quality">
+                            <option value="512">512x512 (Высокое)</option>
+                            <option value="256">256x256 (Среднее)</option>
+                            <option value="128">128x128 (Низкое)</option>
+                        </select>
                     </div>
                 </section>
             </div>

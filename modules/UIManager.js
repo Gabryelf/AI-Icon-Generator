@@ -1,18 +1,20 @@
 // ============================================
-// UI МЕНЕДЖЕР - Рендеринг и обновление DOM
+// UI МЕНЕДЖЕР v4.0 - Рендеринг и обновление DOM
 // ============================================
 
 export class UIManager {
     constructor() {
         this.statsEl = {
             total: document.getElementById('stat-total'),
-            styles: document.getElementById('stat-styles')
+            styles: document.getElementById('stat-styles'),
+            saved: document.getElementById('stat-saved')
         };
     }
 
     updateStats(stats) {
         if (this.statsEl.total) this.statsEl.total.textContent = stats?.total || 0;
-        if (this.statsEl.styles) this.statsEl.styles.textContent = stats?.styles || 8;
+        if (this.statsEl.styles) this.statsEl.styles.textContent = stats?.styles || 18;
+        if (this.statsEl.saved) this.statsEl.saved.textContent = stats?.saved || 0;
     }
 
     renderHistory(history) {
@@ -46,7 +48,6 @@ export class UIManager {
             `;
         }).join('');
 
-        // Отрисовываем миниатюры
         container.querySelectorAll('.history-item canvas').forEach(canvas => {
             try {
                 const data = JSON.parse(decodeURIComponent(canvas.dataset.icon));

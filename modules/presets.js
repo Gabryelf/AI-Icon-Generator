@@ -1,6 +1,8 @@
-// ============================================
-// БИБЛИОТЕКА ПРЕСЕТОВ v4.0
-// ============================================
+// ===============================================================
+// БИБЛИОТЕКА ПРЕСЕТОВ - v2.0 Улучшение основных прессетов
+//                     - v3.0 Добавление пиксельных прессетов
+//                     - v4.0 Добавление алгоритмов для скинов
+// ===============================================================
 
 // ДОМЕНЫ (сферы применения)
 export const DOMAINS = {
@@ -8,7 +10,7 @@ export const DOMAINS = {
         name: 'Игры',
         icon: 'fas fa-gamepad',
         description: 'Иконки, кнопки, аватары для игр',
-        styles: ['neon', 'pixel', 'fantasy', 'minimal', 'vibrant', 'cyberpunk'],
+        styles: ['neon', 'pixel', 'fantasy', 'minimal', 'vibrant', 'cyberpunk', 'cartoon'],
         categories: ['game_icon', 'game_button', 'game_avatar', 'game_emblem', 'game_ui', 'game_character', 'game_item']
     },
     branding: {
@@ -29,7 +31,7 @@ export const DOMAINS = {
         name: 'Соцсети',
         icon: 'fas fa-share-alt',
         description: 'Аватары, обложки, стикеры',
-        styles: ['vibrant', 'pastel', 'gradient', 'cartoon', 'minimal', 'watercolor'],
+        styles: ['vibrant', 'pastel', 'gradient', 'cartoon', 'minimal', 'watercolor', 'anime'],
         categories: ['avatar', 'cover', 'sticker', 'reaction', 'badge', 'social_template']
     },
     presentation: {
@@ -76,7 +78,7 @@ export const STYLES = {
     pixel: {
         name: 'Пиксельный',
         icon: 'fas fa-th',
-        description: 'Ретро-пиксельная графика'
+        description: 'Ретро-пиксельная графика, 16x16 спрайты'
     },
     fantasy: {
         name: 'Фэнтези',
@@ -132,6 +134,11 @@ export const STYLES = {
         name: 'Low Poly',
         icon: 'fas fa-cube',
         description: 'Полигональный стиль'
+    },
+    anime: {
+        name: 'Аниме',
+        icon: 'fas fa-heart',
+        description: 'Японский стиль, большие глаза'
     }
 };
 
@@ -202,7 +209,7 @@ export const CATEGORIES = {
             complexity: {
                 label: 'Детализация',
                 type: 'range',
-                min: 1,
+                min: 0,
                 max: 10,
                 default: 5
             }
@@ -211,13 +218,19 @@ export const CATEGORIES = {
     game_character: {
         name: 'Игровой персонаж',
         icon: 'fas fa-user-astronaut',
-        description: 'Персонажи для игр',
+        description: 'Персонажи для игр в разных стилях',
         defaults: {
             style: 'fantasy',
             color: '#7c3aed',
+            skinColor: '#f5d0b8',
+            eyes: 'simple',
+            mouth: 'smile',
+            hair: 'short',
             bgColor: 'transparent',
             hasWeapon: false,
-            hasArmor: false
+            hasArmor: false,
+            hasGlasses: false,
+            hasHat: false
         },
         config: {
             style: {
@@ -225,9 +238,10 @@ export const CATEGORIES = {
                 type: 'select',
                 options: [
                     { value: 'fantasy', label: 'Фэнтези' },
-                    { value: 'sci-fi', label: 'Sci-Fi' },
+                    { value: 'sciFi', label: 'Sci-Fi' },
                     { value: 'cartoon', label: 'Мультяшный' },
-                    { value: 'realistic', label: 'Реалистичный' }
+                    { value: 'realistic', label: 'Реалистичный' },
+                    { value: 'anime', label: 'Аниме' }
                 ],
                 default: 'fantasy'
             },
@@ -235,6 +249,48 @@ export const CATEGORIES = {
                 label: 'Основной цвет',
                 type: 'color',
                 default: '#7c3aed'
+            },
+            skinColor: {
+                label: 'Цвет кожи',
+                type: 'color',
+                default: '#f5d0b8'
+            },
+            eyes: {
+                label: 'Глаза',
+                type: 'select',
+                options: [
+                    { value: 'simple', label: 'Простые' },
+                    { value: 'anime', label: 'Аниме' },
+                    { value: 'cartoon', label: 'Мультяшные' },
+                    { value: 'realistic', label: 'Реалистичные' },
+                    { value: 'closed', label: 'Закрытые' }
+                ],
+                default: 'simple'
+            },
+            mouth: {
+                label: 'Рот',
+                type: 'select',
+                options: [
+                    { value: 'smile', label: 'Улыбка' },
+                    { value: 'open', label: 'Открытый' },
+                    { value: 'neutral', label: 'Нейтральный' },
+                    { value: 'happy', label: 'Счастливый' },
+                    { value: 'none', label: 'Без рта' }
+                ],
+                default: 'smile'
+            },
+            hair: {
+                label: 'Прическа',
+                type: 'select',
+                options: [
+                    { value: 'short', label: 'Короткие' },
+                    { value: 'long', label: 'Длинные' },
+                    { value: 'ponytail', label: 'Хвост' },
+                    { value: 'spiky', label: 'Торчком' },
+                    { value: 'curly', label: 'Кудрявые' },
+                    { value: 'bald', label: 'Лысый' }
+                ],
+                default: 'short'
             },
             bgColor: {
                 label: 'Фон',
@@ -253,6 +309,16 @@ export const CATEGORIES = {
             },
             hasArmor: {
                 label: 'Доспехи',
+                type: 'checkbox',
+                default: false
+            },
+            hasGlasses: {
+                label: 'Очки',
+                type: 'checkbox',
+                default: false
+            },
+            hasHat: {
+                label: 'Шляпа',
                 type: 'checkbox',
                 default: false
             }
@@ -370,15 +436,17 @@ export const CATEGORIES = {
     game_avatar: {
         name: 'Игровой аватар',
         icon: 'fas fa-user-astronaut',
-        description: 'Аватары для игровых профилей',
+        description: 'Аватары для игровых профилей (включая пиксельные)',
         defaults: {
             shape: 'circle',
             color: '#7c3aed',
             bgColor: 'transparent',
             hasBorder: true,
             borderColor: '#ffffff',
-            eyes: 'anime',
-            mouth: 'smile'
+            eyes: 'simple',
+            mouth: 'smile',
+            hair: 'short',
+            size: 160
         },
         config: {
             shape: {
@@ -421,12 +489,12 @@ export const CATEGORIES = {
                 label: 'Глаза',
                 type: 'select',
                 options: [
+                    { value: 'simple', label: 'Простые' },
                     { value: 'anime', label: 'Аниме' },
-                    { value: 'realistic', label: 'Реалистичные' },
                     { value: 'cartoon', label: 'Мультяшные' },
-                    { value: 'simple', label: 'Простые' }
+                    { value: 'closed', label: 'Закрытые' }
                 ],
-                default: 'anime'
+                default: 'simple'
             },
             mouth: {
                 label: 'Рот',
@@ -435,9 +503,29 @@ export const CATEGORIES = {
                     { value: 'smile', label: 'Улыбка' },
                     { value: 'open', label: 'Открытый' },
                     { value: 'neutral', label: 'Нейтральный' },
+                    { value: 'happy', label: 'Счастливый' },
                     { value: 'none', label: 'Без рта' }
                 ],
                 default: 'smile'
+            },
+            hair: {
+                label: 'Прическа',
+                type: 'select',
+                options: [
+                    { value: 'short', label: 'Короткие' },
+                    { value: 'long', label: 'Длинные' },
+                    { value: 'ponytail', label: 'Хвост' },
+                    { value: 'spiky', label: 'Торчком' },
+                    { value: 'bald', label: 'Лысый' }
+                ],
+                default: 'short'
+            },
+            size: {
+                label: 'Размер',
+                type: 'range',
+                min: 80,
+                max: 200,
+                default: 160
             }
         }
     },
@@ -481,7 +569,7 @@ export const CATEGORIES = {
             stars: {
                 label: 'Количество звезд',
                 type: 'range',
-                min: 1,
+                min: 0,
                 max: 5,
                 default: 3
             },
@@ -740,7 +828,8 @@ export const CATEGORIES = {
             bgColor: 'transparent',
             hasGlow: false,
             eyes: 'simple',
-            mouth: 'smile'
+            mouth: 'smile',
+            hair: 'short'
         },
         config: {
             style: {
@@ -751,7 +840,8 @@ export const CATEGORIES = {
                     { value: 'pastel', label: 'Пастельный' },
                     { value: 'minimal', label: 'Минималистичный' },
                     { value: 'cartoon', label: 'Мультяшный' },
-                    { value: 'watercolor', label: 'Акварель' }
+                    { value: 'watercolor', label: 'Акварель' },
+                    { value: 'anime', label: 'Аниме' }
                 ],
                 default: 'vibrant'
             },
@@ -781,7 +871,8 @@ export const CATEGORIES = {
                 options: [
                     { value: 'simple', label: 'Простые' },
                     { value: 'anime', label: 'Аниме' },
-                    { value: 'cartoon', label: 'Мультяшные' }
+                    { value: 'cartoon', label: 'Мультяшные' },
+                    { value: 'closed', label: 'Закрытые' }
                 ],
                 default: 'simple'
             },
@@ -791,9 +882,21 @@ export const CATEGORIES = {
                 options: [
                     { value: 'smile', label: 'Улыбка' },
                     { value: 'neutral', label: 'Нейтральный' },
+                    { value: 'happy', label: 'Счастливый' },
                     { value: 'none', label: 'Без рта' }
                 ],
                 default: 'smile'
+            },
+            hair: {
+                label: 'Прическа',
+                type: 'select',
+                options: [
+                    { value: 'short', label: 'Короткие' },
+                    { value: 'long', label: 'Длинные' },
+                    { value: 'ponytail', label: 'Хвост' },
+                    { value: 'bald', label: 'Лысый' }
+                ],
+                default: 'short'
             }
         }
     },
