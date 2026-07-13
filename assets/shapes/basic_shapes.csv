@@ -7,3 +7,25 @@ hexagon,basic,"M0,-1 L0.866,-0.5 L0.866,0.5 L0,1 L-0.866,0.5 L-0.866,-0.5 Z",#10
 diamond,basic,"M0,-1 L1,0 L0,1 L-1,0 Z",#8b5cf6,basic,geometric
 shield,basic,"M0,-1 L1,-0.6 L0.8,0.6 L0,1 L-0.8,0.6 L-1,-0.6 Z",#7c3aed,basic,geometric
 crest,basic,"M0,-1 L0.8,-0.6 L0.6,0.6 L0,1 L-0.6,0.6 L-0.8,-0.6 Z",#d97706,basic,geometric
+octagon,basic,"M-0.7,-1 L0.7,-1 L1,-0.7 L1,0.7 L0.7,1 L-0.7,1 L-1,0.7 L-1,-0.7 Z",#8b5cf6,basic,geometric
+cross,basic,"M-0.3,-1 L0.3,-1 L0.3,-0.3 L1,-0.3 L1,0.3 L0.3,0.3 L0.3,1 L-0.3,1 L-0.3,0.3 L-1,0.3 L-1,-0.3 L-0.3,-0.3 Z",#3b82f6,basic,geometric
+arrow,basic,"M-0.5,-0.5 L0.5,-0.5 L0.5,-1 L1,0 L0.5,1 L0.5,0.5 L-0.5,0.5 Z",#f59e0b,basic,geometric
+chevron,basic,"M-1,-0.5 L0,-1 L1,-0.5 L0.7,0 L0,0.7 L-0.7,0 Z",#10b981,basic,geometric
+pentagon,basic,"M0,-1 L0.951,-0.309 L0.588,0.809 L-0.588,0.809 L-0.951,-0.309 Z",#ec4899,basic,geometric
+crescent,basic,"M0,-1 Q1,-0.5 0.5,0 Q1,0.5 0,1 Q-0.5,0.5 -0.8,0 Q-0.5,-0.5 0,-1",#ffd93d,basic,organic
+clover,basic,"M0,-1 Q-0.8,-0.5 -0.5,0 Q-0.8,0.5 0,1 Q0.8,0.5 0.5,0 Q0.8,-0.5 0,-1",#6bcb77,basic,organic
+spiral,basic,"M0,0 Q0.5,0 0.5,0.5 Q0,0.5 0,0 Q0.4,0 0.4,0.4 Q0,0.4 0,0",#4d96ff,basic,organic
+wave,basic,"M-1,0 Q-0.5,-0.5 0,0 Q0.5,0.5 1,0",#00d2d3,basic,organic
+zigzag,basic,"M-1,0 L-0.5,-0.5 L0,0 L0.5,0.5 L1,0",#f368e0,basic,geometric
+arc,basic,"M-1,0 Q0,-1 1,0",#ff6b6b,basic,organic
+droplet,basic,"M0,-1 Q1,0 0,1 Q-1,0 0,-1",#4d96ff,basic,organic
+flame,basic,"M0,1 Q-0.5,0 -0.3,-0.5 Q0,-1 0.3,-0.5 Q0.5,0 0,1",#ff6b6b,basic,organic
+gear,basic,"M0,-1 Q0.3,-0.8 0.5,-0.5 Q0.8,-0.3 1,0 Q0.8,0.3 0.5,0.5 Q0.3,0.8 0,1 Q-0.3,0.8 -0.5,0.5 Q-0.8,0.3 -1,0 Q-0.8,-0.3 -0.5,-0.5 Q-0.3,-0.8 0,-1",#7c3aed,basic,geometric
+heart,basic,"M0,0.3 Q-1,-0.5 -1,-1.2 Q-1,-1.8 -0.3,-1.8 Q0,-1.8 0,-1.2 Q0,-1.8 0.3,-1.8 Q1,-1.8 1,-1.2 Q1,-0.5 0,0.3",#ef4444,basic,organic
+infinity,basic,"M-0.8,0 Q-1.2,0.5 -0.8,0.8 Q-0.3,1.2 0,0.5 Q0.3,1.2 0.8,0.8 Q1.2,0.5 0.8,0 Q1.2,-0.5 0.8,-0.8 Q0.3,-1.2 0,-0.5 Q-0.3,-1.2 -0.8,-0.8 Q-1.2,-0.5 -0.8,0",#8b5cf6,basic,organic
+knot,basic,"M-0.8,0 Q-0.3,-0.8 0,-0.3 Q0.3,-0.8 0.8,0 Q0.3,0.8 0,0.3 Q-0.3,0.8 -0.8,0",#f59e0b,basic,organic
+loop,basic,"M-0.5,0.5 Q0,1 0.5,0.5 Q1,0 0.5,-0.5 Q0,-1 -0.5,-0.5 Q-1,0 -0.5,0.5",#10b981,basic,organic
+moon,basic,"M0,-1 Q1,-0.5 0.8,0 Q1,0.5 0,1 Q-0.5,0.8 -0.8,0 Q-0.5,-0.8 0,-1",#ffd93d,basic,organic
+sun,basic,"M0,-1 Q0.3,-0.8 0.5,-0.5 Q0.8,-0.3 1,0 Q0.8,0.3 0.5,0.5 Q0.3,0.8 0,1 Q-0.3,0.8 -0.5,0.5 Q-0.8,0.3 -1,0 Q-0.8,-0.3 -0.5,-0.5 Q-0.3,-0.8 0,-1 M0,-0.7 Q0.5,-0.3 0.5,0 Q0.5,0.3 0,0.7 Q-0.5,0.3 -0.5,0 Q-0.5,-0.3 0,-0.7",#ffd93d,basic,geometric
+thunder,basic,"M0.2,-1 L-0.3,-0.3 L0.1,-0.3 L-0.2,0.3 L0.5,-0.5 L0.1,-0.5 L0.5,0.5 L-0.3,0.3 L0.2,-0.3 L-0.1,-0.3 Z",#ffd93d,basic,organic
+yin_yang,basic,"M0,-1 Q-1,0 0,1 Q1,0 0,-1 M0,-0.5 Q-0.5,0 0,0.5 Q0.5,0 0,-0.5 M0,-1 Q-1,0 0,0 Q1,0 0,-1",#1a1a2e,basic,geometric

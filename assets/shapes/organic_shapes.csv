@@ -4,3 +4,18 @@ drop,organic,"M0,-1 Q1,0 0,1 Q-1,0 0,-1",#3b82f6,organic,nature
 cloud,organic,"M-1.2,0.4 Q-1.2,-0.4 -0.6,-0.6 Q-0.4,-1.2 0.2,-1.2 Q0.8,-1.2 1.0,-0.6 Q1.6,-0.4 1.6,0.2 Q1.6,0.6 1.2,0.8 Q0.8,1.2 0.2,1.2 Q-0.4,1.2 -0.8,0.8 Q-1.2,0.6 -1.2,0.4",#9ca3af,organic,nature
 flower,organic,"M0,-1 Q0.5,-0.8 0.8,-0.3 Q1,0.2 0.5,0.5 Q0,0.8 -0.5,0.5 Q-1,0.2 -0.8,-0.3 Q-0.5,-0.8 0,-1",#ec4899,organic,nature
 heart,organic,"M0,0.3 Q-1,-0.5 -1,-1.2 Q-1,-1.8 -0.3,-1.8 Q0,-1.8 0,-1.2 Q0,-1.8 0.3,-1.8 Q1,-1.8 1,-1.2 Q1,-0.5 0,0.3",#ef4444,organic,nature
+vine,organic,"M0,1 Q-0.3,0.5 -0.5,0 Q-0.3,-0.5 0,-1 Q0.3,-0.5 0.5,0 Q0.3,0.5 0,1",#10b981,organic,nature
+feather,organic,"M0,-1 Q0.5,-0.7 1,-0.3 Q0.5,0 0,0.3 Q-0.5,0 -1,-0.3 Q-0.5,-0.7 0,-1",#9ca3af,organic,nature
+shell,organic,"M0,-1 Q0.8,-0.5 1,0 Q0.8,0.5 0,1 Q-0.8,0.5 -1,0 Q-0.8,-0.5 0,-1",#f5cba7,organic,nature
+wave,organic,"M-1,0 Q-0.5,-0.5 0,0 Q0.5,0.5 1,0",#00d2d3,organic,nature
+spiral,organic,"M0,0 Q0.5,0 0.5,0.5 Q0,0.5 0,0 Q0.4,0 0.4,0.4 Q0,0.4 0,0",#4d96ff,organic,nature
+petal,organic,"M0,-0.5 Q0.5,-0.3 0.5,0 Q0.5,0.3 0,0.5 Q-0.5,0.3 -0.5,0 Q-0.5,-0.3 0,-0.5",#ff6b81,organic,nature
+mushroom,organic,"M-0.3,-0.5 L0.3,-0.5 L0.3,-1 L-0.3,-1 Z M-0.6,0 L0.6,0 L0.4,0.5 L-0.4,0.5 Z",#e8a87c,organic,nature
+tree,organic,"M0,-1 L-0.2,-0.5 L0.2,-0.5 Z M-0.5,0 L0.5,0 L0.3,0.5 L-0.3,0.5 Z M-0.8,1 L0.8,1 L0.4,0.5 L-0.4,0.5 Z",#2d5016,organic,nature
+mountain,organic,"M-1,1 L-0.3,-0.3 L0,0.2 L0.3,-0.3 L1,1 Z",#4a7c2e,organic,nature
+river,organic,"M-1,0.5 Q-0.5,1 0,0.5 Q0.5,0 1,0.5",#4da6cf,organic,nature
+lake,organic,"M-0.8,0.2 Q0,0 0.8,0.2 Q0.6,0.8 0,1 Q-0.6,0.8 -0.8,0.2",#4da6cf,organic,nature
+island,organic,"M-0.5,0.2 Q0,0 0.5,0.2 Q0.3,0.6 0,0.8 Q-0.3,0.6 -0.5,0.2",#8cb369,organic,nature
+coral,organic,"M0,1 Q-0.3,0.5 -0.5,0 Q-0.3,-0.5 0,-0.5 Q0.3,-0.5 0.5,0 Q0.3,0.5 0,1",#ff6b6b,organic,nature
+starfish,organic,"M0,-1 L0.2,-0.3 L0.9,-0.5 L0.5,0.1 L0.8,0.8 L0.2,0.5 L-0.2,0.8 L-0.5,0.1 L-0.9,-0.5 L-0.2,-0.3 Z",#ff9f43,organic,nature
+seashell,organic,"M0,-0.8 Q0.5,-0.5 0.8,0 Q0.5,0.5 0,0.8 Q-0.5,0.5 -0.8,0 Q-0.5,-0.5 0,-0.8",#f5cba7,organic,nature

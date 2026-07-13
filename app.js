@@ -39,50 +39,34 @@ class App {
             theme: this.storage.load('theme', 'purple'),
             username: this.storage.load('username', ''),
             autoGenerate: this.storage.load('autoGenerate', true),
-            exportQuality: this.storage.load('exportQuality', 512)
+            autoSaveProfile: this.storage.load('autoSaveProfile', false),
+            exportQuality: this.storage.load('exportQuality', 512),
+            currentIconData: null,
+            currentParams: null,
+            lastGeneratedId: null
         };
-
-        // Ссылка на текущие данные иконки
-        this.currentIconData = null;
-        this.currentParams = null;
 
         // Инициализация
         this.init();
     }
 
     async init() {
-        // Применяем тему
         this.applyTheme(this.state.theme);
-        
-        // Загружаем данные из CSV
         await this.loadShapeData();
-        
-        // Настройка UI
         this.setupUI();
-        
-        // Обновление статистики
         this.updateStats();
-        
-        // Рендеринг истории и последних иконок
         this.ui.renderHistory(this.state.history);
         this.ui.renderRecent(this.state.recent);
         this.renderSavedIcons();
-        
-        // Генерация превью для дашборда
         this.generateDashboardPreview();
-
-        // Обработчики событий
         this.setupEventListeners();
-
-        // Загрузка сохраненных настроек
         this.loadSettings();
 
-        console.log('🧠 Neural Icon Forge v3.1 инициализирован');
+        console.log('🧠 Neural Icon Forge v3.2 инициализирован');
     }
 
     async loadShapeData() {
         try {
-            // Загрузка CSV файлов
             const basicShapes = await this.loadCSV('/assets/shapes/basic_shapes.csv');
             const organicShapes = await this.loadCSV('/assets/shapes/organic_shapes.csv');
             const geometricShapes = await this.loadCSV('/assets/shapes/geometric_shapes.csv');
@@ -125,7 +109,6 @@ class App {
     }
 
     setupUI() {
-        // Настройка панелей
         this.renderStyles();
         this.renderCategories();
         this.renderDomainGrid();
@@ -201,7 +184,6 @@ class App {
             `;
         }).join('');
 
-        // Отрисовываем миниатюры
         grid.querySelectorAll('.saved-item canvas').forEach(canvas => {
             try {
                 const data = JSON.parse(decodeURIComponent(canvas.dataset.icon));
@@ -212,7 +194,6 @@ class App {
             }
         });
 
-        // Обработчики для удаления
         grid.querySelectorAll('.remove-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -221,7 +202,6 @@ class App {
             });
         });
 
-        // Обработчики для просмотра
         grid.querySelectorAll('.saved-item').forEach(item => {
             item.addEventListener('click', () => {
                 const index = parseInt(item.dataset.index);
@@ -229,7 +209,6 @@ class App {
             });
         });
 
-        // Обновляем статистику в профиле
         document.getElementById('profile-saved').textContent = this.state.saved.length;
         document.getElementById('profile-total').textContent = this.state.history.length;
     }
@@ -241,13 +220,12 @@ class App {
         const canvas = document.getElementById('generation-canvas');
         const ctx = canvas.getContext('2d');
         this.generator.drawIcon(ctx, canvas.width, canvas.height, item.data);
-        this.currentIconData = item.data;
-        this.currentParams = item.params;
+        this.state.currentIconData = item.data;
+        this.state.currentParams = item.params;
 
         document.getElementById('preview-settings').textContent = 
             `${item.params?.domain || 'unknown'} / ${item.params?.style || 'unknown'} / ${item.params?.category || 'unknown'}`;
         
-        // Переключаемся на генератор
         this.switchTab('generator');
     }
 
@@ -260,13 +238,10 @@ class App {
         }
     }
 
-    // ===== ВЫБОР ПАРАМЕТРОВ =====
-
     selectDomain(domain) {
         this.state.selectedDomain = domain;
         document.querySelectorAll('.domain-card').forEach(c => c.classList.remove('selected'));
         document.querySelector(`.domain-card[data-domain="${domain}"]`)?.classList.add('selected');
-        
         this.showStep('step-style');
     }
 
@@ -274,7 +249,6 @@ class App {
         this.state.selectedStyle = style;
         document.querySelectorAll('.style-card').forEach(c => c.classList.remove('selected'));
         document.querySelector(`.style-card[data-style="${style}"]`)?.classList.add('selected');
-        
         this.filterCategoriesByDomain();
         this.showStep('step-category');
     }
@@ -283,7 +257,6 @@ class App {
         this.state.selectedCategory = category;
         document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
         document.querySelector(`.category-card[data-category="${category}"]`)?.classList.add('selected');
-        
         this.loadCategoryConfig(category);
         this.showStep('step-config');
     }
@@ -313,8 +286,6 @@ class App {
         if (!container) return;
 
         container.innerHTML = '';
-
-        // Создаем группы настроек
         const groups = this.groupConfigFields(catData.config);
 
         groups.forEach(group => {
@@ -341,7 +312,6 @@ class App {
 
     groupConfigFields(config) {
         const groups = [];
-        
         const basicFields = ['shape', 'size', 'color', 'bgColor', 'skinColor'];
         const styleFields = ['style', 'glow', 'hasBorder', 'borderColor'];
         const detailFields = ['complexity', 'stars', 'details', 'hasRibbon', 'eyes', 'mouth', 'hair'];
@@ -433,7 +403,6 @@ class App {
         input.addEventListener('change', () => {
             const val = input.type === 'checkbox' ? input.checked : input.value;
             this.state.config[field.key] = val;
-            
             if (this.state.autoGenerate) {
                 this.generateIcon();
             }
@@ -462,19 +431,16 @@ class App {
         });
     }
 
-    // ===== ШАГИ =====
-
     showStep(stepId) {
         document.querySelectorAll('.setup-step').forEach(el => el.style.display = 'none');
         const step = document.getElementById(stepId);
         if (step) step.style.display = 'block';
-        
         if (stepId === 'step-config') {
             setTimeout(() => this.generateIcon(), 300);
         }
     }
 
-    // ===== ГЕНЕРАЦИЯ ИКОНКИ =====
+    // ===== ГЕНЕРАЦИЯ ИКОНКИ (НОВАЯ ЛОГИКА СОХРАНЕНИЯ) =====
 
     generateIcon() {
         const params = {
@@ -490,8 +456,8 @@ class App {
         }
 
         const iconData = this.generator.generate(params);
-        this.currentIconData = iconData;
-        this.currentParams = params;
+        this.state.currentIconData = iconData;
+        this.state.currentParams = params;
 
         const canvas = document.getElementById('generation-canvas');
         const ctx = canvas.getContext('2d');
@@ -500,8 +466,90 @@ class App {
         const info = document.getElementById('preview-settings');
         info.textContent = `${params.domain} / ${params.style} / ${params.category}`;
 
+        // ВСЕГДА сохраняем в историю (показ последних генераций)
         this.saveToHistory(iconData, params);
         this.updateStats();
+
+        // Сохранение в профиль - ТОЛЬКО если включено авто-сохранение
+        if (this.state.autoSaveProfile) {
+            this.saveToProfile(iconData, params);
+            document.getElementById('save-status').textContent = '✅ Авто-сохранено в профиль';
+            document.getElementById('save-status').style.color = '#10b981';
+        } else {
+            document.getElementById('save-status').textContent = '💾 Нажмите "Сохранить в профиль" чтобы сохранить';
+            document.getElementById('save-status').style.color = '#f59e0b';
+        }
+
+        this.state.lastGeneratedId = Date.now();
+    }
+
+    saveToHistory(iconData, params) {
+        const entry = {
+            id: Date.now(),
+            timestamp: new Date().toLocaleString(),
+            data: iconData,
+            params: params
+        };
+
+        this.state.history.unshift(entry);
+        if (this.state.history.length > 50) {
+            this.state.history = this.state.history.slice(0, 50);
+        }
+        this.storage.save('history', this.state.history);
+
+        this.state.recent.unshift(entry);
+        if (this.state.recent.length > 6) {
+            this.state.recent = this.state.recent.slice(0, 6);
+        }
+        this.storage.save('recent', this.state.recent);
+
+        this.ui.renderHistory(this.state.history);
+        this.ui.renderRecent(this.state.recent);
+    }
+
+    // ===== СОХРАНЕНИЕ В ПРОФИЛЬ (ТОЛЬКО ПО КНОПКЕ) =====
+
+    saveToProfile(iconData = null, params = null) {
+        const data = iconData || this.state.currentIconData;
+        const p = params || this.state.currentParams;
+
+        if (!data || !p) {
+            alert('Сначала сгенерируйте иконку!');
+            return;
+        }
+
+        // Проверяем, не сохранена ли уже такая иконка
+        const isDuplicate = this.state.saved.some(item => 
+            item.params?.domain === p.domain && 
+            item.params?.style === p.style && 
+            item.params?.category === p.category &&
+            JSON.stringify(item.data) === JSON.stringify(data)
+        );
+
+        if (isDuplicate) {
+            alert('⚠️ Эта иконка уже сохранена в профиле!');
+            return;
+        }
+
+        const entry = {
+            id: Date.now(),
+            timestamp: new Date().toLocaleString(),
+            data: data,
+            params: p
+        };
+
+        this.state.saved.push(entry);
+        this.storage.save('saved', this.state.saved);
+        this.renderSavedIcons();
+        this.updateStats();
+        
+        document.getElementById('save-status').textContent = '✅ Сохранено в профиль!';
+        document.getElementById('save-status').style.color = '#10b981';
+        
+        // Показываем уведомление
+        setTimeout(() => {
+            document.getElementById('save-status').textContent = '';
+        }, 3000);
     }
 
     randomizeConfig() {
@@ -550,55 +598,6 @@ class App {
         this.generateIcon();
     }
 
-    saveToProfile() {
-        if (!this.currentIconData || !this.currentParams) {
-            alert('Сначала сгенерируйте иконку!');
-            return;
-        }
-
-        const entry = {
-            id: Date.now(),
-            timestamp: new Date().toLocaleString(),
-            data: this.currentIconData,
-            params: this.currentParams
-        };
-
-        this.state.saved.push(entry);
-        this.storage.save('saved', this.state.saved);
-        this.renderSavedIcons();
-        this.updateStats();
-        
-        alert('✅ Иконка сохранена в профиль!');
-    }
-
-    // ===== СОХРАНЕНИЕ В ИСТОРИЮ =====
-
-    saveToHistory(iconData, params) {
-        const entry = {
-            id: Date.now(),
-            timestamp: new Date().toLocaleString(),
-            data: iconData,
-            params: params
-        };
-
-        this.state.history.unshift(entry);
-        if (this.state.history.length > 50) {
-            this.state.history = this.state.history.slice(0, 50);
-        }
-        this.storage.save('history', this.state.history);
-
-        this.state.recent.unshift(entry);
-        if (this.state.recent.length > 6) {
-            this.state.recent = this.state.recent.slice(0, 6);
-        }
-        this.storage.save('recent', this.state.recent);
-
-        this.ui.renderHistory(this.state.history);
-        this.ui.renderRecent(this.state.recent);
-    }
-
-    // ===== СТАТИСТИКА =====
-
     updateStats() {
         const stats = {
             total: this.state.history.length,
@@ -616,8 +615,6 @@ class App {
         }
     }
 
-    // ===== ДАШБОРД =====
-
     generateDashboardPreview() {
         if (this.state.history.length > 0) {
             const canvas = document.querySelector('#page-dashboard canvas');
@@ -628,27 +625,21 @@ class App {
         }
     }
 
-    // ===== ТЕМЫ =====
-
     applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         this.state.theme = theme;
         this.storage.save('theme', theme);
-        
         const select = document.getElementById('theme-select');
         if (select) select.value = theme;
     }
-
-    // ===== НАСТРОЙКИ =====
 
     loadSettings() {
         document.getElementById('username-input').value = this.state.username || '';
         document.getElementById('theme-select').value = this.state.theme || 'purple';
         document.getElementById('auto-generate').checked = this.state.autoGenerate !== false;
+        document.getElementById('auto-save-profile').checked = this.state.autoSaveProfile || false;
         document.getElementById('export-quality').value = this.state.exportQuality || 512;
     }
-
-    // ===== ЭКСПОРТ ВСЕГО =====
 
     exportAll() {
         if (this.state.saved.length === 0) {
@@ -656,43 +647,30 @@ class App {
             return;
         }
 
-        // Создаем ZIP архив (упрощенная версия)
-        const zip = {
-            files: [],
-            add: function(name, data) {
-                this.files.push({ name, data });
-            },
-            generate: function() {
-                // Простая JSON сериализация
-                return JSON.stringify(this.files);
-            }
-        };
+        const zip = { files: [] };
+        zip.add = function(name, data) { this.files.push({ name, data }); };
+        zip.generate = function() { return JSON.stringify(this.files); };
 
         this.state.saved.forEach((item, index) => {
             const canvas = document.createElement('canvas');
-            canvas.width = 512;
-            canvas.height = 512;
+            const size = this.state.exportQuality || 512;
+            canvas.width = size;
+            canvas.height = size;
             const ctx = canvas.getContext('2d');
-            this.generator.drawIcon(ctx, 512, 512, item.data);
-            
+            this.generator.drawIcon(ctx, size, size, item.data);
             const dataUrl = canvas.toDataURL('image/png');
             zip.add(`icon-${index + 1}.png`, dataUrl);
         });
 
-        // Скачиваем как JSON (можно расширить до реального ZIP)
         const blob = new Blob([zip.generate()], {type: 'application/json'});
         const link = document.createElement('a');
         link.download = `icons-${Date.now()}.json`;
         link.href = URL.createObjectURL(blob);
         link.click();
-        
         alert('✅ Экспорт завершен!');
     }
 
-    // ===== ОБРАБОТЧИКИ СОБЫТИЙ =====
-
     setupEventListeners() {
-        // Навигация
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const tab = item.dataset.tab;
@@ -700,22 +678,18 @@ class App {
             });
         });
 
-        // Генерация
         document.getElementById('generate-btn')?.addEventListener('click', () => {
             this.generateIcon();
         });
 
-        // Рандомизация
         document.getElementById('randomize-btn')?.addEventListener('click', () => {
             this.randomizeConfig();
         });
 
-        // Сохранение в профиль
         document.getElementById('save-to-profile-btn')?.addEventListener('click', () => {
             this.saveToProfile();
         });
 
-        // Кнопки назад
         document.querySelectorAll('.back-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const target = btn.dataset.back;
@@ -725,31 +699,28 @@ class App {
             });
         });
 
-        // Экспорт
         document.getElementById('download-png-btn')?.addEventListener('click', () => {
-            if (this.currentIconData) {
-                this.generator.download('png', this.currentIconData);
+            if (this.state.currentIconData) {
+                this.generator.download('png', this.state.currentIconData);
             }
         });
 
         document.getElementById('download-svg-btn')?.addEventListener('click', () => {
-            if (this.currentIconData) {
-                this.generator.download('svg', this.currentIconData);
+            if (this.state.currentIconData) {
+                this.generator.download('svg', this.state.currentIconData);
             }
         });
 
         document.getElementById('copy-svg-btn')?.addEventListener('click', () => {
-            if (this.currentIconData) {
-                this.generator.copySVG(this.currentIconData);
+            if (this.state.currentIconData) {
+                this.generator.copySVG(this.state.currentIconData);
             }
         });
 
-        // Экспорт всего
         document.getElementById('export-all-btn')?.addEventListener('click', () => {
             this.exportAll();
         });
 
-        // Очистка кэша
         document.getElementById('clear-storage-btn')?.addEventListener('click', () => {
             if (confirm('Очистить все данные?')) {
                 this.storage.clear();
@@ -764,7 +735,6 @@ class App {
             }
         });
 
-        // Глобальные обработчики для истории
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-action]');
             if (target) {
@@ -781,7 +751,6 @@ class App {
             }
         });
 
-        // Настройки
         document.getElementById('username-input')?.addEventListener('change', (e) => {
             this.state.username = e.target.value;
             this.storage.save('username', e.target.value);
@@ -796,13 +765,19 @@ class App {
             this.storage.save('autoGenerate', e.target.checked);
         });
 
+        document.getElementById('auto-save-profile')?.addEventListener('change', (e) => {
+            this.state.autoSaveProfile = e.target.checked;
+            this.storage.save('autoSaveProfile', e.target.checked);
+            document.getElementById('save-status').textContent = e.target.checked ? 
+                '✅ Авто-сохранение включено' : 
+                '💾 Авто-сохранение отключено';
+        });
+
         document.getElementById('export-quality')?.addEventListener('change', (e) => {
             this.state.exportQuality = parseInt(e.target.value);
             this.storage.save('exportQuality', parseInt(e.target.value));
         });
     }
-
-    // ===== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК =====
 
     switchTab(tab) {
         this.state.currentTab = tab;
@@ -842,6 +817,5 @@ class App {
     }
 }
 
-// Инициализация приложения
 const app = new App();
 window.app = app;

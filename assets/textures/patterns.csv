@@ -4,3 +4,8 @@ grid,pattern,#3b82f6,Сетка
 diagonal,pattern,#ef4444,Диагональные линии
 noise,pattern,#10b981,Шум
 gradient,pattern,#8b5cf6,Градиент
+stripes,pattern,#f59e0b,Полосы
+checker,pattern,#ec4899,Шахматная доска
+waves,pattern,#00d2d3,Волны
+spiral,pattern,#ff6b6b,Спираль
+hex_grid,pattern,#4d96ff,Шестиугольная сетка

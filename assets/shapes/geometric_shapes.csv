@@ -1,6 +1,21 @@
 name,type,path,defaultColor,tags
-octagon,geometric,"M-0.7,-1 L0.7,-1 L1,-0.7 L1,0.7 L0.7,1 L-0.7,1 L-1,0.7 L-1,-0.7 Z",#8b5cf6,geometric
-cross,geometric,"M-0.3,-1 L0.3,-1 L0.3,-0.3 L1,-0.3 L1,0.3 L0.3,0.3 L0.3,1 L-0.3,1 L-0.3,0.3 L-1,0.3 L-1,-0.3 L-0.3,-0.3 Z",#3b82f6,geometric
-arrow,geometric,"M-0.5,-0.5 L0.5,-0.5 L0.5,-1 L1,0 L0.5,1 L0.5,0.5 L-0.5,0.5 Z",#f59e0b,geometric
-chevron,geometric,"M-1,-0.5 L0,-1 L1,-0.5 L0.7,0 L0,0.7 L-0.7,0 Z",#10b981,geometric
-pentagon,geometric,"M0,-1 L0.951,-0.309 L0.588,0.809 L-0.588,0.809 L-0.951,-0.309 Z",#ec4899,geometric
+cube,geometric,"M-0.5,-0.5 L0.5,-0.5 L0.8,0 L0.5,0.5 L-0.5,0.5 L-0.8,0 Z M-0.5,-0.5 L-0.8,0 L-0.5,0.5 M0.5,-0.5 L0.8,0 L0.5,0.5",#3b82f6,geometric,3d
+pyramid,geometric,"M0,-1 L-0.8,0.5 L0.8,0.5 Z",#ef4444,geometric,3d
+prism,geometric,"M-0.5,-0.5 L0.5,-0.5 L0.5,0.5 L-0.5,0.5 Z M-0.7,-0.7 L0.3,-0.7 L0.7,-0.3 L0.7,0.7 L-0.3,0.7 L-0.7,0.3 Z",#10b981,geometric,3d
+sphere,geometric,"M0,-1 Q1,0 0,1 Q-1,0 0,-1",#8b5cf6,geometric,3d
+torus,geometric,"M0,-0.8 Q0.8,-0.5 0.8,0 Q0.8,0.5 0,0.8 Q-0.8,0.5 -0.8,0 Q-0.8,-0.5 0,-0.8 M0,-0.5 Q0.5,-0.3 0.5,0 Q0.5,0.3 0,0.5 Q-0.5,0.3 -0.5,0 Q-0.5,-0.3 0,-0.5",#f59e0b,geometric,3d
+helix,geometric,"M-0.5,1 Q0,0.5 0.5,0 Q0,-0.5 -0.5,-1",#ec4899,geometric,3d
+fractal,geometric,"M0,0 L0.5,0 L0.5,0.5 L0,0.5 Z M0.25,0.25 L0.75,0.25 L0.75,0.75 L0.25,0.75 Z",#7c3aed,geometric,pattern
+polygon,geometric,"M0,-1 L0.5,-0.5 L0.8,0.3 L0.3,0.8 L-0.3,0.8 L-0.8,0.3 L-0.5,-0.5 Z",#ff6b6b,geometric,pattern
+tessellation,geometric,"M-0.5,-0.5 L0.5,-0.5 L0.5,0.5 L-0.5,0.5 Z M-0.7,-0.7 L-0.1,-0.7 L-0.1,-0.1 L-0.7,-0.1 Z M0.1,0.1 L0.7,0.1 L0.7,0.7 L0.1,0.7 Z",#4d96ff,geometric,pattern
+mandala,geometric,"M0,-1 L0.3,-0.5 L0.8,-0.3 L0.5,0 L0.8,0.3 L0.3,0.5 L0,1 L-0.3,0.5 L-0.8,0.3 L-0.5,0 L-0.8,-0.3 L-0.3,-0.5 Z",#ffd93d,geometric,pattern
+labyrinth,geometric,"M-0.8,-0.8 L0.8,-0.8 L0.8,0.8 L-0.8,0.8 Z M-0.4,-0.4 L0.4,-0.4 L0.4,0.4 L-0.4,0.4 Z M0,-0.2 L0.2,-0.2 L0.2,0.2 L-0.2,0.2 Z",#8b5cf6,geometric,pattern
+maze,geometric,"M-0.8,-0.8 L0.8,-0.8 L0.8,0.8 L-0.8,0.8 Z M-0.6,-0.6 L-0.6,0.6 L0.6,0.6 L0.6,-0.6 Z M-0.4,-0.4 L0.4,-0.4 L0.4,0.4 L-0.4,0.4 Z",#10b981,geometric,pattern
+grid,geometric,"M-0.8,-0.8 L0.8,-0.8 L0.8,0.8 L-0.8,0.8 Z M0,-0.8 L0,0.8 M-0.8,0 L0.8,0",#3b82f6,geometric,pattern
+lattice,geometric,"M-0.8,-0.8 L0.8,-0.8 L0.8,0.8 L-0.8,0.8 Z M-0.4,-0.8 L-0.4,0.8 M0.4,-0.8 L0.4,0.8 M-0.8,-0.4 L0.8,-0.4 M-0.8,0.4 L0.8,0.4",#7c3aed,geometric,pattern
+crystal,geometric,"M0,-1 L0.5,-0.5 L0.8,0 L0.5,0.5 L0,1 L-0.5,0.5 L-0.8,0 L-0.5,-0.5 Z",#4d96ff,geometric,3d
+geodesic,geometric,"M0,-1 L0.5,-0.5 L0.8,0 L0.5,0.5 L0,1 L-0.5,0.5 L-0.8,0 L-0.5,-0.5 Z M0,-0.5 L0.3,0 L0,0.5 L-0.3,0 Z",#8b5cf6,geometric,3d
+icosahedron,geometric,"M0,-1 L0.5,-0.3 L-0.5,-0.3 Z M0.5,-0.3 L0.8,0.3 L0.2,0.7 Z M-0.5,-0.3 L-0.8,0.3 L-0.2,0.7 Z M0,1 L0.2,0.7 L-0.2,0.7 Z",#f59e0b,geometric,3d
+dodecahedron,geometric,"M-0.5,-0.5 L0.5,-0.5 L0.8,0 L0.5,0.5 L-0.5,0.5 L-0.8,0 Z",#10b981,geometric,3d
+octahedron,geometric,"M0,-1 L0.5,0 L-0.5,0 Z M0,1 L0.5,0 L-0.5,0 Z",#ef4444,geometric,3d
+tetrahedron,geometric,"M0,-1 L-0.5,0.5 L0.5,0.5 Z",#3b82f6,geometric,3d
