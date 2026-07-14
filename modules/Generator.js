@@ -1,9 +1,10 @@
 // =============================================================
 // ГЕНЕРАТОР v0.0.3 - Полная дифференциация стилей
 //           v0.0.4 - Расширение функционала тематик
+//           v0.0.5 - Поддержка компонентов и стилей
 // =============================================================
 
-import { DOMAINS, STYLES, CATEGORIES } from './presets.js';
+import { COMPONENTS, STYLES, CATEGORY_CONFIGS } from './presets.js';
 import { ShapeLibrary } from './ShapeLibrary.js';
 import { ColorPalette } from './ColorPalette.js';
 import { TextureGenerator } from './TextureGenerator.js';
@@ -21,11 +22,9 @@ export class Generator {
         this.characterGenerator = new CharacterGenerator();
         this.cache = new Map();
         
-        // Загружаем встроенные фигуры как резерв
         if (typeof this.shapeLibrary.loadDefaultShapes === 'function') {
             this.shapeLibrary.loadDefaultShapes();
         } else {
-            console.warn('ShapeLibrary.loadDefaultShapes not available, using fallback');
             this.loadFallbackShapes();
         }
     }
@@ -44,51 +43,54 @@ export class Generator {
         this.shapeLibrary.loaded = true;
     }
 
-    generate(params) {
-        const { domain, style, category, config } = params;
+    generateComponent(params) {
+        const { component, style, config } = params;
         
-        const categoryData = CATEGORIES[category];
-        if (!categoryData) {
+        const componentData = COMPONENTS[component];
+        const styleData = STYLES[style];
+        const palette = this.colorPalette.getPalette(style, component);
+
+        if (!componentData) {
             return this.generateFallback(config);
         }
 
-        const styleData = STYLES[style] || STYLES.minimal;
-        const palette = this.colorPalette.getPalette(style, domain);
-
         let icon = null;
 
-        // Специальные генераторы для разных стилей и категорий
-        if (style === 'pixel' && (category === 'game_avatar' || category === 'avatar' || category === 'game_character')) {
-            icon = this.pixelGenerator.generateAvatar({
-                color: config.color || palette.primary || '#7c3aed',
-                size: config.size || 16,
-                shape: config.shape || 'human',
-                skinColor: config.skinColor || '#f5d0b8',
-                accessories: this.getAccessories(config)
-            });
-        }
-        else if (category === 'game_character' || category === 'game_avatar') {
-            icon = this.characterGenerator.generate({
-                style: style,
-                color: config.color || palette.primary || '#7c3aed',
-                skinColor: config.skinColor || '#f5d0b8',
-                eyes: config.eyes || 'simple',
-                mouth: config.mouth || 'smile',
-                hair: config.hair || 'short',
-                accessories: this.getAccessories(config),
-                hasWeapon: config.hasWeapon || false,
-                hasArmor: config.hasArmor || false
-            });
-        }
-        else {
-            icon = this.iconComposer.compose({
-                category: category,
-                style: style,
-                domain: domain,
-                config: config,
-                palette: palette,
-                styleData: styleData
-            });
+        // Выбор алгоритма в зависимости от компонента и стиля
+        switch (component) {
+            case 'button':
+                icon = this.generateButton(style, config, palette);
+                break;
+            case 'icon':
+                icon = this.generateIcon(style, config, palette);
+                break;
+            case 'avatar':
+                // Аватары обрабатываются в PixelGenerator
+                icon = this.pixelGenerator.generateAvatar({
+                    color: config.color,
+                    size: config.size || 16,
+                    shape: 'human',
+                    skinColor: config.skinColor,
+                    accessories: config.accessories ? config.accessories.split(',').map(a => a.trim()) : [],
+                    style: style
+                });
+                break;
+            case 'character':
+                // Персонажи обрабатываются в CharacterGenerator
+                icon = this.characterGenerator.generate({
+                    style: style,
+                    color: config.color,
+                    skinColor: config.skinColor,
+                    eyes: config.eyes,
+                    mouth: config.mouth,
+                    hair: config.hair,
+                    accessories: config.accessories ? config.accessories.split(',').map(a => a.trim()) : [],
+                    hasWeapon: config.hasWeapon || false,
+                    hasArmor: config.hasArmor || false
+                });
+                break;
+            default:
+                icon = this.generateDefaultComponent(component, style, config, palette);
         }
 
         // Применяем эффекты в зависимости от стиля
@@ -97,45 +99,239 @@ export class Generator {
         return icon;
     }
 
-    getAccessories(config) {
-        const accessories = [];
-        if (config.hasGlasses) accessories.push('glasses');
-        if (config.hasHat) accessories.push('hat');
-        if (config.hasCape) accessories.push('cape');
-        if (config.hasWeapon) accessories.push('weapon');
-        return accessories;
+    // ===== ГЕНЕРАЦИЯ КНОПКИ =====
+    generateButton(style, config, palette) {
+        const layers = [];
+        const color = config.color || palette.primary || '#7c3aed';
+        const shape = config.shape || 'rounded';
+        const text = config.text || 'Кнопка';
+
+        layers.push({
+            type: 'background',
+            style: config.bgColor === 'gradient' ? 'gradient' : 'solid',
+            color: config.bgColor === 'transparent' ? 'transparent' : (config.bgColor || 'transparent'),
+            gradientColor: palette.secondary || '#1a1a3e'
+        });
+
+        // Кнопка с учетом стиля
+        const buttonLayer = {
+            type: 'button',
+            shape: shape,
+            color: color,
+            text: text,
+            cornerRadius: config.cornerRadius || 20,
+            x: 250,
+            y: 250,
+            width: 180,
+            height: 60,
+            glow: config.glow
+        };
+
+        // Добавляем стилистические особенности
+        if (style === 'neon') {
+            buttonLayer.glow = true;
+            buttonLayer.borderColor = color;
+            buttonLayer.borderWidth = 3;
+        } else if (style === 'vintage') {
+            buttonLayer.color = this.darkenColor(color, 20);
+            buttonLayer.texture = 'vintage';
+        } else if (style === 'cyberpunk') {
+            buttonLayer.glow = true;
+            buttonLayer.borderColor = '#00ffff';
+            buttonLayer.borderWidth = 2;
+        }
+
+        layers.push(buttonLayer);
+
+        return {
+            layers: layers,
+            effects: this.getStyleEffects(style, config),
+            style: style,
+            component: 'button',
+            config: config
+        };
+    }
+
+    // ===== ГЕНЕРАЦИЯ ИКОНКИ =====
+    generateIcon(style, config, palette) {
+        const layers = [];
+        const color = config.color || palette.primary || '#7c3aed';
+        const shape = config.shape || 'circle';
+
+        layers.push({
+            type: 'background',
+            style: config.bgColor === 'gradient' ? 'gradient' : 'solid',
+            color: config.bgColor === 'transparent' ? 'transparent' : (config.bgColor || 'transparent'),
+            gradientColor: palette.secondary || '#1a1a3e'
+        });
+
+        // Основная фигура
+        const mainLayer = {
+            type: 'main',
+            shape: shape,
+            color: color,
+            size: config.size || 120,
+            x: 250,
+            y: 250,
+            strokeWidth: config.strokeWidth || 0,
+            opacity: 1
+        };
+
+        layers.push(mainLayer);
+
+        // Детали в зависимости от стиля
+        if (style === 'geometric' && config.complexity > 3) {
+            // Добавляем геометрические элементы
+            for (let i = 0; i < Math.min(config.complexity, 8); i++) {
+                const angle = (i / Math.min(config.complexity, 8)) * Math.PI * 2;
+                const r = 40 + (i / Math.min(config.complexity, 8)) * 80;
+                layers.push({
+                    type: 'main',
+                    shape: ['circle', 'square', 'triangle', 'hexagon'][i % 4],
+                    color: this.lightenColor(color, 20 + i * 5),
+                    size: 15 + i * 5,
+                    x: 250 + Math.cos(angle) * r,
+                    y: 250 + Math.sin(angle) * r,
+                    opacity: 0.3 + (i / Math.min(config.complexity, 8)) * 0.4
+                });
+            }
+        }
+
+        if (style === 'neon') {
+            layers.push({
+                type: 'glow',
+                color: color,
+                size: 200,
+                intensity: 0.8
+            });
+            // Глитч-линии
+            for (let i = 0; i < 3; i++) {
+                layers.push({
+                    type: 'glitch_line',
+                    color: color,
+                    y: 100 + Math.random() * 300,
+                    width: 10 + Math.random() * 30,
+                    opacity: 0.1 + Math.random() * 0.2
+                });
+            }
+        }
+
+        if (style === 'fantasy') {
+            // Магические звезды
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2;
+                const r = 100 + Math.random() * 40;
+                layers.push({
+                    type: 'star',
+                    x: 250 + Math.cos(angle) * r,
+                    y: 250 + Math.sin(angle) * r,
+                    size: 8 + Math.random() * 12,
+                    color: '#ffd700',
+                    points: 5,
+                    opacity: 0.5 + Math.random() * 0.3
+                });
+            }
+        }
+
+        return {
+            layers: layers,
+            effects: this.getStyleEffects(style, config),
+            style: style,
+            component: 'icon',
+            config: config
+        };
+    }
+
+    // ===== ДЕФОЛТНАЯ ГЕНЕРАЦИЯ =====
+    generateDefaultComponent(component, style, config, palette) {
+        const layers = [];
+        const color = config.color || palette.primary || '#7c3aed';
+        const shape = config.shape || 'circle';
+
+        layers.push({
+            type: 'background',
+            style: 'none',
+            color: 'transparent'
+        });
+
+        layers.push({
+            type: 'main',
+            shape: shape,
+            color: color,
+            size: config.size || 120,
+            x: 250,
+            y: 250,
+            strokeWidth: config.strokeWidth || 0,
+            opacity: 1
+        });
+
+        return {
+            layers: layers,
+            effects: this.getStyleEffects(style, config),
+            style: style,
+            component: component,
+            config: config
+        };
+    }
+
+    // ===== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ =====
+
+    getStyleEffects(style, config) {
+        const effects = [];
+
+        switch (style) {
+            case 'neon':
+                effects.push({ type: 'glow', color: config.color || '#ff00ff', intensity: 0.8 });
+                break;
+            case 'fantasy':
+                effects.push({ type: 'glow', color: '#ffd700', intensity: 0.3 });
+                effects.push({ type: 'particles', count: 15 });
+                break;
+            case 'vintage':
+                effects.push({ type: 'vintage', intensity: 0.4 });
+                break;
+            case 'cyberpunk':
+                effects.push({ type: 'glow', color: '#ff00ff', intensity: 0.5 });
+                effects.push({ type: 'scanline', intensity: 0.15 });
+                break;
+            case 'pixel':
+                // Пиксельный эффект уже в PixelGenerator
+                break;
+            default:
+                if (config.glow) {
+                    effects.push({ type: 'glow', color: config.color || '#7c3aed', intensity: 0.4 });
+                }
+        }
+
+        return effects;
     }
 
     applyStyleEffects(icon, style, config) {
         if (!icon.effects) icon.effects = [];
 
-        if (style === 'neon' && config.glow) {
-            icon.effects.push({
-                type: 'glow',
-                color: config.color || '#7c3aed',
-                intensity: 0.6,
-                size: 250
-            });
-        }
-
-        if (style === 'vintage') {
-            icon.effects.push({
-                type: 'vintage',
-                intensity: 0.3
-            });
-        }
-
-        if (style === 'cyberpunk') {
-            icon.effects.push({
-                type: 'glow',
-                color: '#ff00ff',
-                intensity: 0.5,
-                size: 200
-            });
-            icon.effects.push({
-                type: 'scanline',
-                intensity: 0.2
-            });
+        // Стилистические эффекты
+        switch (style) {
+            case 'neon':
+                icon.effects.push({ type: 'glow', color: config.color || '#ff00ff', intensity: 0.8 });
+                break;
+            case 'fantasy':
+                icon.effects.push({ type: 'glow', color: '#ffd700', intensity: 0.3 });
+                icon.effects.push({ type: 'particles', count: 15 });
+                break;
+            case 'vintage':
+                icon.effects.push({ type: 'vintage', intensity: 0.4 });
+                break;
+            case 'cyberpunk':
+                icon.effects.push({ type: 'glow', color: '#ff00ff', intensity: 0.5 });
+                icon.effects.push({ type: 'scanline', intensity: 0.15 });
+                break;
+            case 'pixel':
+                // Пиксельный эффект уже в PixelGenerator
+                break;
+            default:
+                if (config.glow) {
+                    icon.effects.push({ type: 'glow', color: config.color || '#7c3aed', intensity: 0.4 });
+                }
         }
 
         return icon;
@@ -148,9 +344,8 @@ export class Generator {
                 { type: 'main', shape: 'circle', color: '#7c3aed', size: 120, x: 250, y: 250 }
             ],
             effects: [],
-            style: 'minimal',
-            domain: 'unknown',
-            category: 'unknown',
+            style: 'fallback',
+            component: 'unknown',
             config: config || {}
         };
     }
@@ -171,7 +366,7 @@ export class Generator {
 
         if (data.effects) {
             data.effects.forEach(effect => {
-                this.applyEffect(ctx, effect, width, height);
+                this.applyEffectToCanvas(ctx, effect, width, height);
             });
         }
     }
@@ -190,9 +385,6 @@ export class Generator {
             case 'button':
                 this.drawButton(ctx, layer, cx, cy);
                 break;
-            case 'avatar':
-                this.drawAvatar(ctx, layer, cx, cy);
-                break;
             case 'text':
                 this.drawText(ctx, layer, cx, cy);
                 break;
@@ -206,17 +398,11 @@ export class Generator {
                     this.drawStarFallback(ctx, layer);
                 }
                 break;
-            case 'healthbar':
-                this.drawHealthBar(ctx, layer);
-                break;
-            case 'bar':
-                this.drawBar(ctx, layer);
-                break;
-            case 'stroke':
-                this.drawStroke(ctx, layer, cx, cy);
-                break;
             case 'dot':
                 this.drawDot(ctx, layer);
+                break;
+            case 'glitch_line':
+                this.drawGlitchLine(ctx, layer, width, height);
                 break;
             case 'pixel_avatar':
                 this.drawPixelAvatar(ctx, layer);
@@ -249,25 +435,58 @@ export class Generator {
         const r = button.cornerRadius || 8;
         const color = button.color || '#7c3aed';
 
-        ctx.shadowColor = color + '40';
-        ctx.shadowBlur = 20;
+        // Тень
+        if (button.glow) {
+            ctx.shadowColor = color + '60';
+            ctx.shadowBlur = 30;
+        }
+
         ctx.fillStyle = color;
 
+        // Рисуем кнопку в зависимости от формы
+        const shape = button.shape || 'rounded';
         ctx.beginPath();
-        ctx.moveTo(x - w/2 + r, y - h/2);
-        ctx.lineTo(x + w/2 - r, y - h/2);
-        ctx.quadraticCurveTo(x + w/2, y - h/2, x + w/2, y - h/2 + r);
-        ctx.lineTo(x + w/2, y + h/2 - r);
-        ctx.quadraticCurveTo(x + w/2, y + h/2, x + w/2 - r, y + h/2);
-        ctx.lineTo(x - w/2 + r, y + h/2);
-        ctx.quadraticCurveTo(x - w/2, y + h/2, x - w/2, y + h/2 - r);
-        ctx.lineTo(x - w/2, y - h/2 + r);
-        ctx.quadraticCurveTo(x - w/2, y - h/2, x - w/2 + r, y - h/2);
+        if (shape === 'circle') {
+            ctx.arc(x, y, Math.min(w, h) / 2, 0, Math.PI * 2);
+        } else if (shape === 'pill') {
+            const r2 = h / 2;
+            ctx.moveTo(x - w/2 + r2, y - h/2);
+            ctx.lineTo(x + w/2 - r2, y - h/2);
+            ctx.quadraticCurveTo(x + w/2, y - h/2, x + w/2, y - h/2 + r2);
+            ctx.lineTo(x + w/2, y + h/2 - r2);
+            ctx.quadraticCurveTo(x + w/2, y + h/2, x + w/2 - r2, y + h/2);
+            ctx.lineTo(x - w/2 + r2, y + h/2);
+            ctx.quadraticCurveTo(x - w/2, y + h/2, x - w/2, y + h/2 - r2);
+            ctx.lineTo(x - w/2, y - h/2 + r2);
+            ctx.quadraticCurveTo(x - w/2, y - h/2, x - w/2 + r2, y - h/2);
+        } else {
+            // rounded или square
+            ctx.moveTo(x - w/2 + r, y - h/2);
+            ctx.lineTo(x + w/2 - r, y - h/2);
+            ctx.quadraticCurveTo(x + w/2, y - h/2, x + w/2, y - h/2 + r);
+            ctx.lineTo(x + w/2, y + h/2 - r);
+            ctx.quadraticCurveTo(x + w/2, y + h/2, x + w/2 - r, y + h/2);
+            ctx.lineTo(x - w/2 + r, y + h/2);
+            ctx.quadraticCurveTo(x - w/2, y + h/2, x - w/2, y + h/2 - r);
+            ctx.lineTo(x - w/2, y - h/2 + r);
+            ctx.quadraticCurveTo(x - w/2, y - h/2, x - w/2 + r, y - h/2);
+        }
         ctx.closePath();
         ctx.fill();
 
+        // Обводка
+        if (button.borderColor && button.borderWidth) {
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = button.borderColor;
+            ctx.lineWidth = button.borderWidth;
+            ctx.stroke();
+        }
+
+        // Текст
         if (button.text) {
             ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 24px Arial';
             ctx.textAlign = 'center';
@@ -278,35 +497,10 @@ export class Generator {
         ctx.restore();
     }
 
-    drawAvatar(ctx, avatar, cx, cy) {
-        ctx.save();
-        const size = avatar.size || 160;
-        const color = avatar.color || '#7c3aed';
-        
-        ctx.shadowColor = color + '40';
-        ctx.shadowBlur = 20;
-        ctx.fillStyle = color;
-
-        this.shapeLibrary.drawShape(ctx, {
-            shape: avatar.shape || 'circle',
-            size: size,
-            x: cx,
-            y: cy
-        });
-
-        if (avatar.hasBorder) {
-            ctx.strokeStyle = avatar.borderColor || '#ffffff';
-            ctx.lineWidth = 4;
-            ctx.stroke();
-        }
-
-        ctx.restore();
-    }
-
     drawText(ctx, text, cx, cy) {
         ctx.save();
         ctx.fillStyle = text.color || '#ffffff';
-        ctx.font = `${text.weight || 'bold'} ${text.size || 60}px Arial`;
+        ctx.font = `${text.weight || 'bold'} ${text.size || 60}px ${text.font || 'Arial'}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(text.text || 'A', text.x || cx, text.y || cy);
@@ -326,46 +520,11 @@ export class Generator {
         ctx.restore();
     }
 
-    drawHealthBar(ctx, healthbar) {
+    drawGlitchLine(ctx, layer, width, height) {
         ctx.save();
-        const x = healthbar.x || 250;
-        const y = healthbar.y || 250;
-        const w = healthbar.width || 200;
-        const h = healthbar.height || 20;
-        const color = healthbar.color || '#7c3aed';
-        const value = healthbar.value || 0.7;
-
-        ctx.fillStyle = '#333';
-        ctx.fillRect(x - w/2, y - h/2, w, h);
-        
-        const grad = ctx.createLinearGradient(x - w/2, y - h/2, x - w/2 + w * value, y - h/2);
-        grad.addColorStop(0, color);
-        grad.addColorStop(1, color + '80');
-        ctx.fillStyle = grad;
-        ctx.fillRect(x - w/2, y - h/2, w * value, h);
-
-        ctx.strokeStyle = '#666';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x - w/2, y - h/2, w, h);
-
-        ctx.restore();
-    }
-
-    drawBar(ctx, bar) {
-        ctx.save();
-        ctx.globalAlpha = bar.opacity || 0.8;
-        ctx.fillStyle = bar.color || '#7c3aed';
-        ctx.fillRect(bar.x - bar.width/2, bar.y, bar.width, bar.height);
-        ctx.restore();
-    }
-
-    drawStroke(ctx, stroke, cx, cy) {
-        ctx.save();
-        ctx.strokeStyle = stroke.color || '#ffffff';
-        ctx.lineWidth = stroke.width || 3;
-        ctx.beginPath();
-        ctx.arc(stroke.x || cx, stroke.y || cy, (stroke.size || 180) / 2, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.globalAlpha = layer.opacity || 0.15;
+        ctx.fillStyle = layer.color || '#ff00ff';
+        ctx.fillRect(0, layer.y, width, layer.width || 15);
         ctx.restore();
     }
 
@@ -381,8 +540,32 @@ export class Generator {
         ctx.restore();
     }
 
+    drawStarFallback(ctx, params) {
+        const { x, y, size, points, color, opacity } = params;
+        const outerRadius = size || 20;
+        const innerRadius = outerRadius * 0.4;
+        const spikes = points || 5;
+        
+        ctx.save();
+        ctx.translate(x || 0, y || 0);
+        ctx.globalAlpha = opacity || 1;
+        ctx.fillStyle = color || '#f59e0b';
+        ctx.shadowColor = (color || '#f59e0b') + '60';
+        ctx.shadowBlur = 15;
+        
+        ctx.beginPath();
+        for (let i = 0; i < spikes * 2; i++) {
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const angle = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+            if (i === 0) ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+            else ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
     drawPixelAvatar(ctx, layer) {
-        // Отрисовка пиксельного аватара
         const { pixels, pixelSize, size } = layer;
         if (!pixels) return;
 
@@ -403,31 +586,7 @@ export class Generator {
         ctx.restore();
     }
 
-    drawStarFallback(ctx, params) {
-        const { x, y, size, points, color } = params;
-        const outerRadius = size || 20;
-        const innerRadius = outerRadius * 0.4;
-        const spikes = points || 5;
-        
-        ctx.save();
-        ctx.translate(x || 0, y || 0);
-        ctx.fillStyle = color || '#f59e0b';
-        ctx.shadowColor = (color || '#f59e0b') + '60';
-        ctx.shadowBlur = 15;
-        
-        ctx.beginPath();
-        for (let i = 0; i < spikes * 2; i++) {
-            const radius = i % 2 === 0 ? outerRadius : innerRadius;
-            const angle = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
-            if (i === 0) ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
-            else ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
-        }
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-    }
-
-    applyEffect(ctx, effect, width, height) {
+    applyEffectToCanvas(ctx, effect, width, height) {
         switch (effect.type) {
             case 'glow':
                 this.drawGlow(ctx, effect, width, height);
@@ -438,11 +597,16 @@ export class Generator {
             case 'scanline':
                 this.applyScanlineEffect(ctx, width, height, effect.intensity);
                 break;
+            case 'glitch':
+                this.applyGlitchEffect(ctx, width, height, effect.intensity);
+                break;
+            case 'particles':
+                this.applyParticlesEffect(ctx, width, height, effect.count || 15);
+                break;
         }
     }
 
     applyVintageEffect(ctx, width, height, intensity = 0.3) {
-        // Эффект старения
         ctx.save();
         ctx.globalAlpha = intensity * 0.2;
         ctx.fillStyle = '#8b7355';
@@ -450,8 +614,7 @@ export class Generator {
         ctx.restore();
     }
 
-    applyScanlineEffect(ctx, width, height, intensity = 0.2) {
-        // Эффект сканирующих линий
+    applyScanlineEffect(ctx, width, height, intensity = 0.15) {
         ctx.save();
         ctx.globalAlpha = intensity;
         for (let y = 0; y < height; y += 4) {
@@ -459,6 +622,56 @@ export class Generator {
             ctx.fillRect(0, y, width, 1);
         }
         ctx.restore();
+    }
+
+    applyGlitchEffect(ctx, width, height, intensity = 0.1) {
+        if (Math.random() > 0.7) {
+            ctx.save();
+            const offset = Math.random() * 20 - 10;
+            const y = Math.random() * height;
+            const h = 5 + Math.random() * 20;
+            ctx.globalAlpha = intensity;
+            ctx.drawImage(ctx.canvas, offset, y, width, h, 0, y, width, h);
+            ctx.restore();
+        }
+    }
+
+    applyParticlesEffect(ctx, width, height, count = 15) {
+        ctx.save();
+        for (let i = 0; i < count; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const size = 1 + Math.random() * 3;
+            const color = ['#ffd700', '#ff6b6b', '#4d96ff', '#6bcb77', '#ff9f43'][Math.floor(Math.random() * 5)];
+            ctx.globalAlpha = 0.1 + Math.random() * 0.3;
+            ctx.fillStyle = color;
+            ctx.shadowColor = color + '60';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    // ===== ЦВЕТОВЫЕ УТИЛИТЫ =====
+
+    lightenColor(hex, percent) {
+        const num = parseInt(hex.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.min(255, (num >> 16) + amt);
+        const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+        const B = Math.min(255, (num & 0x0000FF) + amt);
+        return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+    }
+
+    darkenColor(hex, percent) {
+        const num = parseInt(hex.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.max(0, (num >> 16) - amt);
+        const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+        const B = Math.max(0, (num & 0x0000FF) - amt);
+        return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
     }
 
     // ===== ЭКСПОРТ =====
@@ -527,22 +740,31 @@ export class Generator {
             return `<text x="${item.x}" y="${item.y}" fill="${item.color}" font-size="${item.size}" font-weight="${item.weight}" text-anchor="middle" dominant-baseline="middle">${item.text}</text>`;
         }
         if (item.type === 'pixel_avatar') {
-            // Для пиксельных аватаров SVG экспорт
             let svg = '';
             const { pixels, pixelSize, size: avatarSize } = item;
             if (!pixels) return '';
+            const totalSize = pixelSize * avatarSize;
+            const offsetX = (size - totalSize) / 2;
+            const offsetY = (size - totalSize) / 2;
             
             for (let y = 0; y < pixels.length; y++) {
                 for (let x = 0; x < pixels[y].length; x++) {
                     const color = pixels[y][x];
                     if (color && color !== 0 && color !== 'transparent') {
-                        const px = x * pixelSize + (size - avatarSize * pixelSize) / 2;
-                        const py = y * pixelSize + (size - avatarSize * pixelSize) / 2;
-                        svg += `<rect x="${px}" y="${py}" width="${pixelSize}" height="${pixelSize}" fill="${color}" />`;
+                        svg += `<rect x="${offsetX + x * pixelSize}" y="${offsetY + y * pixelSize}" width="${pixelSize}" height="${pixelSize}" fill="${color}" />`;
                     }
                 }
             }
             return svg;
+        }
+        if (item.type === 'dot') {
+            return `<circle cx="${item.x}" cy="${item.y}" r="${item.size}" fill="${item.color}" opacity="${item.opacity}" />`;
+        }
+        if (item.type === 'star') {
+            const cx = item.x || 250;
+            const cy = item.y || 250;
+            const r = item.size || 20;
+            return `<polygon points="${cx},${cy-r} ${cx+r*0.3},${cy-r*0.3} ${cx+r},${cy-r*0.3} ${cx+r*0.4},${cy+r*0.1} ${cx+r*0.6},${cy+r*0.8} ${cx},${cy+r*0.4} ${cx-r*0.6},${cy+r*0.8} ${cx-r*0.4},${cy+r*0.1} ${cx-r},${cy-r*0.3} ${cx-r*0.3},${cy-r*0.3}" fill="${item.color}" opacity="${item.opacity || 1}" />`;
         }
         return '';
     }
