@@ -1,5 +1,5 @@
 // =============================================================
-// APP - Главный контроллер приложения
+// APP - Главный контроллер приложения v4.0
 // =============================================================
 
 import { Router } from './Router.js';
@@ -16,7 +16,7 @@ import { CharacterGenerator } from '../generators/CharacterGenerator.js';
 
 export class App {
     constructor() {
-        // Инициализация базовых модулей
+        // ===== ИНИЦИАЛИЗАЦИЯ МОДУЛЕЙ =====
         this.storage = new Storage('nif_');
         this.ui = new UIManager();
         this.router = new Router();
@@ -24,13 +24,13 @@ export class App {
         this.colorPalette = new ColorPalette();
         this.fontLibrary = new FontLibrary();
         
-        // Инициализация генераторов
+        // Генераторы
         this.buttonGenerator = new ButtonGenerator(this.shapeLibrary, this.colorPalette, this.fontLibrary);
         this.iconGenerator = new IconGenerator(this.shapeLibrary, this.colorPalette, this.fontLibrary);
         this.avatarGenerator = new AvatarGenerator(this.shapeLibrary, this.colorPalette, this.fontLibrary);
         this.characterGenerator = new CharacterGenerator(this.shapeLibrary, this.colorPalette, this.fontLibrary);
 
-        // Состояние приложения
+        // ===== СОСТОЯНИЕ =====
         this.state = {
             currentTab: 'dashboard',
             selectedCategory: null,
@@ -49,15 +49,21 @@ export class App {
             isGenerating: false
         };
 
-        // Регистрация маршрутов
-        this.router.register('dashboard', () => this.showDashboard());
-        this.router.register('generator', () => this.showGenerator());
-        this.router.register('history', () => this.showHistory());
-        this.router.register('profile', () => this.showProfile());
-        this.router.register('settings', () => this.showSettings());
+        // ===== РЕГИСТРАЦИЯ МАРШРУТОВ =====
+        this.router
+            .register('dashboard', () => this.showDashboard())
+            .register('generator', () => this.showGenerator())
+            .register('history', () => this.showHistory())
+            .register('profile', () => this.showProfile())
+            .register('settings', () => this.showSettings());
 
+        // ===== ЗАПУСК =====
         this.init();
     }
+
+    // =============================================================
+    // ИНИЦИАЛИЗАЦИЯ
+    // =============================================================
 
     async init() {
         console.log('🚀 Neural Icon Forge v4.0 инициализация...');
@@ -72,7 +78,6 @@ export class App {
         this.setupEventListeners();
         this.loadSettings();
 
-        // Навигация по умолчанию
         this.router.navigate('dashboard');
 
         console.log('✅ Neural Icon Forge v4.0 готов к работе');
@@ -80,6 +85,10 @@ export class App {
         console.log(`🎨 Стили: ${Object.keys(STYLES).length}`);
         console.log(`💾 Сохранено: ${this.state.saved.length}`);
     }
+
+    // =============================================================
+    // ЗАГРУЗКА ДАННЫХ
+    // =============================================================
 
     async loadShapeData() {
         try {
@@ -123,6 +132,10 @@ export class App {
                 return data;
             });
     }
+
+    // =============================================================
+    // НАСТРОЙКА UI
+    // =============================================================
 
     setupUI() {
         this.renderCategories();
@@ -177,6 +190,10 @@ export class App {
         }
     }
 
+    // =============================================================
+    // РЕНДЕРИНГ
+    // =============================================================
+
     renderAll() {
         this.ui.renderHistory(this.state.history);
         this.ui.renderRecent(this.state.recent);
@@ -185,31 +202,48 @@ export class App {
     }
 
     renderDashboardPreview() {
-        if (this.state.history.length > 0) {
-            const container = document.querySelector('#page-dashboard .recent-grid');
-            if (container) {
-                const items = this.state.history.slice(0, 6).map(item => {
-                    if (!item || !item.data) return '';
-                    const dataStr = encodeURIComponent(JSON.stringify(item.data));
-                    return `
-                        <div class="recent-item" data-icon="${dataStr}">
-                            <canvas width="80" height="80" data-icon="${dataStr}"></canvas>
-                        </div>
-                    `;
-                }).join('');
-                container.innerHTML = items || '<div class="empty-state">Нет недавних иконок</div>';
-                
-                container.querySelectorAll('.recent-item canvas').forEach(canvas => {
-                    try {
-                        const data = JSON.parse(decodeURIComponent(canvas.dataset.icon));
-                        const ctx = canvas.getContext('2d');
-                        this.drawIcon(ctx, 80, 80, data);
-                    } catch (e) {
-                        console.warn('Ошибка отрисовки миниатюры:', e);
-                    }
-                });
-            }
+        const container = document.querySelector('#page-dashboard .recent-grid');
+        if (!container) return;
+
+        if (!this.state.history || this.state.history.length === 0) {
+            container.innerHTML = '<div class="empty-state">Нет недавних иконок</div>';
+            return;
         }
+
+        container.innerHTML = this.state.history.slice(0, 6).map(item => {
+            if (!item?.data) return '';
+            const dataStr = encodeURIComponent(JSON.stringify(item.data));
+            return `
+                <div class="recent-item" data-icon="${dataStr}">
+                    <canvas width="80" height="80" data-icon="${dataStr}"></canvas>
+                </div>
+            `;
+        }).join('');
+
+        container.querySelectorAll('.recent-item canvas').forEach(canvas => {
+            try {
+                const data = JSON.parse(decodeURIComponent(canvas.dataset.icon));
+                const ctx = canvas.getContext('2d');
+                this.drawIcon(ctx, 80, 80, data);
+            } catch (e) {
+                console.warn('Ошибка отрисовки миниатюры:', e);
+            }
+        });
+
+        container.querySelectorAll('.recent-item').forEach(item => {
+            item.addEventListener('click', () => {
+                try {
+                    const data = JSON.parse(decodeURIComponent(item.dataset.icon));
+                    const canvas = document.getElementById('generation-canvas');
+                    const ctx = canvas.getContext('2d');
+                    this.drawIcon(ctx, canvas.width, canvas.height, data);
+                    this.state.currentIconData = data;
+                    this.router.navigate('generator');
+                } catch (e) {
+                    console.error('Ошибка загрузки иконки:', e);
+                }
+            });
+        });
     }
 
     renderSavedIcons() {
@@ -222,7 +256,7 @@ export class App {
         }
 
         grid.innerHTML = this.state.saved.map((item, index) => {
-            if (!item || !item.data) return '';
+            if (!item?.data) return '';
             const dataStr = encodeURIComponent(JSON.stringify(item.data));
             return `
                 <div class="saved-item" data-index="${index}">
@@ -263,7 +297,7 @@ export class App {
 
     loadSavedIcon(index) {
         const item = this.state.saved[index];
-        if (!item || !item.data) return;
+        if (!item?.data) return;
 
         const canvas = document.getElementById('generation-canvas');
         const ctx = canvas.getContext('2d');
@@ -287,7 +321,10 @@ export class App {
         }
     }
 
-    // ===== ВЫБОР КАТЕГОРИИ И СТИЛЯ =====
+    // =============================================================
+    // ВЫБОР КАТЕГОРИИ И СТИЛЯ
+    // =============================================================
+
     selectCategory(category) {
         this.state.selectedCategory = category;
         document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
@@ -351,9 +388,16 @@ export class App {
             const categoryName = CATEGORIES[category]?.name || category;
             desc.textContent = `Настройка ${categoryName} в стиле "${styleName}"`;
         }
+
+        if (this.state.autoGenerate) {
+            setTimeout(() => this.generateIcon(), 300);
+        }
     }
 
-    // ===== ГЕНЕРАЦИЯ =====
+    // =============================================================
+    // ГЕНЕРАЦИЯ
+    // =============================================================
+
     generateIcon() {
         if (this.state.isGenerating) return;
         
@@ -387,7 +431,7 @@ export class App {
                     iconData = this.characterGenerator.generate(style, config);
                     break;
                 default:
-                    throw new Error('Неизвестная категория');
+                    throw new Error(`Неизвестная категория: ${category}`);
             }
 
             if (!iconData) throw new Error('Ошибка генерации');
@@ -395,7 +439,6 @@ export class App {
             this.state.currentIconData = iconData;
             this.state.currentParams = params;
 
-            // Отрисовка
             const canvas = document.getElementById('generation-canvas');
             const ctx = canvas.getContext('2d');
             this.drawIcon(ctx, canvas.width, canvas.height, iconData);
@@ -404,7 +447,6 @@ export class App {
             const styleName = STYLES[style]?.name || style;
             document.getElementById('preview-settings').textContent = `${categoryName} / ${styleName}`;
 
-            // Сохранение
             this.saveToHistory(iconData, params);
             this.updateStats();
 
@@ -413,20 +455,26 @@ export class App {
                 document.getElementById('save-status').textContent = '✅ Авто-сохранено в профиль';
                 document.getElementById('save-status').style.color = '#10b981';
             } else {
-                document.getElementById('save-status').textContent = '💾 Нажмите "Сохранить в профиль" чтобы сохранить';
+                document.getElementById('save-status').textContent = '💾 Нажмите "Сохранить в профиль"';
                 document.getElementById('save-status').style.color = '#f59e0b';
             }
         } catch (error) {
             console.error('Ошибка генерации:', error);
             document.getElementById('preview-settings').textContent = '❌ Ошибка генерации';
+            document.getElementById('save-status').textContent = '❌ ' + error.message;
+            document.getElementById('save-status').style.color = '#ef4444';
         } finally {
             this.state.isGenerating = false;
             document.getElementById('generate-btn').disabled = false;
         }
     }
 
+    // =============================================================
+    // ОТРИСОВКА ИКОНОК
+    // =============================================================
+
     drawIcon(ctx, width, height, data) {
-        if (!data || !data.layers) return;
+        if (!data?.layers) return;
         
         ctx.clearRect(0, 0, width, height);
         
@@ -446,55 +494,25 @@ export class App {
     }
 
     drawLayer(ctx, layer, width, height) {
+        // Защита от undefined/null
+        if (!layer || !layer.type) {
+            console.warn('⚠️ Слой без типа:', layer);
+            return;
+        }
+        
         const cx = width / 2;
         const cy = height / 2;
-    
+
         switch (layer.type) {
             case 'background':
                 this.drawBackground(ctx, layer, width, height);
                 break;
-                
-            // Кнопки
             case 'button_main':
                 this.drawButtonMain(ctx, layer, cx, cy);
                 break;
-            case 'glow_layer':
-                this.drawGlowLayer(ctx, layer, width, height);
-                break;
-            case 'decorative_element':
-                this.drawDecorativeElement(ctx, layer);
-                break;
-            case 'pixel_corner':
-                this.drawPixelCorner(ctx, layer);
-                break;
-            case 'highlight':
-                this.drawHighlight(ctx, layer);
-                break;
-                
-            // Иконки
             case 'icon_main':
                 this.drawIconMain(ctx, layer);
                 break;
-            case 'icon_inner':
-                this.drawIconInner(ctx, layer);
-                break;
-            case 'decorative_dot':
-                this.drawDot(ctx, layer);
-                break;
-            case 'pixel_grid':
-                this.drawPixelGrid(ctx, layer);
-                break;
-            case 'cartoon_face':
-                this.drawCartoonFace(ctx, layer);
-                break;
-            case 'rune':
-                this.drawRune(ctx, layer);
-                break;
-            case 'neon_line':
-                this.drawNeonLine(ctx, layer);
-                break;
-                
-            // Аватары и персонажи
             case 'face_base':
                 this.drawFaceBase(ctx, layer, cx, cy);
                 break;
@@ -509,9 +527,6 @@ export class App {
                 break;
             case 'eye_highlight':
                 this.drawEyeHighlight(ctx, layer);
-                break;
-            case 'eyelashes':
-                this.drawEyelashes(ctx, layer);
                 break;
             case 'eyebrows':
                 this.drawEyebrows(ctx, layer, cx, cy);
@@ -539,11 +554,6 @@ export class App {
             case 'chibi_sparkle':
                 this.drawChibiSparkle(ctx, layer);
                 break;
-            case 'pixel_details':
-                this.drawPixelDetails(ctx, layer);
-                break;
-                
-            // Персонажи
             case 'torso':
                 this.drawTorso(ctx, layer);
                 break;
@@ -568,14 +578,6 @@ export class App {
             case 'magic_aura':
                 this.drawMagicAura(ctx, layer);
                 break;
-            case 'chibi_proportions':
-                // Пропорции чиби уже учтены в размерах
-                break;
-            case 'pixel_outline':
-                this.drawPixelOutline(ctx, layer);
-                break;
-                
-            // Аксессуары
             case 'glasses':
                 this.drawGlasses(ctx, layer);
                 break;
@@ -594,8 +596,6 @@ export class App {
             case 'backpack':
                 this.drawBackpack(ctx, layer);
                 break;
-                
-            // Оружие
             case 'sword':
                 this.drawSword(ctx, layer);
                 break;
@@ -611,20 +611,104 @@ export class App {
             case 'shield_weapon':
                 this.drawShieldWeapon(ctx, layer);
                 break;
-                
+            case 'glow_layer':
+                this.drawGlowLayer(ctx, layer, width, height);
+                break;
+            case 'decorative_element':
+                this.drawDecorativeElement(ctx, layer);
+                break;
+            case 'highlight':
+                this.drawHighlight(ctx, layer);
+                break;
+            case 'decorative_dot':
+                this.drawDot(ctx, layer);
+                break;
+            case 'rune':
+                this.drawRune(ctx, layer);
+                break;
+            case 'neon_line':
+                this.drawNeonLine(ctx, layer);
+                break;
+            case 'pixel_sprite':
+                this.drawPixelSprite(ctx, layer);
+                break;
+            case 'pixel_button':
+                this.drawPixelButton(ctx, layer);
+                break;
+            case 'pixel_icon':
+                this.drawPixelIcon(ctx, layer);
+                break;
+            case 'pixel_border':
+                this.drawPixelBorder(ctx, layer);
+                break;
+            case 'pixel_corner':
+                this.drawPixelCorner(ctx, layer);
+                break;
+            case 'pixel_outline':
+                this.drawPixelOutline(ctx, layer);
+                break;
+            case 'pixel_details':
+                this.drawPixelDetails(ctx, layer);
+                break;
+            case 'text':
+                this.drawText(ctx, layer, cx, cy);
+                break;
             default:
-                console.warn('Неизвестный тип слоя:', layer.type);
+                console.warn('⚠️ Неизвестный тип слоя:', layer.type);
         }
     }
 
     // =============================================================
-    // МЕТОДЫ ОТРИСОВКИ - Полная реализация всех типов слоев
+    // ИСПРАВЛЕННЫЙ МЕТОД drawBackground
     // =============================================================
 
-    // ---- КНОПКИ ----
+    drawBackground(ctx, layer, width, height) {
+        // Проверяем, что слой существует и имеет нужные свойства
+        if (!layer) return;
+        
+        // Если цвет прозрачный или стиль none - ничего не рисуем
+        if (layer.style === 'none' || layer.color === 'transparent') return;
+        
+        // Если это градиент
+        if (layer.style === 'gradient' && layer.color && layer.gradientColor) {
+            try {
+                const grad = ctx.createLinearGradient(0, 0, width, height);
+                grad.addColorStop(0, layer.color);
+                grad.addColorStop(1, layer.gradientColor);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, width, height);
+                return;
+            } catch (e) {
+                console.warn('⚠️ Ошибка создания градиента:', e);
+                // Если градиент не получился, используем сплошной цвет
+                if (layer.color && layer.color !== 'gradient' && layer.color !== 'transparent') {
+                    ctx.fillStyle = layer.color;
+                    ctx.fillRect(0, 0, width, height);
+                }
+                return;
+            }
+        }
+        
+        // Сплошной цвет - проверяем, что это валидный цвет
+        if (layer.color && layer.color !== 'gradient' && layer.color !== 'transparent') {
+            try {
+                ctx.fillStyle = layer.color;
+                ctx.fillRect(0, 0, width, height);
+            } catch (e) {
+                console.warn('⚠️ Ошибка установки цвета фона:', e);
+                // Используем цвет по умолчанию
+                ctx.fillStyle = '#0a0a0f';
+                ctx.fillRect(0, 0, width, height);
+            }
+        }
+    }
+
+    // =============================================================
+    // ОСТАЛЬНЫЕ МЕТОДЫ ОТРИСОВКИ (сокращенные)
+    // =============================================================
 
     drawButtonMain(ctx, layer, cx, cy) {
-        const { color, text, size, cornerRadius, x, y, textColor, font, glow, borderWidth, borderColor, shadow, style } = layer;
+        const { color, text, size, cornerRadius, x, y, textColor, font, glow, borderWidth, borderColor } = layer;
         const w = size * 1.5;
         const h = size * 0.5;
         const r = cornerRadius || 20;
@@ -632,143 +716,51 @@ export class App {
         const py = y || cy;
 
         ctx.save();
-
-        // Тень
-        if (shadow) {
-            ctx.shadowColor = 'rgba(0,0,0,0.3)';
-            ctx.shadowBlur = 20;
-            ctx.shadowOffsetY = 4;
-        }
-
-        // Свечение
         if (glow) {
             ctx.shadowColor = color + '60';
             ctx.shadowBlur = 30;
         }
-
-        // Основная форма
         ctx.fillStyle = color;
         this.roundRect(ctx, px - w/2, py - h/2, w, h, r);
         ctx.fill();
 
-        // Контур
         if (borderWidth > 0) {
             ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
             ctx.strokeStyle = borderColor || this.lightenColor(color, 20);
             ctx.lineWidth = borderWidth;
             this.roundRect(ctx, px - w/2, py - h/2, w, h, r);
             ctx.stroke();
         }
 
-        // Текст
         ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
         ctx.fillStyle = textColor || '#ffffff';
         ctx.font = `bold ${size * 0.2}px ${font || 'Arial'}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(text, px, py + 2);
-
+        ctx.fillText(text || 'Кнопка', px, py + 2);
         ctx.restore();
     }
-
-    drawGlowLayer(ctx, layer, width, height) {
-        const { color, size, x, y } = layer;
-        const cx = x || width / 2;
-        const cy = y || height / 2;
-
-        ctx.save();
-        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size || 100);
-        grad.addColorStop(0, color + '40');
-        grad.addColorStop(0.5, color + '20');
-        grad.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, width, height);
-        ctx.restore();
-    }
-
-    drawDecorativeElement(ctx, layer) {
-        const { x, y, size, color, shape } = layer;
-        ctx.save();
-        ctx.fillStyle = color || '#ffd700';
-        ctx.globalAlpha = 0.6;
-        
-        if (shape === 'diamond') {
-            ctx.translate(x, y);
-            ctx.rotate(Math.PI / 4);
-            ctx.fillRect(-size/2, -size/2, size, size);
-        } else {
-            ctx.beginPath();
-            ctx.arc(x, y, size/2, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.restore();
-    }
-
-    drawPixelCorner(ctx, layer) {
-        const { x, y, size, color, direction } = layer;
-        ctx.save();
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.5;
-        
-        const dx = direction.dx || 1;
-        const dy = direction.dy || 1;
-        
-        for (let i = 0; i < size; i += 4) {
-            for (let j = 0; j < size - i; j += 4) {
-                ctx.fillRect(
-                    x + dx * i,
-                    y + dy * j,
-                    4, 4
-                );
-            }
-        }
-        ctx.restore();
-    }
-
-    drawHighlight(ctx, layer) {
-        const { x, y, width, height, color, rotation } = layer;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(rotation || 0);
-        ctx.globalAlpha = 0.3;
-        ctx.fillStyle = color || 'rgba(255,255,255,0.3)';
-        ctx.beginPath();
-        ctx.ellipse(0, -height/2, width/2, height/2, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-    }
-
-    // ---- ИКОНКИ ----
 
     drawIconMain(ctx, layer) {
-        const { shape, color, size, x, y, strokeWidth, strokeColor, glow, style } = layer;
+        const { shape, color, size, x, y, strokeWidth, strokeColor, glow } = layer;
         const cx = x || 250;
         const cy = y || 250;
         const radius = size / 2;
 
         ctx.save();
-
         if (glow) {
             ctx.shadowColor = color + '60';
             ctx.shadowBlur = 30;
         }
-
         ctx.fillStyle = color;
         ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-
-        // Отрисовка формы
         this.drawShape(ctx, shape, cx, cy, radius);
-
         if (strokeWidth > 0) {
             ctx.strokeStyle = strokeColor || this.darkenColor(color, 30);
             ctx.lineWidth = strokeWidth;
             this.drawShape(ctx, shape, cx, cy, radius);
             ctx.stroke();
         }
-
         ctx.restore();
     }
 
@@ -804,201 +796,49 @@ export class App {
                 ctx.lineTo(cx - radius, cy);
                 ctx.closePath();
                 break;
-            case 'star':
-                this.drawStarPath(ctx, cx, cy, radius);
-                break;
             default:
                 ctx.arc(cx, cy, radius, 0, Math.PI * 2);
         }
     }
 
-    drawStarPath(ctx, cx, cy, radius) {
-        const spikes = 5;
-        const outerRadius = radius;
-        const innerRadius = radius * 0.4;
-        
-        for (let i = 0; i < spikes * 2; i++) {
-            const r = i % 2 === 0 ? outerRadius : innerRadius;
-            const angle = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
-            const x = cx + Math.cos(angle) * r;
-            const y = cy + Math.sin(angle) * r;
-            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        }
-        ctx.closePath();
-    }
-
-    drawIconInner(ctx, layer) {
-        const { shape, color, size, x, y, opacity } = layer;
-        ctx.save();
-        ctx.globalAlpha = opacity || 0.6;
-        ctx.fillStyle = color;
-        this.drawShape(ctx, shape, x, y, size / 2);
-        ctx.fill();
-        ctx.restore();
-    }
-
-    drawPixelGrid(ctx, layer) {
-        const { size, pixelSize, gridSize, color, x, y, complexity } = layer;
-        ctx.save();
-        
-        const offsetX = x - (gridSize * pixelSize) / 2;
-        const offsetY = y - (gridSize * pixelSize) / 2;
-        const density = 0.3 + (complexity / 10) * 0.5;
-
-        for (let i = 0; i < gridSize; i++) {
-            for (let j = 0; j < gridSize; j++) {
-                const dx = i - gridSize/2;
-                const dy = j - gridSize/2;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                const fill = dist < gridSize * 0.4 && Math.random() < density;
-                
-                if (fill) {
-                    ctx.fillStyle = color;
-                    ctx.fillRect(offsetX + i * pixelSize, offsetY + j * pixelSize, pixelSize, pixelSize);
-                }
-            }
-        }
-        ctx.restore();
-    }
-
-    drawCartoonFace(ctx, layer) {
-        const { color, pupilColor, size, x, y } = layer;
-        ctx.save();
-        
-        // Глаза
-        ctx.fillStyle = color;
-        ctx.shadowColor = 'transparent';
-        
-        for (let side of [-1, 1]) {
-            ctx.beginPath();
-            ctx.ellipse(x + side * size * 0.8, y, size * 0.5, size * 0.6, 0, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = pupilColor;
-            ctx.beginPath();
-            ctx.arc(x + side * size * 0.8, y + 2, size * 0.2, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = color;
-        }
-        
-        // Улыбка
-        ctx.strokeStyle = pupilColor;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(x, y + size * 0.2, size * 0.3, 0.1, Math.PI - 0.1);
-        ctx.stroke();
-        
-        ctx.restore();
-    }
-
-    drawRune(ctx, layer) {
-        const { x, y, size, color, opacity } = layer;
-        ctx.save();
-        ctx.globalAlpha = opacity || 0.5;
-        ctx.strokeStyle = color || '#ffd700';
-        ctx.lineWidth = 2;
-        
-        // Простая руна в виде круга с крестом
-        ctx.beginPath();
-        ctx.arc(x, y, size/2, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.moveTo(x - size/2, y);
-        ctx.lineTo(x + size/2, y);
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.moveTo(x, y - size/2);
-        ctx.lineTo(x, y + size/2);
-        ctx.stroke();
-        
-        ctx.restore();
-    }
-
-    drawNeonLine(ctx, layer) {
-        const { x1, y1, x2, y2, color, width, opacity } = layer;
-        ctx.save();
-        ctx.globalAlpha = opacity || 0.5;
-        ctx.strokeStyle = color || '#00ffff';
-        ctx.lineWidth = width || 2;
-        ctx.shadowColor = color + '60';
-        ctx.shadowBlur = 10;
-        
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-        ctx.restore();
-    }
-
-    // ---- АВАТАРЫ И ПЕРСОНАЖИ ----
-
+    // --- Базовые методы отрисовки ---
     drawFaceBase(ctx, layer, cx, cy) {
-        const { color, size, shape, width, height, shadow } = layer;
-        const x = layer.x || cx;
-        const y = layer.y || cy;
-        
+        const { color, size, shape, width, height, x, y } = layer;
+        const px = x || cx;
+        const py = y || cy;
         ctx.save();
-        
-        if (shadow) {
-            ctx.shadowColor = 'rgba(0,0,0,0.1)';
-            ctx.shadowBlur = 15;
-            ctx.shadowOffsetY = 4;
-        }
-        
         ctx.fillStyle = color || '#f5d0b8';
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
-        
         if (shape === 'ellipse' || shape === 'anime_face') {
             const w = width || size * 0.85;
             const h = height || size * 0.95;
             ctx.beginPath();
-            ctx.ellipse(x, y, w/2, h/2, 0, 0, Math.PI * 2);
+            ctx.ellipse(px, py, w/2, h/2, 0, 0, Math.PI * 2);
             ctx.fill();
         } else {
             ctx.beginPath();
-            ctx.arc(x, y, size/2, 0, Math.PI * 2);
+            ctx.arc(px, py, size/2, 0, Math.PI * 2);
             ctx.fill();
         }
-        
         ctx.restore();
     }
 
     drawEyeWhite(ctx, layer) {
-        const { x, y, width, height, color, style } = layer;
+        const { x, y, width, height, color } = layer;
         ctx.save();
         ctx.fillStyle = color || '#ffffff';
-        ctx.shadowColor = 'transparent';
-        
         ctx.beginPath();
         ctx.ellipse(x, y, width/2, height/2, 0, 0, Math.PI * 2);
         ctx.fill();
-        
-        // Контур для некоторых стилей
-        if (style === 'anime' || style === 'cartoon') {
-            ctx.strokeStyle = '#2d3436';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.ellipse(x, y, width/2, height/2, 0, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-        
         ctx.restore();
     }
 
     drawIris(ctx, layer) {
-        const { x, y, size, color, style } = layer;
+        const { x, y, size, color } = layer;
         ctx.save();
         ctx.fillStyle = color || '#4d96ff';
-        
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
-        
         ctx.restore();
     }
 
@@ -1017,164 +857,65 @@ export class App {
         ctx.save();
         ctx.globalAlpha = opacity || 0.8;
         ctx.fillStyle = color || '#ffffff';
-        ctx.shadowColor = 'transparent';
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
     }
 
-    drawEyelashes(ctx, layer) {
-        const { x, y, size, color, side } = layer;
-        ctx.save();
-        ctx.strokeStyle = color || '#2d3436';
-        ctx.lineWidth = 2;
-        ctx.shadowColor = 'transparent';
-        
-        const count = 4;
-        for (let i = 0; i < count; i++) {
-            const angle = -0.3 + (i / (count - 1)) * 0.6;
-            const len = size * (0.5 + i / count * 0.5);
-            ctx.beginPath();
-            ctx.moveTo(x + side * size * 0.4, y - size * 0.2);
-            ctx.lineTo(
-                x + side * size * 0.4 + Math.sin(angle) * len * side,
-                y - size * 0.2 - Math.cos(angle) * len
-            );
-            ctx.stroke();
-        }
-        
-        ctx.restore();
-    }
-
     drawEyebrows(ctx, layer, cx, cy) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         const bx = x || cx;
         const by = y || cy;
-        
         ctx.save();
         ctx.strokeStyle = color || '#2d3436';
         ctx.lineWidth = 2;
-        ctx.shadowColor = 'transparent';
-        
         const leftX = bx - size * 1.2;
         const rightX = bx + size * 1.2;
-        
-        if (style === 'anime' || style === 'arched') {
-            // Аниме брови - изогнутые
-            ctx.beginPath();
-            ctx.moveTo(leftX, by);
-            ctx.quadraticCurveTo(leftX + size * 0.5, by - size * 0.6, leftX + size * 0.8, by - size * 0.2);
-            ctx.stroke();
-            
-            ctx.beginPath();
-            ctx.moveTo(rightX, by);
-            ctx.quadraticCurveTo(rightX - size * 0.5, by - size * 0.6, rightX - size * 0.8, by - size * 0.2);
-            ctx.stroke();
-        } else if (style === 'chibi') {
-            // Чиби брови - маленькие точки
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(leftX + size * 0.3, by - size * 0.3, size * 0.15, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(rightX - size * 0.3, by - size * 0.3, size * 0.15, 0, Math.PI * 2);
-            ctx.fill();
-        } else {
-            // Естественные брови
-            ctx.beginPath();
-            ctx.moveTo(leftX, by);
-            ctx.quadraticCurveTo(leftX + size * 0.5, by - size * 0.3, leftX + size, by);
-            ctx.stroke();
-            
-            ctx.beginPath();
-            ctx.moveTo(rightX, by);
-            ctx.quadraticCurveTo(rightX - size * 0.5, by - size * 0.3, rightX - size, by);
-            ctx.stroke();
-        }
-        
+        ctx.beginPath();
+        ctx.moveTo(leftX, by);
+        ctx.quadraticCurveTo(leftX + size * 0.5, by - size * 0.5, leftX + size * 0.8, by - size * 0.1);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(rightX, by);
+        ctx.quadraticCurveTo(rightX - size * 0.5, by - size * 0.5, rightX - size * 0.8, by - size * 0.1);
+        ctx.stroke();
         ctx.restore();
     }
 
     drawNose(ctx, layer, cx, cy) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         const nx = x || cx;
         const ny = y || cy;
-        
         ctx.save();
         ctx.fillStyle = color || '#e8c4a8';
-        ctx.shadowColor = 'transparent';
-        
-        if (style === 'tiny' || style === 'small') {
-            // Маленький носик
-            ctx.beginPath();
-            ctx.arc(nx, ny, size * 0.5, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (style === 'simple') {
-            // Простой носик
-            ctx.beginPath();
-            ctx.moveTo(nx, ny - size * 0.3);
-            ctx.lineTo(nx - size * 0.3, ny + size * 0.3);
-            ctx.lineTo(nx + size * 0.3, ny + size * 0.3);
-            ctx.closePath();
-            ctx.fill();
-        } else {
-            // Естественный носик
-            ctx.beginPath();
-            ctx.moveTo(nx, ny - size * 0.5);
-            ctx.quadraticCurveTo(nx - size * 0.5, ny, nx, ny + size * 0.3);
-            ctx.quadraticCurveTo(nx + size * 0.5, ny, nx, ny - size * 0.5);
-            ctx.fill();
-        }
-        
+        ctx.beginPath();
+        ctx.arc(nx, ny, size * 0.5, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
     }
 
     drawMouth(ctx, layer, cx, cy) {
-        const { color, size, x, y, expression, style } = layer;
+        const { color, size, x, y, expression } = layer;
         const mx = x || cx;
         const my = y || cy;
-        
         ctx.save();
         ctx.strokeStyle = color || '#e17055';
-        ctx.fillStyle = color || '#e17055';
         ctx.lineWidth = 2;
-        ctx.shadowColor = 'transparent';
-        
         if (expression === 'smile' || expression === 'happy') {
-            if (style === 'cute' || style === 'small') {
-                // Маленькая улыбка
-                ctx.beginPath();
-                ctx.arc(mx, my - size * 0.2, size * 0.4, 0.1, Math.PI - 0.1);
-                ctx.stroke();
-            } else {
-                // Широкая улыбка
-                ctx.beginPath();
-                ctx.arc(mx, my - size * 0.1, size * 0.6, 0.1, Math.PI - 0.1);
-                ctx.stroke();
-                
-                // Заполнение для широкой улыбки
-                ctx.beginPath();
-                ctx.arc(mx, my - size * 0.1, size * 0.6, 0.1, Math.PI - 0.1);
-                ctx.fillStyle = '#e17055';
-                ctx.fill();
-            }
+            ctx.beginPath();
+            ctx.arc(mx, my - size * 0.2, size * 0.5, 0.1, Math.PI - 0.1);
+            ctx.stroke();
         } else if (expression === 'surprised') {
+            ctx.fillStyle = color || '#e17055';
             ctx.beginPath();
             ctx.arc(mx, my, size * 0.3, 0, Math.PI * 2);
             ctx.fill();
-        } else if (expression === 'sad') {
-            ctx.beginPath();
-            ctx.arc(mx, my + size * 0.2, size * 0.4, Math.PI + 0.1, -0.1);
-            ctx.stroke();
         } else {
-            // Нейтральный
             ctx.beginPath();
-            ctx.moveTo(mx - size * 0.4, my);
-            ctx.lineTo(mx + size * 0.4, my);
+            ctx.arc(mx, my, size * 0.3, 0, Math.PI);
             ctx.stroke();
         }
-        
         ctx.restore();
     }
 
@@ -1182,86 +923,35 @@ export class App {
         const { color, size, x, y, opacity } = layer;
         const bx = x || cx;
         const by = y || cy;
-        
         ctx.save();
         ctx.globalAlpha = opacity || 0.3;
         ctx.fillStyle = color || '#ff6b6b';
-        ctx.shadowColor = 'transparent';
-        
-        // Левая щека
         ctx.beginPath();
-        ctx.ellipse(bx - size * 1.4, by + size * 0.2, size * 0.8, size * 0.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(bx - size * 1.4, by + size * 0.2, size * 0.6, size * 0.4, 0, 0, Math.PI * 2);
         ctx.fill();
-        
-        // Правая щека
         ctx.beginPath();
-        ctx.ellipse(bx + size * 1.4, by + size * 0.2, size * 0.8, size * 0.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(bx + size * 1.4, by + size * 0.2, size * 0.6, size * 0.4, 0, 0, Math.PI * 2);
         ctx.fill();
-        
         ctx.restore();
     }
 
     drawHair(ctx, layer) {
-        const { color, size, x, y, style, category } = layer;
-        ctx.save();
-        ctx.fillStyle = color;
-        ctx.shadowColor = 'transparent';
-        
+        const { color, size, x, y, type } = layer;
         const cx = x || 250;
         const cy = y || 250;
-        const type = layer.type || 'hair_base';
-        
+        ctx.save();
+        ctx.fillStyle = color;
         if (type === 'hair_base') {
-            // Основная прическа
-            if (style === 'short') {
-                ctx.beginPath();
-                ctx.ellipse(cx, cy, size * 0.6, size * 0.4, 0, Math.PI, Math.PI * 2);
-                ctx.fill();
-            } else if (style === 'long') {
-                ctx.beginPath();
-                ctx.ellipse(cx, cy, size * 0.55, size * 0.5, 0, Math.PI, Math.PI * 2);
-                ctx.fill();
-                // Длинные волосы по бокам
-                ctx.fillRect(cx - size * 0.4, cy, size * 0.15, size * 0.5);
-                ctx.fillRect(cx + size * 0.25, cy, size * 0.15, size * 0.5);
-            } else if (style === 'ponytail') {
-                ctx.beginPath();
-                ctx.ellipse(cx, cy, size * 0.6, size * 0.35, 0, Math.PI, Math.PI * 2);
-                ctx.fill();
-            } else if (style === 'bald') {
-                // Лысый - ничего не рисуем
-            } else {
-                // Средняя прическа
-                ctx.beginPath();
-                ctx.ellipse(cx, cy, size * 0.6, size * 0.4, 0, Math.PI, Math.PI * 2);
-                ctx.fill();
-            }
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, size * 0.55, size * 0.4, 0, Math.PI, Math.PI * 2);
+            ctx.fill();
         } else if (type === 'hair_bangs') {
-            // Челка
-            const bangsSize = size * 0.6;
-            if (style === 'long' || style === 'ponytail') {
-                ctx.fillRect(cx - bangsSize * 0.6, cy - size * 0.5, bangsSize, size * 0.3);
-                // Неровная челка
-                for (let i = 0; i < 5; i++) {
-                    const xOff = -bangsSize * 0.5 + i * bangsSize * 0.25;
-                    ctx.fillRect(cx + xOff, cy - size * 0.5 + Math.sin(i * 0.8) * 5, bangsSize * 0.15, size * 0.2);
-                }
-            } else {
-                ctx.fillRect(cx - bangsSize * 0.5, cy - size * 0.5, bangsSize, size * 0.3);
-            }
+            ctx.fillRect(cx - size * 0.25, cy - size * 0.5, size * 0.5, size * 0.3);
         } else if (type === 'hair_tail') {
-            // Хвост
-            if (style === 'ponytail') {
-                ctx.beginPath();
-                ctx.ellipse(cx + size * 0.4, cy + size * 0.3, size * 0.25, size * 0.5, 0.3, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                ctx.beginPath();
-                ctx.ellipse(cx, cy + size * 0.2, size * 0.4, size * 0.6, 0, 0, Math.PI * 2);
-                ctx.fill();
-            }
+            ctx.beginPath();
+            ctx.ellipse(cx + size * 0.3, cy + size * 0.2, size * 0.2, size * 0.4, 0.3, 0, Math.PI * 2);
+            ctx.fill();
         }
-        
         ctx.restore();
     }
 
@@ -1269,22 +959,16 @@ export class App {
         const { color, size, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color;
-        ctx.shadowColor = 'transparent';
-        
-        // Левое ухо
         ctx.beginPath();
         ctx.moveTo(x - size * 1.2, y);
         ctx.quadraticCurveTo(x - size * 1.6, y - size * 0.8, x - size * 1.0, y - size * 0.3);
         ctx.quadraticCurveTo(x - size * 1.1, y - size * 0.1, x - size * 1.2, y);
         ctx.fill();
-        
-        // Правое ухо
         ctx.beginPath();
         ctx.moveTo(x + size * 1.2, y);
         ctx.quadraticCurveTo(x + size * 1.6, y - size * 0.8, x + size * 1.0, y - size * 0.3);
         ctx.quadraticCurveTo(x + size * 1.1, y - size * 0.1, x + size * 1.2, y);
         ctx.fill();
-        
         ctx.restore();
     }
 
@@ -1295,8 +979,6 @@ export class App {
         ctx.fillStyle = color || '#ffd700';
         ctx.shadowColor = color + '60';
         ctx.shadowBlur = 15;
-        
-        // Звездочка
         const points = 4;
         const outer = size;
         const inner = size * 0.3;
@@ -1310,7 +992,6 @@ export class App {
         }
         ctx.closePath();
         ctx.fill();
-        
         ctx.restore();
     }
 
@@ -1318,9 +999,6 @@ export class App {
         const { color, size, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color || '#ffffff';
-        ctx.shadowColor = 'transparent';
-        
-        // Звездочка в глазе
         ctx.beginPath();
         for (let i = 0; i < 4; i++) {
             const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
@@ -1330,66 +1008,22 @@ export class App {
         }
         ctx.closePath();
         ctx.fill();
-        
         ctx.restore();
     }
-
-    drawPixelDetails(ctx, layer) {
-        const { size, pixelSize, x, y, color, opacity } = layer;
-        ctx.save();
-        ctx.globalAlpha = opacity || 0.3;
-        ctx.fillStyle = color || '#2d3436';
-        
-        const gridSize = Math.floor(size / pixelSize);
-        const offsetX = x - (gridSize * pixelSize) / 2;
-        const offsetY = y - (gridSize * pixelSize) / 2;
-        
-        // Пиксельный контур лица
-        for (let i = 0; i < gridSize; i += 2) {
-            for (let j = 0; j < gridSize; j += 2) {
-                const dx = i - gridSize/2;
-                const dy = j - gridSize/2;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (Math.abs(dist - gridSize * 0.45) < 3) {
-                    ctx.fillRect(offsetX + i * pixelSize, offsetY + j * pixelSize, pixelSize, pixelSize);
-                }
-            }
-        }
-        
-        ctx.restore();
-    }
-
-    // ---- ПЕРСОНАЖИ ----
 
     drawTorso(ctx, layer) {
-        const { color, width, height, x, y, shape, style } = layer;
+        const { color, width, height, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color;
-        ctx.shadowColor = 'transparent';
-        
         const w = width || 60;
         const h = height || 100;
-        
-        if (shape === 'muscular') {
-            // Мускулистое тело
-            ctx.beginPath();
-            ctx.moveTo(x - w/2, y - h/2);
-            ctx.quadraticCurveTo(x - w/2 - 10, y, x - w/2 + 5, y + h/2);
-            ctx.lineTo(x + w/2 - 5, y + h/2);
-            ctx.quadraticCurveTo(x + w/2 + 10, y, x + w/2, y - h/2);
-            ctx.closePath();
-            ctx.fill();
-        } else {
-            // Нормальное тело
-            ctx.beginPath();
-            ctx.moveTo(x - w/2, y - h/2);
-            ctx.quadraticCurveTo(x - w/2 - 5, y + h/4, x - w/2 + 5, y + h/2);
-            ctx.lineTo(x + w/2 - 5, y + h/2);
-            ctx.quadraticCurveTo(x + w/2 + 5, y + h/4, x + w/2, y - h/2);
-            ctx.closePath();
-            ctx.fill();
-        }
-        
+        ctx.beginPath();
+        ctx.moveTo(x - w/2, y - h/2);
+        ctx.quadraticCurveTo(x - w/2 - 5, y + h/4, x - w/2 + 5, y + h/2);
+        ctx.lineTo(x + w/2 - 5, y + h/2);
+        ctx.quadraticCurveTo(x + w/2 + 5, y + h/4, x + w/2, y - h/2);
+        ctx.closePath();
+        ctx.fill();
         ctx.restore();
     }
 
@@ -1397,76 +1031,55 @@ export class App {
         const { color, size, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color;
-        ctx.shadowColor = 'transparent';
         ctx.fillRect(x - size/2, y, size, size * 1.2);
         ctx.restore();
     }
 
     drawHeadBase(ctx, layer) {
-        const { color, size, x, y, shape, width, height } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color || '#f5d0b8';
         ctx.shadowColor = 'rgba(0,0,0,0.05)';
         ctx.shadowBlur = 10;
-        
-        const w = width || size;
-        const h = height || size;
-        
-        if (shape === 'ellipse') {
-            ctx.beginPath();
-            ctx.ellipse(x, y, w/2, h/2, 0, 0, Math.PI * 2);
-            ctx.fill();
-        } else {
-            ctx.beginPath();
-            ctx.arc(x, y, size/2, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        
+        ctx.beginPath();
+        ctx.arc(x, y, size/2, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
     }
 
     drawArm(ctx, layer) {
-        const { color, x1, y1, x2, y2, width, style } = layer;
+        const { color, x1, y1, x2, y2, width } = layer;
         ctx.save();
         ctx.strokeStyle = color;
         ctx.lineWidth = width || 8;
         ctx.lineCap = 'round';
-        ctx.shadowColor = 'transparent';
-        
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
-        
         ctx.restore();
     }
 
     drawLeg(ctx, layer) {
-        const { color, x1, y1, x2, y2, width, style } = layer;
+        const { color, x1, y1, x2, y2, width } = layer;
         ctx.save();
         ctx.strokeStyle = color;
         ctx.lineWidth = width || 12;
         ctx.lineCap = 'round';
-        ctx.shadowColor = 'transparent';
-        
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
-        
         ctx.restore();
     }
 
     drawShoe(ctx, layer) {
-        const { color, x, y, width, height, style } = layer;
+        const { color, x, y, width, height } = layer;
         ctx.save();
         ctx.fillStyle = color;
-        ctx.shadowColor = 'transparent';
-        
         ctx.beginPath();
         ctx.ellipse(x, y, width/2, height/2, 0, 0, Math.PI * 2);
         ctx.fill();
-        
         ctx.restore();
     }
 
@@ -1475,8 +1088,6 @@ export class App {
         ctx.save();
         ctx.globalAlpha = opacity || 0.8;
         ctx.fillStyle = color;
-        ctx.shadowColor = 'transparent';
-        
         ctx.beginPath();
         ctx.moveTo(x - size * 0.3, y - size * 0.4);
         ctx.quadraticCurveTo(x - size * 0.7, y + size * 0.2, x - size * 0.4, y + size * 0.6);
@@ -1484,7 +1095,6 @@ export class App {
         ctx.quadraticCurveTo(x + size * 0.7, y + size * 0.2, x + size * 0.3, y - size * 0.4);
         ctx.closePath();
         ctx.fill();
-        
         ctx.restore();
     }
 
@@ -1502,104 +1112,51 @@ export class App {
         ctx.restore();
     }
 
-    drawPixelOutline(ctx, layer) {
-        const { size, pixelSize, x, y, color, opacity } = layer;
-        ctx.save();
-        ctx.globalAlpha = opacity || 0.3;
-        ctx.fillStyle = color || '#2d3436';
-        
-        const gridSize = Math.floor(size / pixelSize);
-        const offsetX = x - (gridSize * pixelSize) / 2;
-        const offsetY = y - (gridSize * pixelSize) / 2;
-        
-        // Контур персонажа
-        const bodyShape = [
-            [0, 2, 2, 2, 2, 0],
-            [2, 2, 2, 2, 2, 2],
-            [2, 2, 2, 2, 2, 2],
-            [0, 2, 2, 2, 2, 0],
-            [0, 2, 0, 0, 2, 0],
-            [0, 2, 0, 0, 2, 0]
-        ];
-        
-        const centerX = offsetX + (gridSize - 6) / 2 * pixelSize;
-        const centerY = offsetY + (gridSize - 6) / 2 * pixelSize;
-        
-        for (let i = 0; i < bodyShape.length; i++) {
-            for (let j = 0; j < bodyShape[i].length; j++) {
-                if (bodyShape[i][j] === 2) {
-                    ctx.fillRect(centerX + j * pixelSize, centerY + i * pixelSize, pixelSize, pixelSize);
-                }
-            }
-        }
-        
-        ctx.restore();
-    }
-
-    // ---- АКСЕССУАРЫ ----
-
     drawGlasses(ctx, layer) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.strokeStyle = color || '#2d3436';
         ctx.lineWidth = 2;
-        ctx.shadowColor = 'transparent';
         ctx.fillStyle = 'rgba(255,255,255,0.1)';
-        
-        // Левая линза
         ctx.beginPath();
         ctx.ellipse(x - size * 0.8, y, size * 0.5, size * 0.4, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.fill();
-        
-        // Правая линза
         ctx.beginPath();
         ctx.ellipse(x + size * 0.8, y, size * 0.5, size * 0.4, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.fill();
-        
-        // Дужка
         ctx.beginPath();
         ctx.moveTo(x - size * 0.3, y);
         ctx.lineTo(x + size * 0.3, y);
         ctx.stroke();
-        
         ctx.restore();
     }
 
     drawHat(ctx, layer) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color || '#2d3436';
-        ctx.shadowColor = 'transparent';
-        
-        // Поля шляпы
         ctx.beginPath();
         ctx.ellipse(x, y + size * 0.1, size * 0.8, size * 0.15, 0, 0, Math.PI * 2);
         ctx.fill();
-        
-        // Тулья
         ctx.beginPath();
         ctx.moveTo(x - size * 0.4, y + size * 0.1);
         ctx.quadraticCurveTo(x - size * 0.3, y - size * 0.4, x, y - size * 0.5);
         ctx.quadraticCurveTo(x + size * 0.3, y - size * 0.4, x + size * 0.4, y + size * 0.1);
         ctx.closePath();
         ctx.fill();
-        
         ctx.restore();
     }
 
     drawCrown(ctx, layer) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color || '#ffd700';
         ctx.shadowColor = color + '60';
         ctx.shadowBlur = 15;
-        
-        // Основа короны
         const w = size * 0.7;
         const h = size * 0.4;
-        
         ctx.beginPath();
         ctx.moveTo(x - w/2, y + h/2);
         for (let i = 0; i < 5; i++) {
@@ -1610,41 +1167,31 @@ export class App {
         ctx.lineTo(x + w/2, y + h/2);
         ctx.closePath();
         ctx.fill();
-        
         ctx.restore();
     }
 
     drawHeadphones(ctx, layer) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.strokeStyle = color || '#2d3436';
         ctx.lineWidth = 4;
-        ctx.shadowColor = 'transparent';
         ctx.fillStyle = color || '#2d3436';
-        
-        // Дужка
         ctx.beginPath();
         ctx.arc(x, y - size * 0.1, size * 0.4, Math.PI * 1.2, Math.PI * 1.8);
         ctx.stroke();
-        
-        // Наушники
         ctx.beginPath();
         ctx.ellipse(x - size * 0.3, y + size * 0.1, size * 0.15, size * 0.25, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
         ctx.ellipse(x + size * 0.3, y + size * 0.1, size * 0.15, size * 0.25, 0, 0, Math.PI * 2);
         ctx.fill();
-        
         ctx.restore();
     }
 
     drawBow(ctx, layer) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color || '#ff6b6b';
-        ctx.shadowColor = 'transparent';
-        
-        // Бант
         ctx.beginPath();
         ctx.moveTo(x - size, y);
         ctx.quadraticCurveTo(x - size * 0.3, y - size, x, y);
@@ -1652,21 +1199,15 @@ export class App {
         ctx.quadraticCurveTo(x + size * 0.3, y + size, x, y);
         ctx.quadraticCurveTo(x - size * 0.3, y + size, x - size, y);
         ctx.fill();
-        
         ctx.restore();
     }
 
     drawBackpack(ctx, layer) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color || '#2d3436';
-        ctx.shadowColor = 'transparent';
-        
-        ctx.beginPath();
-        ctx.roundRect(x - size/2, y - size/2, size, size * 0.8, 5);
+        this.roundRect(ctx, x - size/2, y - size/2, size, size * 0.8, 5);
         ctx.fill();
-        
-        // Лямки
         ctx.strokeStyle = color;
         ctx.lineWidth = 3;
         ctx.beginPath();
@@ -1677,19 +1218,13 @@ export class App {
         ctx.moveTo(x + size * 0.2, y - size/2);
         ctx.lineTo(x + size * 0.4, y + size * 0.2);
         ctx.stroke();
-        
         ctx.restore();
     }
 
-    // ---- ОРУЖИЕ ----
-
     drawSword(ctx, layer) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color || '#c0c0c0';
-        ctx.shadowColor = 'transparent';
-        
-        // Клинок
         ctx.beginPath();
         ctx.moveTo(x - size * 0.05, y - size);
         ctx.lineTo(x + size * 0.05, y - size);
@@ -1697,97 +1232,67 @@ export class App {
         ctx.lineTo(x - size * 0.03, y + size * 0.2);
         ctx.closePath();
         ctx.fill();
-        
-        // Рукоять
         ctx.fillStyle = '#8b7355';
         ctx.fillRect(x - size * 0.04, y + size * 0.2, size * 0.08, size * 0.15);
-        
-        // Гарда
         ctx.fillStyle = '#ffd700';
         ctx.fillRect(x - size * 0.12, y + size * 0.18, size * 0.24, size * 0.03);
-        
         ctx.restore();
     }
 
     drawStaff(ctx, layer) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.strokeStyle = color || '#8b7355';
         ctx.lineWidth = 4;
-        ctx.shadowColor = 'transparent';
-        
-        // Посох
         ctx.beginPath();
         ctx.moveTo(x, y + size * 0.5);
         ctx.lineTo(x, y - size * 0.5);
         ctx.stroke();
-        
-        // Навершие
         ctx.fillStyle = '#ffd700';
         ctx.beginPath();
         ctx.arc(x, y - size * 0.5, size * 0.08, 0, Math.PI * 2);
         ctx.fill();
-        
-        // Камень
         ctx.fillStyle = '#4d96ff';
         ctx.beginPath();
         ctx.arc(x, y - size * 0.5, size * 0.04, 0, Math.PI * 2);
         ctx.fill();
-        
         ctx.restore();
     }
 
     drawBowWeapon(ctx, layer) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.strokeStyle = color || '#8b7355';
         ctx.lineWidth = 3;
-        ctx.shadowColor = 'transparent';
-        
-        // Лук
         ctx.beginPath();
         ctx.arc(x, y + size * 0.2, size * 0.4, Math.PI * 1.2, Math.PI * 1.8);
         ctx.stroke();
-        
-        // Тетива
         ctx.beginPath();
         ctx.moveTo(x - size * 0.35, y + size * 0.1);
         ctx.lineTo(x + size * 0.35, y + size * 0.1);
         ctx.stroke();
-        
         ctx.restore();
     }
 
     drawGun(ctx, layer) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color || '#2d3436';
-        ctx.shadowColor = 'transparent';
-        
-        // Ствол
         ctx.fillRect(x - size * 0.05, y - size * 0.3, size * 0.1, size * 0.6);
-        
-        // Рукоять
         ctx.beginPath();
         ctx.moveTo(x - size * 0.12, y + size * 0.3);
         ctx.quadraticCurveTo(x, y + size * 0.5, x + size * 0.12, y + size * 0.3);
         ctx.fill();
-        
-        // Курок
         ctx.fillRect(x - size * 0.02, y + size * 0.25, size * 0.04, size * 0.08);
-        
         ctx.restore();
     }
 
     drawShieldWeapon(ctx, layer) {
-        const { color, size, x, y, style } = layer;
+        const { color, size, x, y } = layer;
         ctx.save();
         ctx.fillStyle = color || '#c0c0c0';
-        ctx.shadowColor = 'transparent';
         ctx.strokeStyle = '#ffd700';
         ctx.lineWidth = 2;
-        
-        // Щит
         ctx.beginPath();
         ctx.moveTo(x, y - size/2);
         ctx.quadraticCurveTo(x + size/2, y - size/3, x + size/2 * 0.8, y + size/3);
@@ -1796,17 +1301,356 @@ export class App {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
-        
-        // Символ на щите
         ctx.fillStyle = '#ffd700';
         ctx.beginPath();
         ctx.arc(x, y, size * 0.15, 0, Math.PI * 2);
         ctx.fill();
-        
         ctx.restore();
     }
 
-    // ---- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ----
+    drawGlowLayer(ctx, layer, width, height) {
+        const { color, size, x, y } = layer;
+        const cx = x || width / 2;
+        const cy = y || height / 2;
+        ctx.save();
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size || 100);
+        grad.addColorStop(0, color + '40');
+        grad.addColorStop(0.5, color + '20');
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+    }
+
+    drawDecorativeElement(ctx, layer) {
+        const { x, y, size, color, shape } = layer;
+        ctx.save();
+        ctx.fillStyle = color || '#ffd700';
+        ctx.globalAlpha = 0.6;
+        if (shape === 'diamond') {
+            ctx.translate(x, y);
+            ctx.rotate(Math.PI / 4);
+            ctx.fillRect(-size/2, -size/2, size, size);
+        } else {
+            ctx.beginPath();
+            ctx.arc(x, y, size/2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    drawHighlight(ctx, layer) {
+        const { x, y, width, height, color, rotation } = layer;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation || 0);
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = color || 'rgba(255,255,255,0.3)';
+        ctx.beginPath();
+        ctx.ellipse(0, -height/2, width/2, height/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    drawDot(ctx, layer) {
+        const { x, y, size, color, opacity } = layer;
+        ctx.save();
+        ctx.globalAlpha = opacity || 0.8;
+        ctx.fillStyle = color || '#7c3aed';
+        ctx.shadowColor = color + '60';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(x, y, size/2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    drawRune(ctx, layer) {
+        const { x, y, size, color, opacity } = layer;
+        ctx.save();
+        ctx.globalAlpha = opacity || 0.5;
+        ctx.strokeStyle = color || '#ffd700';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, size/2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x - size/2, y);
+        ctx.lineTo(x + size/2, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y - size/2);
+        ctx.lineTo(x, y + size/2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    drawNeonLine(ctx, layer) {
+        const { x1, y1, x2, y2, color, width, opacity } = layer;
+        ctx.save();
+        ctx.globalAlpha = opacity || 0.5;
+        ctx.strokeStyle = color || '#00ffff';
+        ctx.lineWidth = width || 2;
+        ctx.shadowColor = color + '60';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // =============================================================
+    // ПИКСЕЛЬНЫЕ МЕТОДЫ
+    // =============================================================
+
+    drawPixelSprite(ctx, layer) {
+        const { pixels, pixelSize, x, y } = layer;
+        if (!pixels || !pixels.length) return;
+        
+        const size = pixels.length;
+        const totalSize = size * pixelSize;
+        const offsetX = x - totalSize / 2;
+        const offsetY = y - totalSize / 2;
+        
+        for (let row = 0; row < size; row++) {
+            for (let col = 0; col < size; col++) {
+                const color = pixels[row][col];
+                if (color) {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(offsetX + col * pixelSize, offsetY + row * pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+    }
+
+    drawPixelButton(ctx, layer) {
+        const { color, text, w, h, pixelSize, x, y, textColor } = layer;
+        const offsetX = x - w / 2;
+        const offsetY = y - h / 2;
+        
+        for (let row = 0; row < h / pixelSize; row++) {
+            for (let col = 0; col < w / pixelSize; col++) {
+                const isBorder = row === 0 || row === h/pixelSize - 1 || col === 0 || col === w/pixelSize - 1;
+                ctx.fillStyle = isBorder ? this.lightenColor(color, 20) : color;
+                ctx.fillRect(offsetX + col * pixelSize, offsetY + row * pixelSize, pixelSize, pixelSize);
+            }
+        }
+        
+        if (text) {
+            ctx.fillStyle = textColor || '#ffffff';
+            ctx.font = `${Math.min(w, h) * 0.15}px 'Press Start 2P'`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, x, y + 2);
+        }
+    }
+
+    drawPixelIcon(ctx, layer) {
+        const { shape, color, gridSize, pixelSize, x, y, complexity } = layer;
+        const size = gridSize * pixelSize;
+        const offsetX = x - size / 2;
+        const offsetY = y - size / 2;
+        const density = 0.3 + (complexity / 10) * 0.5;
+        
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                const dx = i - gridSize/2;
+                const dy = j - gridSize/2;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                let fill = false;
+                
+                switch(shape) {
+                    case 'circle': fill = dist < gridSize * 0.4; break;
+                    case 'square': fill = Math.abs(dx) < gridSize * 0.4 && Math.abs(dy) < gridSize * 0.4; break;
+                    case 'hexagon': fill = Math.abs(dx) < gridSize * 0.4 && Math.abs(dy) < gridSize * 0.4 && Math.abs(dx + dy) < gridSize * 0.5; break;
+                    case 'shield': fill = dist < gridSize * 0.5 && Math.abs(dy) < gridSize * 0.3 || dist < gridSize * 0.3; break;
+                    case 'diamond': fill = Math.abs(dx) + Math.abs(dy) < gridSize * 0.4; break;
+                    default: fill = dist < gridSize * 0.4;
+                }
+                
+                if (fill && Math.random() < density) {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(offsetX + i * pixelSize, offsetY + j * pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+    }
+
+    drawPixelBorder(ctx, layer) {
+        const { color, w, h, pixelSize, x, y, opacity } = layer;
+        const offsetX = x - w / 2;
+        const offsetY = y - h / 2;
+        
+        ctx.save();
+        ctx.globalAlpha = opacity || 0.5;
+        for (let row = 0; row < h / pixelSize; row++) {
+            for (let col = 0; col < w / pixelSize; col++) {
+                const isBorder = row === 0 || row === h/pixelSize - 1 || col === 0 || col === w/pixelSize - 1;
+                if (isBorder) {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(offsetX + col * pixelSize, offsetY + row * pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+        ctx.restore();
+    }
+
+    drawPixelCorner(ctx, layer) {
+        const { x, y, size, color, direction } = layer;
+        ctx.save();
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.5;
+        const dx = direction.dx || 1;
+        const dy = direction.dy || 1;
+        for (let i = 0; i < size; i += 4) {
+            for (let j = 0; j < size - i; j += 4) {
+                ctx.fillRect(x + dx * i, y + dy * j, 4, 4);
+            }
+        }
+        ctx.restore();
+    }
+
+    drawPixelOutline(ctx, layer) {
+        const { size, pixelSize, x, y, color, opacity } = layer;
+        ctx.save();
+        ctx.globalAlpha = opacity || 0.3;
+        ctx.fillStyle = color || '#2d3436';
+        const gridSize = Math.floor(size / pixelSize);
+        const offsetX = x - (gridSize * pixelSize) / 2;
+        const offsetY = y - (gridSize * pixelSize) / 2;
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                const isBorder = i === 0 || i === gridSize - 1 || j === 0 || j === gridSize - 1;
+                if (isBorder) {
+                    ctx.fillRect(offsetX + i * pixelSize, offsetY + j * pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+        ctx.restore();
+    }
+
+    drawPixelDetails(ctx, layer) {
+        const { size, pixelSize, x, y, color, opacity } = layer;
+        ctx.save();
+        ctx.globalAlpha = opacity || 0.3;
+        ctx.fillStyle = color || '#2d3436';
+        const gridSize = Math.floor(size / pixelSize);
+        const offsetX = x - (gridSize * pixelSize) / 2;
+        const offsetY = y - (gridSize * pixelSize) / 2;
+        for (let i = 0; i < gridSize; i += 2) {
+            for (let j = 0; j < gridSize; j += 2) {
+                const dx = i - gridSize/2;
+                const dy = j - gridSize/2;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (Math.abs(dist - gridSize * 0.45) < 3) {
+                    ctx.fillRect(offsetX + i * pixelSize, offsetY + j * pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+        ctx.restore();
+    }
+
+    drawText(ctx, layer, cx, cy) {
+        ctx.save();
+        ctx.fillStyle = layer.color || '#ffffff';
+        ctx.font = `${layer.weight || 'bold'} ${layer.size || 60}px ${layer.font || 'Arial'}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(layer.text || 'A', layer.x || cx, layer.y || cy);
+        ctx.restore();
+    }
+
+    // =============================================================
+    // ЭФФЕКТЫ
+    // =============================================================
+
+    applyEffect(ctx, effect, width, height) {
+        switch (effect.type) {
+            case 'glow':
+                this.drawGlowEffect(ctx, effect, width, height);
+                break;
+            case 'scanline':
+                this.applyScanline(ctx, width, height, effect.intensity);
+                break;
+            case 'particles':
+                this.applyParticles(ctx, width, height, effect.count);
+                break;
+            case 'glitch':
+                this.applyGlitch(ctx, width, height, effect.intensity);
+                break;
+            case 'vintage':
+                this.applyVintage(ctx, width, height, effect.intensity);
+                break;
+        }
+    }
+
+    drawGlowEffect(ctx, effect, width, height) {
+        const cx = width / 2;
+        const cy = height / 2;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, effect.size || 150);
+        grad.addColorStop(0, effect.color + '60');
+        grad.addColorStop(1, 'transparent');
+        ctx.save();
+        ctx.fillStyle = grad;
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+    }
+
+    applyScanline(ctx, width, height, intensity = 0.1) {
+        ctx.save();
+        ctx.globalAlpha = intensity;
+        for (let y = 0; y < height; y += 4) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, y, width, 1);
+        }
+        ctx.restore();
+    }
+
+    applyParticles(ctx, width, height, count = 10) {
+        ctx.save();
+        const colors = ['#ffd700', '#ff6b6b', '#4d96ff', '#6bcb77', '#ff9f43'];
+        for (let i = 0; i < count; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const size = 1 + Math.random() * 3;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            ctx.globalAlpha = 0.1 + Math.random() * 0.3;
+            ctx.fillStyle = color;
+            ctx.shadowColor = color + '60';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    applyGlitch(ctx, width, height, intensity = 0.05) {
+        if (Math.random() > 0.7) {
+            ctx.save();
+            const offset = Math.random() * 20 - 10;
+            const y = Math.random() * height;
+            const h = 5 + Math.random() * 20;
+            ctx.globalAlpha = intensity;
+            ctx.drawImage(ctx.canvas, offset, y, width, h, 0, y, width, h);
+            ctx.restore();
+        }
+    }
+
+    applyVintage(ctx, width, height, intensity = 0.2) {
+        ctx.save();
+        ctx.globalAlpha = intensity;
+        ctx.fillStyle = '#8b7355';
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+    }
+
+    // =============================================================
+    // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
+    // =============================================================
 
     roundRect(ctx, x, y, w, h, r) {
         ctx.beginPath();
@@ -1840,251 +1684,10 @@ export class App {
         return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
     }
 
-    drawBackground(ctx, layer, width, height) {
-        if (layer.style === 'none' || layer.color === 'transparent') return;
+    // =============================================================
+    // СОХРАНЕНИЕ
+    // =============================================================
 
-        if (layer.style === 'gradient') {
-            const grad = ctx.createLinearGradient(0, 0, width, height);
-            grad.addColorStop(0, layer.color || '#0a0a0f');
-            grad.addColorStop(1, layer.gradientColor || '#1a1a3e');
-            ctx.fillStyle = grad;
-        } else {
-            ctx.fillStyle = layer.color || '#0a0a0f';
-        }
-        ctx.fillRect(0, 0, width, height);
-    }
-
-    drawFaceBase(ctx, layer, cx, cy) {
-        ctx.save();
-        const size = layer.size || 100;
-        const color = layer.color || '#f5d0b8';
-        const shape = layer.shape || 'ellipse';
-        
-        ctx.fillStyle = color;
-        ctx.shadowColor = 'rgba(0,0,0,0.1)';
-        ctx.shadowBlur = 10;
-
-        if (shape === 'ellipse' || shape === 'anime_face') {
-            const w = layer.width || size * 0.85;
-            const h = layer.height || size * 0.95;
-            ctx.beginPath();
-            ctx.ellipse(cx, cy, w/2, h/2, 0, 0, Math.PI * 2);
-            ctx.fill();
-        } else {
-            ctx.beginPath();
-            ctx.arc(cx, cy, size/2, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        
-        ctx.restore();
-    }
-
-    drawEyes(ctx, layer, cx, cy) {
-        ctx.save();
-        const size = layer.size || 20;
-        const color = layer.color || '#ffffff';
-        const pupilColor = layer.pupilColor || '#2d3436';
-        
-        // Левое глаз
-        ctx.shadowColor = 'transparent';
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.ellipse(cx - size * 0.8, cy, size * 0.6, size * 0.8, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Правое глаз
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.ellipse(cx + size * 0.8, cy, size * 0.6, size * 0.8, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Зрачки
-        ctx.fillStyle = pupilColor;
-        ctx.beginPath();
-        ctx.arc(cx - size * 0.8, cy + 2, size * 0.3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(cx + size * 0.8, cy + 2, size * 0.3, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Блик
-        ctx.fillStyle = '#ffffff';
-        ctx.globalAlpha = 0.8;
-        ctx.beginPath();
-        ctx.arc(cx - size * 0.65, cy - size * 0.3, size * 0.15, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(cx + size * 0.95, cy - size * 0.3, size * 0.15, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.restore();
-    }
-
-    drawMouth(ctx, layer, cx, cy) {
-        ctx.save();
-        const size = layer.size || 10;
-        const color = layer.color || '#e17055';
-        const expression = layer.expression || 'smile';
-        
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.fillStyle = color;
-        
-        if (expression === 'smile' || expression === 'happy') {
-            ctx.beginPath();
-            ctx.arc(cx, cy - size * 0.2, size * 0.6, 0.1, Math.PI - 0.1);
-            ctx.stroke();
-        } else if (expression === 'surprised') {
-            ctx.beginPath();
-            ctx.arc(cx, cy, size * 0.4, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (expression === 'sad') {
-            ctx.beginPath();
-            ctx.arc(cx, cy + size * 0.3, size * 0.5, Math.PI + 0.1, -0.1);
-            ctx.stroke();
-        } else {
-            ctx.beginPath();
-            ctx.arc(cx, cy, size * 0.3, 0, Math.PI);
-            ctx.stroke();
-        }
-        
-        ctx.restore();
-    }
-
-    drawEyebrows(ctx, layer, cx, cy) {
-        ctx.save();
-        const size = layer.size || 10;
-        const color = layer.color || '#2d3436';
-        
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        
-        // Левая бровь
-        ctx.beginPath();
-        ctx.moveTo(cx - size * 1.2, cy);
-        ctx.quadraticCurveTo(cx - size * 0.8, cy - size * 0.7, cx - size * 0.3, cy - size * 0.2);
-        ctx.stroke();
-        
-        // Правая бровь
-        ctx.beginPath();
-        ctx.moveTo(cx + size * 1.2, cy);
-        ctx.quadraticCurveTo(cx + size * 0.8, cy - size * 0.7, cx + size * 0.3, cy - size * 0.2);
-        ctx.stroke();
-        
-        ctx.restore();
-    }
-
-    drawBlush(ctx, layer, cx, cy) {
-        ctx.save();
-        const size = layer.size || 10;
-        const color = layer.color || '#ff6b6b';
-        const opacity = layer.opacity || 0.3;
-        
-        ctx.globalAlpha = opacity;
-        ctx.fillStyle = color;
-        ctx.shadowColor = 'transparent';
-        
-        // Левая щека
-        ctx.beginPath();
-        ctx.ellipse(cx - size * 1.4, cy + size * 0.3, size * 0.8, size * 0.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Правая щека
-        ctx.beginPath();
-        ctx.ellipse(cx + size * 1.4, cy + size * 0.3, size * 0.8, size * 0.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.restore();
-    }
-
-    drawGlow(ctx, layer, width, height) {
-        ctx.save();
-        const cx = width / 2;
-        const cy = height / 2;
-        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, layer.size || 150);
-        grad.addColorStop(0, layer.color + '80');
-        grad.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad;
-        ctx.globalCompositeOperation = 'screen';
-        ctx.fillRect(0, 0, width, height);
-        ctx.restore();
-    }
-
-    drawPixelLayer(ctx, layer) {
-        ctx.save();
-        const size = layer.size || 100;
-        const pixelSize = layer.pixelSize || 4;
-        const color = layer.color || '#7c3aed';
-        const x = layer.x || 250;
-        const y = layer.y || 250;
-        
-        const gridSize = Math.floor(size / pixelSize);
-        const offsetX = x - (gridSize * pixelSize) / 2;
-        const offsetY = y - (gridSize * pixelSize) / 2;
-        
-        for (let i = 0; i < gridSize; i++) {
-            for (let j = 0; j < gridSize; j++) {
-                if (Math.random() > 0.3) {
-                    ctx.fillStyle = color;
-                    ctx.fillRect(offsetX + i * pixelSize, offsetY + j * pixelSize, pixelSize, pixelSize);
-                }
-            }
-        }
-        
-        ctx.restore();
-    }
-
-    drawText(ctx, layer, cx, cy) {
-        ctx.save();
-        ctx.fillStyle = layer.color || '#ffffff';
-        ctx.font = `${layer.weight || 'bold'} ${layer.size || 60}px ${layer.font || 'Arial'}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(layer.text || 'A', layer.x || cx, layer.y || cy);
-        ctx.restore();
-    }
-
-    applyEffect(ctx, effect, width, height) {
-        switch (effect.type) {
-            case 'glow':
-                this.drawGlow(ctx, effect, width, height);
-                break;
-            case 'scanline':
-                this.applyScanline(ctx, width, height, effect.intensity);
-                break;
-            case 'particles':
-                this.applyParticles(ctx, width, height, effect.count);
-                break;
-        }
-    }
-
-    applyScanline(ctx, width, height, intensity = 0.1) {
-        ctx.save();
-        ctx.globalAlpha = intensity;
-        for (let y = 0; y < height; y += 4) {
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, y, width, 1);
-        }
-        ctx.restore();
-    }
-
-    applyParticles(ctx, width, height, count = 10) {
-        ctx.save();
-        for (let i = 0; i < count; i++) {
-            const x = Math.random() * width;
-            const y = Math.random() * height;
-            const size = 1 + Math.random() * 3;
-            const color = ['#ffd700', '#ff6b6b', '#4d96ff', '#6bcb77'][Math.floor(Math.random() * 4)];
-            ctx.globalAlpha = 0.1 + Math.random() * 0.3;
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.restore();
-    }
-
-    // ===== СОХРАНЕНИЕ =====
     saveToHistory(iconData, params) {
         const entry = {
             id: Date.now(),
@@ -2197,7 +1800,10 @@ export class App {
         this.generateIcon();
     }
 
-    // ===== СТАТИСТИКА =====
+    // =============================================================
+    // СТАТИСТИКА
+    // =============================================================
+
     updateStats() {
         const stats = {
             total: this.state.history.length,
@@ -2215,7 +1821,10 @@ export class App {
         }
     }
 
-    // ===== НАВИГАЦИЯ =====
+    // =============================================================
+    // НАВИГАЦИЯ
+    // =============================================================
+
     showDashboard() {
         this.renderDashboardPreview();
     }
@@ -2242,7 +1851,10 @@ export class App {
         this.loadSettings();
     }
 
-    // ===== НАСТРОЙКИ =====
+    // =============================================================
+    // НАСТРОЙКИ
+    // =============================================================
+
     applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         this.state.theme = theme;
@@ -2288,7 +1900,10 @@ export class App {
         alert('✅ Экспорт завершен!');
     }
 
-    // ===== ЭКСПОРТ =====
+    // =============================================================
+    // ЭКСПОРТ
+    // =============================================================
+
     download(format, data) {
         const canvas = document.createElement('canvas');
         const size = 512;
@@ -2316,9 +1931,9 @@ export class App {
     copySVG(data) {
         const svg = this.toSVG(data, 512);
         navigator.clipboard.writeText(svg).then(() => {
-            alert('SVG код скопирован в буфер обмена!');
+            alert('✅ SVG код скопирован в буфер обмена!');
         }).catch(() => {
-            alert('Не удалось скопировать SVG');
+            alert('❌ Не удалось скопировать SVG');
         });
     }
 
@@ -2344,22 +1959,11 @@ export class App {
             if (item.style === 'none' || item.color === 'transparent') return '';
             return `<rect width="100%" height="100%" fill="${item.color || '#0a0a0f'}" />`;
         }
-        if (item.type === 'face_base') {
+        if (item.type === 'face_base' || item.type === 'head_base') {
             const cx = item.x || 250;
             const cy = item.y || 250;
             const r = item.size/2 || 100;
             return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${item.color}" />`;
-        }
-        if (item.type === 'fantasy_eyes' || item.type === 'anime_eyes' || item.type === 'chibi_eyes') {
-            const cx = item.x || 250;
-            const cy = item.y || 250;
-            const s = item.size || 20;
-            return `
-                <ellipse cx="${cx - s*0.8}" cy="${cy}" rx="${s*0.6}" ry="${s*0.8}" fill="${item.color}" />
-                <ellipse cx="${cx + s*0.8}" cy="${cy}" rx="${s*0.6}" ry="${s*0.8}" fill="${item.color}" />
-                <circle cx="${cx - s*0.8}" cy="${cy + 2}" r="${s*0.3}" fill="${item.pupilColor}" />
-                <circle cx="${cx + s*0.8}" cy="${cy + 2}" r="${s*0.3}" fill="${item.pupilColor}" />
-            `;
         }
         if (item.type === 'mouth') {
             const cx = item.x || 250;
@@ -2367,7 +1971,7 @@ export class App {
             const s = item.size || 10;
             return `<path d="M${cx - s*0.6},${cy - s*0.2} Q${cx},${cy + s*0.3} ${cx + s*0.6},${cy - s*0.2}" stroke="${item.color}" stroke-width="2" fill="none" />`;
         }
-        if (item.type === 'glow') {
+        if (item.type === 'glow' || item.type === 'glow_layer') {
             const cx = 250;
             const cy = 250;
             const r = item.size || 150;
@@ -2376,9 +1980,11 @@ export class App {
         return '';
     }
 
-    // ===== СОБЫТИЯ =====
+    // =============================================================
+    // СОБЫТИЯ
+    // =============================================================
+
     setupEventListeners() {
-        // Навигация
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const tab = item.dataset.tab;
@@ -2386,7 +1992,6 @@ export class App {
             });
         });
 
-        // Генерация
         document.getElementById('generate-btn')?.addEventListener('click', () => {
             this.generateIcon();
         });
@@ -2399,7 +2004,6 @@ export class App {
             this.saveToProfile();
         });
 
-        // Назад
         document.querySelectorAll('.back-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const target = btn.dataset.back;
@@ -2409,7 +2013,6 @@ export class App {
             });
         });
 
-        // Экспорт
         document.getElementById('download-png-btn')?.addEventListener('click', () => {
             if (this.state.currentIconData) {
                 this.download('png', this.state.currentIconData);
@@ -2443,10 +2046,10 @@ export class App {
                 const canvas = document.getElementById('generation-canvas');
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                document.getElementById('preview-settings').textContent = 'Данные очищены';
             }
         });
 
-        // Настройки
         document.getElementById('username-input')?.addEventListener('change', (e) => {
             this.state.username = e.target.value;
             this.storage.save('username', e.target.value);
@@ -2464,9 +2067,6 @@ export class App {
         document.getElementById('auto-save-profile')?.addEventListener('change', (e) => {
             this.state.autoSaveProfile = e.target.checked;
             this.storage.save('autoSaveProfile', e.target.checked);
-            document.getElementById('save-status').textContent = e.target.checked ? 
-                '✅ Авто-сохранение включено' : 
-                '💾 Авто-сохранение отключено';
         });
 
         document.getElementById('export-quality')?.addEventListener('change', (e) => {
@@ -2474,7 +2074,6 @@ export class App {
             this.storage.save('exportQuality', parseInt(e.target.value));
         });
 
-        // Глобальные события
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-action]');
             if (target) {
@@ -2489,11 +2088,6 @@ export class App {
                     }
                 }
             }
-        });
-
-        // Обработка изменения размера окна
-        window.addEventListener('resize', () => {
-            // Можем добавить адаптивность
         });
     }
 }

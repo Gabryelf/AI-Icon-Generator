@@ -221,6 +221,65 @@ body {
     font-size: 16px;
 }
 
+/* ===== КАТЕГОРИИ ===== */
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.category-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+}
+
+.category-card i {
+    font-size: 48px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 16px;
+}
+
+.category-card span {
+    font-size: 20px;
+    font-weight: 600;
+    display: block;
+}
+
+.category-card small {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-top: 8px;
+    display: block;
+}
+
+.category-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px var(--accent-glow);
+}
+
+.category-card.selected {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+}
+
+.category-card.selected i {
+    color: #fff;
+}
+
+.category-card.selected small {
+    color: rgba(255,255,255,0.8);
+}
+
 /* Component Grid */
 .component-grid {
     display: grid;

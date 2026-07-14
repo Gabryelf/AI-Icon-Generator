@@ -1,12 +1,12 @@
 // =============================================================
-// ANIME STYLE - Аниме стиль для аватаров и персонажей
+// ANIME STYLE - Аутентичный аниме стиль с большими глазами
 // =============================================================
 
 export const AnimeStyle = {
     name: 'anime',
     displayName: 'Аниме',
     icon: 'fas fa-heart',
-    description: 'Японский стиль, большие выразительные глаза',
+    description: 'Большие выразительные глаза, яркие волосы, японская эстетика',
     font: 'Quicksand',
     
     palettes: {
@@ -36,6 +36,10 @@ export const AnimeStyle = {
         const eyeColor = config.eyeColor || palette.eye || '#4d96ff';
         const size = config.size || 200;
 
+        // Аниме пропорции
+        const headSize = size;
+        const eyeSize = headSize * 0.2;
+
         return {
             layers: [
                 {
@@ -43,76 +47,95 @@ export const AnimeStyle = {
                     style: 'solid',
                     color: config.bgColor === 'transparent' ? 'transparent' : (config.bgColor || palette.background || 'transparent')
                 },
+                // Лицо аниме (вытянутое)
                 {
                     type: 'face_base',
                     color: skinColor,
-                    size: size,
+                    size: headSize,
                     x: 250,
                     y: 250,
                     shape: 'anime_face',
-                    width: size * 0.85,
-                    height: size * 0.95
+                    width: headSize * 0.85,
+                    height: headSize * 0.95
                 },
+                // Большие аниме глаза
                 {
                     type: 'anime_eyes',
                     color: '#ffffff',
                     pupilColor: eyeColor,
-                    size: size * 0.25,
+                    size: eyeSize,
                     x: 250,
-                    y: 250 - size * 0.1,
+                    y: 250 - headSize * 0.1,
                     style: 'sparkle',
-                    highlight: true
+                    highlight: true,
+                    spacing: 1.0
                 },
+                // Тонкие брови
                 {
                     type: 'eyebrows',
                     color: hairColor,
-                    size: size * 0.12,
+                    size: headSize * 0.1,
                     x: 250,
-                    y: 250 - size * 0.2,
+                    y: 250 - headSize * 0.22,
                     style: 'anime'
                 },
-                {
-                    type: 'mouth',
-                    color: '#e17055',
-                    size: size * 0.1,
-                    x: 250,
-                    y: 250 + size * 0.2,
-                    expression: config.expression || 'smile'
-                },
+                // Маленький нос
                 {
                     type: 'nose',
                     color: this.darkenColor(skinColor, 10),
-                    size: size * 0.05,
+                    size: headSize * 0.04,
                     x: 250,
-                    y: 250 + size * 0.05
+                    y: 250 + headSize * 0.05,
+                    style: 'small'
                 },
+                // Выразительный рот
+                {
+                    type: 'mouth',
+                    color: '#e17055',
+                    size: headSize * 0.08,
+                    x: 250,
+                    y: 250 + headSize * 0.2,
+                    expression: config.expression || 'smile',
+                    style: 'small'
+                },
+                // Аниме волосы с характерными прядями
                 {
                     type: 'anime_hair',
                     color: hairColor,
-                    size: size,
+                    size: headSize,
                     x: 250,
-                    y: 250 - size * 0.2,
+                    y: 250 - headSize * 0.2,
                     style: config.hairStyle || 'long',
                     hasBangs: true
                 },
+                // Аксессуары
                 ...(config.accessory === 'glasses' ? [{
                     type: 'glasses',
                     color: '#2d3436',
-                    size: size * 0.25,
+                    size: headSize * 0.25,
                     x: 250,
-                    y: 250 - size * 0.05,
+                    y: 250 - headSize * 0.05,
                     style: 'anime'
                 }] : []),
                 ...(config.accessory === 'crown' ? [{
                     type: 'crown',
                     color: '#ffd700',
-                    size: size * 0.2,
+                    size: headSize * 0.2,
                     x: 250,
-                    y: 250 - size * 0.4,
+                    y: 250 - headSize * 0.4,
                     style: 'anime'
+                }] : []),
+                ...(config.accessory === 'bow' ? [{
+                    type: 'bow',
+                    color: '#ff6b6b',
+                    size: headSize * 0.15,
+                    x: 250 + headSize * 0.3,
+                    y: 250 - headSize * 0.3
                 }] : [])
             ],
-            effects: []
+            effects: [
+                { type: 'glow', color: '#ff6b6b', intensity: 0.05 }
+            ]
         };
     },
 
@@ -123,6 +146,9 @@ export const AnimeStyle = {
         const outfitColor = config.outfitColor || palette.primary || '#ff6b6b';
         const size = config.size || 250;
 
+        const headSize = size * 0.3;
+        const eyeSize = headSize * 0.2;
+
         return {
             layers: [
                 {
@@ -130,60 +156,78 @@ export const AnimeStyle = {
                     style: 'solid',
                     color: config.bgColor === 'transparent' ? 'transparent' : (config.bgColor || palette.background || 'transparent')
                 },
+                // Тело аниме (стройное)
                 {
                     type: 'anime_body',
                     color: outfitColor,
-                    size: size * 0.4,
+                    size: size * 0.35,
                     x: 250,
                     y: 250 + size * 0.15,
                     shape: 'slim',
                     bodyType: config.bodyType || 'normal'
                 },
+                // Голова
                 {
                     type: 'face_base',
                     color: skinColor,
-                    size: size * 0.3,
+                    size: headSize,
                     x: 250,
-                    y: 250 - size * 0.25,
+                    y: 250 - size * 0.2,
                     shape: 'anime_face',
-                    width: size * 0.28,
-                    height: size * 0.32
+                    width: headSize * 0.85,
+                    height: headSize * 0.95
                 },
+                // Аниме глаза
                 {
                     type: 'anime_eyes',
                     color: '#ffffff',
                     pupilColor: eyeColor,
-                    size: size * 0.1,
+                    size: eyeSize,
                     x: 250,
                     y: 250 - size * 0.3,
                     style: 'sparkle',
-                    highlight: true
+                    highlight: true,
+                    spacing: 1.0
                 },
+                // Брови
                 {
                     type: 'eyebrows',
                     color: hairColor,
-                    size: size * 0.05,
+                    size: headSize * 0.08,
                     x: 250,
                     y: 250 - size * 0.35,
                     style: 'anime'
                 },
+                // Нос
+                {
+                    type: 'nose',
+                    color: this.darkenColor(skinColor, 10),
+                    size: headSize * 0.04,
+                    x: 250,
+                    y: 250 - size * 0.12,
+                    style: 'small'
+                },
+                // Рот
                 {
                     type: 'mouth',
                     color: '#e17055',
-                    size: size * 0.04,
+                    size: headSize * 0.06,
                     x: 250,
-                    y: 250 - size * 0.15,
-                    expression: config.expression || 'smile'
+                    y: 250 - size * 0.12,
+                    expression: config.expression || 'smile',
+                    style: 'small'
                 },
+                // Аниме волосы
                 {
                     type: 'anime_hair',
                     color: hairColor,
-                    size: size * 0.35,
+                    size: headSize * 1.2,
                     x: 250,
-                    y: 250 - size * 0.4,
+                    y: 250 - size * 0.35,
                     style: config.hairStyle || 'long',
                     hasBangs: true
                 },
+                // Руки и ноги
                 {
                     type: 'anime_limbs',
                     color: skinColor,
@@ -192,14 +236,23 @@ export const AnimeStyle = {
                     y: 250 + size * 0.05,
                     pose: config.pose || 'standing'
                 },
+                // Аксессуары
                 ...(config.accessory === 'glasses' ? [{
                     type: 'glasses',
                     color: '#2d3436',
-                    size: size * 0.1,
+                    size: headSize * 0.2,
                     x: 250,
                     y: 250 - size * 0.28,
                     style: 'anime'
                 }] : []),
+                ...(config.accessory === 'cape' ? [{
+                    type: 'cape',
+                    color: this.darkenColor(outfitColor, 20),
+                    size: size * 0.5,
+                    x: 250,
+                    y: 250 + size * 0.1
+                }] : []),
+                // Оружие
                 ...(config.weapon && config.weapon !== 'none' ? [{
                     type: 'weapon',
                     color: '#c0c0c0',
@@ -209,7 +262,9 @@ export const AnimeStyle = {
                     weaponType: config.weapon
                 }] : [])
             ],
-            effects: []
+            effects: [
+                { type: 'glow', color: '#ff6b6b', intensity: 0.05 }
+            ]
         };
     },
 

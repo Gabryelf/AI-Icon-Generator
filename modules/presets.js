@@ -35,62 +35,61 @@ export const CATEGORIES = {
     }
 };
 
-// СТИЛИ
+// СТИЛИ с улучшенными описаниями и иконками
 export const STYLES = {
     pixel: {
         name: 'Пиксельный',
         icon: 'fas fa-th',
-        description: 'Ретро-пиксельная графика 8-16 бит',
+        description: 'Ретро-пиксельная графика 8-16 бит с характерной сеткой',
         font: 'Press Start 2P',
         colors: ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6bff']
     },
     cartoon: {
         name: 'Мультяшный',
         icon: 'fas fa-face-smile',
-        description: 'Яркий, дружелюбный, с жирным контуром',
+        description: 'Яркий, дружелюбный стиль с жирным контуром и глянцевыми бликами',
         font: 'Fredoka One',
         colors: ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6bff']
     },
     cyberpunk: {
         name: 'Киберпанк',
         icon: 'fas fa-microchip',
-        description: 'Неон, футуризм, технологичный стиль',
+        description: 'Неоновые цвета, хакерская эстетика, футуристичный стиль',
         font: 'Orbitron',
         colors: ['#ff00ff', '#00ffff', '#ff0066', '#6600ff', '#00ff66']
     },
     fantasy: {
         name: 'Фэнтези',
         icon: 'fas fa-dragon',
-        description: 'Магические, сказочные, эпические элементы',
+        description: 'Магические руны, золотое свечение, эпическая атмосфера',
         font: 'MedievalSharp',
         colors: ['#7c3aed', '#ffd700', '#8b5cf6', '#f59e0b', '#ec4899']
     },
     chibi: {
         name: 'Чиби',
         icon: 'fas fa-child',
-        description: 'Миниатюрные, милые, пропорции 2-3 головы',
+        description: 'Миниатюрные пропорции, большие глаза, максимальная милота',
         font: 'Quicksand',
         colors: ['#ff9ff3', '#f368e0', '#ff6b6b', '#ffd93d', '#6bcb77']
     },
     anime: {
         name: 'Аниме',
         icon: 'fas fa-heart',
-        description: 'Японский стиль, большие выразительные глаза',
+        description: 'Большие выразительные глаза, яркие волосы, японская эстетика',
         font: 'Quicksand',
         colors: ['#ff6b6b', '#ffd93d', '#4d96ff', '#ff6bff', '#6bcb77']
     },
     casual: {
         name: 'Казуальный',
         icon: 'fas fa-user',
-        description: 'Повседневный, современный, стильный',
+        description: 'Современный повседневный стиль с естественными пропорциями',
         font: 'Quicksand',
         colors: ['#2d3436', '#636e72', '#74b9ff', '#a29bfe', '#fd79a8']
     }
 };
 
-// КОНФИГУРАЦИИ ДЛЯ КАЖДОЙ КАТЕГОРИИ И СТИЛЯ
+// КОНФИГУРАЦИИ ДЛЯ КАЖДОЙ КАТЕГОРИИ (остаются без изменений)
 export const CATEGORY_CONFIGS = {
-    // ===== КНОПКИ =====
     button: {
         defaults: {
             text: 'Кнопка',
@@ -151,8 +150,6 @@ export const CATEGORY_CONFIGS = {
             }
         }
     },
-
-    // ===== ИКОНКИ =====
     icon: {
         defaults: {
             shape: 'circle',
@@ -221,8 +218,6 @@ export const CATEGORY_CONFIGS = {
             }
         }
     },
-
-    // ===== АВАТАРЫ =====
     avatar: {
         defaults: {
             skinColor: '#f5d0b8',
@@ -297,7 +292,8 @@ export const CATEGORY_CONFIGS = {
                     { value: 'glasses', label: 'Очки' },
                     { value: 'hat', label: 'Шляпа' },
                     { value: 'crown', label: 'Корона' },
-                    { value: 'headphones', label: 'Наушники' }
+                    { value: 'headphones', label: 'Наушники' },
+                    { value: 'bow', label: 'Бант' }
                 ],
                 default: 'none'
             },
@@ -320,8 +316,6 @@ export const CATEGORY_CONFIGS = {
             }
         }
     },
-
-    // ===== ПЕРСОНАЖИ =====
     character: {
         defaults: {
             skinColor: '#f5d0b8',
