@@ -3,131 +3,109 @@
 //                     - v0.0.3 Добавление пиксельных прессетов
 //                     - v0.0.4 Добавление алгоритмов для скинов
 //                     - v0.0.5 - Компоненты, стили, конфигурации
+//                     - v0.0.6 - Реструктуризация
 // ===============================================================
 
 
-// КОМПОНЕНТЫ (основные категории)
-export const COMPONENTS = {
+// КАТЕГОРИИ
+export const CATEGORIES = {
     button: {
         name: 'Кнопка',
         icon: 'fas fa-square',
-        description: 'Интерактивные элементы интерфейса'
+        description: 'Интерактивные элементы интерфейса',
+        styles: ['pixel', 'cartoon', 'cyberpunk', 'fantasy']
     },
     icon: {
         name: 'Иконка',
         icon: 'fas fa-icons',
-        description: 'Графические символы для интерфейсов'
+        description: 'Графические символы для интерфейсов',
+        styles: ['pixel', 'cartoon', 'cyberpunk', 'fantasy']
     },
     avatar: {
         name: 'Аватар',
         icon: 'fas fa-user-circle',
-        description: 'Пиксельные аватары для профилей'
+        description: 'Портреты и лица персонажей',
+        styles: ['fantasy', 'pixel', 'chibi', 'anime', 'casual']
     },
     character: {
         name: 'Персонаж',
         icon: 'fas fa-user-astronaut',
-        description: 'Реалистичные и стилизованные персонажи'
+        description: 'Полноценные персонажи в полный рост',
+        styles: ['fantasy', 'pixel', 'chibi', 'anime', 'casual']
     }
 };
 
-// СТИЛИСТИЧЕСКИЕ НАПРАВЛЕНИЯ
+// СТИЛИ
 export const STYLES = {
-    minimal: {
-        name: 'Минимализм',
-        icon: 'fas fa-circle',
-        description: 'Чистые линии, мало деталей'
-    },
-    vibrant: {
-        name: 'Яркий',
-        icon: 'fas fa-bolt',
-        description: 'Насыщенные цвета, энергия'
-    },
-    neon: {
-        name: 'Неон',
-        icon: 'fas fa-lightbulb',
-        description: 'Свечение, яркие акценты'
-    },
-    vintage: {
-        name: 'Винтаж',
-        icon: 'fas fa-clock',
-        description: 'Ретро-стиль, теплые тона'
-    },
-    geometric: {
-        name: 'Геометрический',
-        icon: 'fas fa-shapes',
-        description: 'Строгие формы и углы'
-    },
-    organic: {
-        name: 'Органический',
-        icon: 'fas fa-leaf',
-        description: 'Плавные линии, природные формы'
-    },
-    fantasy: {
-        name: 'Фэнтези',
-        icon: 'fas fa-dragon',
-        description: 'Магические, сказочные элементы'
-    },
     pixel: {
         name: 'Пиксельный',
         icon: 'fas fa-th',
-        description: 'Ретро-пиксельная графика'
-    },
-    cyberpunk: {
-        name: 'Киберпанк',
-        icon: 'fas fa-microchip',
-        description: 'Неон, футуризм, технологичный стиль'
+        description: 'Ретро-пиксельная графика 8-16 бит',
+        font: 'Press Start 2P',
+        colors: ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6bff']
     },
     cartoon: {
         name: 'Мультяшный',
         icon: 'fas fa-face-smile',
-        description: 'Яркий, дружелюбный стиль'
+        description: 'Яркий, дружелюбный, с жирным контуром',
+        font: 'Fredoka One',
+        colors: ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6bff']
     },
-    steampunk: {
-        name: 'Стимпанк',
-        icon: 'fas fa-cog',
-        description: 'Викторианский стиль + механизмы'
+    cyberpunk: {
+        name: 'Киберпанк',
+        icon: 'fas fa-microchip',
+        description: 'Неон, футуризм, технологичный стиль',
+        font: 'Orbitron',
+        colors: ['#ff00ff', '#00ffff', '#ff0066', '#6600ff', '#00ff66']
     },
-    watercolor: {
-        name: 'Акварель',
-        icon: 'fas fa-tint',
-        description: 'Мягкие, размытые переходы'
+    fantasy: {
+        name: 'Фэнтези',
+        icon: 'fas fa-dragon',
+        description: 'Магические, сказочные, эпические элементы',
+        font: 'MedievalSharp',
+        colors: ['#7c3aed', '#ffd700', '#8b5cf6', '#f59e0b', '#ec4899']
     },
-    low_poly: {
-        name: 'Low Poly',
-        icon: 'fas fa-cube',
-        description: 'Полигональный стиль'
+    chibi: {
+        name: 'Чиби',
+        icon: 'fas fa-child',
+        description: 'Миниатюрные, милые, пропорции 2-3 головы',
+        font: 'Quicksand',
+        colors: ['#ff9ff3', '#f368e0', '#ff6b6b', '#ffd93d', '#6bcb77']
     },
     anime: {
         name: 'Аниме',
         icon: 'fas fa-heart',
-        description: 'Японский стиль, большие глаза'
+        description: 'Японский стиль, большие выразительные глаза',
+        font: 'Quicksand',
+        colors: ['#ff6b6b', '#ffd93d', '#4d96ff', '#ff6bff', '#6bcb77']
+    },
+    casual: {
+        name: 'Казуальный',
+        icon: 'fas fa-user',
+        description: 'Повседневный, современный, стильный',
+        font: 'Quicksand',
+        colors: ['#2d3436', '#636e72', '#74b9ff', '#a29bfe', '#fd79a8']
     }
 };
 
-// КОНФИГУРАЦИИ ДЛЯ КАЖДОГО КОМПОНЕНТА
+// КОНФИГУРАЦИИ ДЛЯ КАЖДОЙ КАТЕГОРИИ И СТИЛЯ
 export const CATEGORY_CONFIGS = {
+    // ===== КНОПКИ =====
     button: {
         defaults: {
-            shape: 'rounded',
-            size: 120,
+            text: 'Кнопка',
             color: '#7c3aed',
             bgColor: 'transparent',
-            glow: true,
+            size: 120,
             cornerRadius: 20,
-            text: 'Кнопка',
-            style: 'flat'
+            glow: true,
+            borderWidth: 2
         },
         config: {
-            shape: {
-                label: 'Форма',
-                type: 'select',
-                options: [
-                    { value: 'rounded', label: 'Скругленная' },
-                    { value: 'square', label: 'Прямоугольная' },
-                    { value: 'circle', label: 'Круглая' },
-                    { value: 'pill', label: 'Таблетка' }
-                ],
-                default: 'rounded'
+            text: {
+                label: 'Текст',
+                type: 'text',
+                default: 'Кнопка'
             },
             color: {
                 label: 'Цвет',
@@ -140,19 +118,17 @@ export const CATEGORY_CONFIGS = {
                 options: [
                     { value: 'transparent', label: 'Прозрачный' },
                     { value: '#0a0a0f', label: 'Темный' },
+                    { value: '#ffffff', label: 'Белый' },
                     { value: 'gradient', label: 'Градиент' }
                 ],
                 default: 'transparent'
             },
-            text: {
-                label: 'Текст',
-                type: 'text',
-                default: 'Кнопка'
-            },
-            glow: {
-                label: 'Свечение',
-                type: 'checkbox',
-                default: true
+            size: {
+                label: 'Размер',
+                type: 'range',
+                min: 40,
+                max: 200,
+                default: 120
             },
             cornerRadius: {
                 label: 'Скругление',
@@ -161,25 +137,31 @@ export const CATEGORY_CONFIGS = {
                 max: 50,
                 default: 20
             },
-            size: {
-                label: 'Размер',
+            glow: {
+                label: 'Свечение',
+                type: 'checkbox',
+                default: true
+            },
+            borderWidth: {
+                label: 'Толщина рамки',
                 type: 'range',
-                min: 40,
-                max: 200,
-                default: 120
+                min: 0,
+                max: 8,
+                default: 2
             }
         }
     },
-    
+
+    // ===== ИКОНКИ =====
     icon: {
         defaults: {
             shape: 'circle',
-            size: 120,
             color: '#7c3aed',
+            size: 120,
             bgColor: 'transparent',
             glow: true,
-            strokeWidth: 3,
-            complexity: 5
+            complexity: 5,
+            strokeWidth: 2
         },
         config: {
             shape: {
@@ -223,160 +205,53 @@ export const CATEGORY_CONFIGS = {
                 type: 'checkbox',
                 default: true
             },
-            strokeWidth: {
-                label: 'Толщина контура',
-                type: 'range',
-                min: 0,
-                max: 10,
-                default: 3
-            },
             complexity: {
                 label: 'Детализация',
                 type: 'range',
                 min: 0,
                 max: 10,
                 default: 5
+            },
+            strokeWidth: {
+                label: 'Толщина контура',
+                type: 'range',
+                min: 0,
+                max: 8,
+                default: 2
             }
         }
     },
-    
+
+    // ===== АВАТАРЫ =====
     avatar: {
         defaults: {
-            color: '#7c3aed',
             skinColor: '#f5d0b8',
-            eyes: 'simple',
-            mouth: 'smile',
-            hair: 'short',
-            size: 16,
-            accessories: '',
-            style: 'default'
-        },
-        config: {
-            color: {
-                label: 'Основной цвет',
-                type: 'color',
-                default: '#7c3aed'
-            },
-            skinColor: {
-                label: 'Цвет кожи',
-                type: 'color',
-                default: '#f5d0b8'
-            },
-            eyes: {
-                label: 'Глаза',
-                type: 'select',
-                options: [
-                    { value: 'simple', label: 'Простые' },
-                    { value: 'anime', label: 'Аниме' },
-                    { value: 'cartoon', label: 'Мультяшные' },
-                    { value: 'realistic', label: 'Реалистичные' },
-                    { value: 'closed', label: 'Закрытые' }
-                ],
-                default: 'simple'
-            },
-            mouth: {
-                label: 'Рот',
-                type: 'select',
-                options: [
-                    { value: 'smile', label: 'Улыбка' },
-                    { value: 'open', label: 'Открытый' },
-                    { value: 'neutral', label: 'Нейтральный' },
-                    { value: 'happy', label: 'Счастливый' },
-                    { value: 'none', label: 'Без рта' }
-                ],
-                default: 'smile'
-            },
-            hair: {
-                label: 'Прическа',
-                type: 'select',
-                options: [
-                    { value: 'short', label: 'Короткие' },
-                    { value: 'long', label: 'Длинные' },
-                    { value: 'ponytail', label: 'Хвост' },
-                    { value: 'spiky', label: 'Торчком' },
-                    { value: 'curly', label: 'Кудрявые' },
-                    { value: 'bald', label: 'Лысый' }
-                ],
-                default: 'short'
-            },
-            size: {
-                label: 'Размер пикселя',
-                type: 'range',
-                min: 8,
-                max: 32,
-                default: 16
-            },
-            accessories: {
-                label: 'Аксессуары (через запятую)',
-                type: 'text',
-                default: ''
-            }
-        }
-    },
-    
-    character: {
-        defaults: {
-            style: 'fantasy',
-            color: '#7c3aed',
-            skinColor: '#f5d0b8',
-            eyes: 'simple',
-            mouth: 'smile',
-            hair: 'short',
+            hairColor: '#2d3436',
+            eyeColor: '#4d96ff',
+            hairStyle: 'short',
+            eyeStyle: 'anime',
+            expression: 'smile',
+            accessory: 'none',
             bgColor: 'transparent',
-            hasWeapon: false,
-            hasArmor: false,
-            hasGlasses: false,
-            hasHat: false,
-            accessories: ''
+            size: 200
         },
         config: {
-            style: {
-                label: 'Стиль персонажа',
-                type: 'select',
-                options: [
-                    { value: 'fantasy', label: 'Фэнтези' },
-                    { value: 'sciFi', label: 'Sci-Fi' },
-                    { value: 'cartoon', label: 'Мультяшный' },
-                    { value: 'realistic', label: 'Реалистичный' },
-                    { value: 'anime', label: 'Аниме' }
-                ],
-                default: 'fantasy'
-            },
-            color: {
-                label: 'Основной цвет',
-                type: 'color',
-                default: '#7c3aed'
-            },
             skinColor: {
                 label: 'Цвет кожи',
                 type: 'color',
                 default: '#f5d0b8'
             },
-            eyes: {
-                label: 'Глаза',
-                type: 'select',
-                options: [
-                    { value: 'simple', label: 'Простые' },
-                    { value: 'anime', label: 'Аниме' },
-                    { value: 'cartoon', label: 'Мультяшные' },
-                    { value: 'realistic', label: 'Реалистичные' },
-                    { value: 'closed', label: 'Закрытые' }
-                ],
-                default: 'simple'
+            hairColor: {
+                label: 'Цвет волос',
+                type: 'color',
+                default: '#2d3436'
             },
-            mouth: {
-                label: 'Рот',
-                type: 'select',
-                options: [
-                    { value: 'smile', label: 'Улыбка' },
-                    { value: 'open', label: 'Открытый' },
-                    { value: 'neutral', label: 'Нейтральный' },
-                    { value: 'happy', label: 'Счастливый' },
-                    { value: 'none', label: 'Без рта' }
-                ],
-                default: 'smile'
+            eyeColor: {
+                label: 'Цвет глаз',
+                type: 'color',
+                default: '#4d96ff'
             },
-            hair: {
+            hairStyle: {
                 label: 'Прическа',
                 type: 'select',
                 options: [
@@ -385,9 +260,46 @@ export const CATEGORY_CONFIGS = {
                     { value: 'ponytail', label: 'Хвост' },
                     { value: 'spiky', label: 'Торчком' },
                     { value: 'curly', label: 'Кудрявые' },
-                    { value: 'bald', label: 'Лысый' }
+                    { value: 'bald', label: 'Лысый' },
+                    { value: 'bob', label: 'Каре' },
+                    { value: 'bun', label: 'Пучок' }
                 ],
                 default: 'short'
+            },
+            eyeStyle: {
+                label: 'Стиль глаз',
+                type: 'select',
+                options: [
+                    { value: 'anime', label: 'Аниме' },
+                    { value: 'simple', label: 'Простые' },
+                    { value: 'realistic', label: 'Реалистичные' },
+                    { value: 'cartoon', label: 'Мультяшные' }
+                ],
+                default: 'anime'
+            },
+            expression: {
+                label: 'Выражение лица',
+                type: 'select',
+                options: [
+                    { value: 'smile', label: 'Улыбка' },
+                    { value: 'happy', label: 'Счастливый' },
+                    { value: 'neutral', label: 'Нейтральный' },
+                    { value: 'surprised', label: 'Удивленный' },
+                    { value: 'sad', label: 'Грустный' }
+                ],
+                default: 'smile'
+            },
+            accessory: {
+                label: 'Аксессуар',
+                type: 'select',
+                options: [
+                    { value: 'none', label: 'Нет' },
+                    { value: 'glasses', label: 'Очки' },
+                    { value: 'hat', label: 'Шляпа' },
+                    { value: 'crown', label: 'Корона' },
+                    { value: 'headphones', label: 'Наушники' }
+                ],
+                default: 'none'
             },
             bgColor: {
                 label: 'Фон',
@@ -399,30 +311,156 @@ export const CATEGORY_CONFIGS = {
                 ],
                 default: 'transparent'
             },
-            hasWeapon: {
+            size: {
+                label: 'Размер',
+                type: 'range',
+                min: 80,
+                max: 300,
+                default: 200
+            }
+        }
+    },
+
+    // ===== ПЕРСОНАЖИ =====
+    character: {
+        defaults: {
+            skinColor: '#f5d0b8',
+            hairColor: '#2d3436',
+            eyeColor: '#4d96ff',
+            outfitColor: '#7c3aed',
+            hairStyle: 'short',
+            eyeStyle: 'anime',
+            expression: 'smile',
+            bodyType: 'normal',
+            accessory: 'none',
+            weapon: 'none',
+            bgColor: 'transparent',
+            size: 250,
+            pose: 'standing'
+        },
+        config: {
+            skinColor: {
+                label: 'Цвет кожи',
+                type: 'color',
+                default: '#f5d0b8'
+            },
+            hairColor: {
+                label: 'Цвет волос',
+                type: 'color',
+                default: '#2d3436'
+            },
+            eyeColor: {
+                label: 'Цвет глаз',
+                type: 'color',
+                default: '#4d96ff'
+            },
+            outfitColor: {
+                label: 'Цвет одежды',
+                type: 'color',
+                default: '#7c3aed'
+            },
+            hairStyle: {
+                label: 'Прическа',
+                type: 'select',
+                options: [
+                    { value: 'short', label: 'Короткие' },
+                    { value: 'long', label: 'Длинные' },
+                    { value: 'ponytail', label: 'Хвост' },
+                    { value: 'spiky', label: 'Торчком' },
+                    { value: 'curly', label: 'Кудрявые' },
+                    { value: 'bald', label: 'Лысый' },
+                    { value: 'bob', label: 'Каре' },
+                    { value: 'bun', label: 'Пучок' }
+                ],
+                default: 'short'
+            },
+            eyeStyle: {
+                label: 'Стиль глаз',
+                type: 'select',
+                options: [
+                    { value: 'anime', label: 'Аниме' },
+                    { value: 'simple', label: 'Простые' },
+                    { value: 'realistic', label: 'Реалистичные' },
+                    { value: 'cartoon', label: 'Мультяшные' }
+                ],
+                default: 'anime'
+            },
+            expression: {
+                label: 'Выражение лица',
+                type: 'select',
+                options: [
+                    { value: 'smile', label: 'Улыбка' },
+                    { value: 'happy', label: 'Счастливый' },
+                    { value: 'neutral', label: 'Нейтральный' },
+                    { value: 'surprised', label: 'Удивленный' },
+                    { value: 'sad', label: 'Грустный' }
+                ],
+                default: 'smile'
+            },
+            bodyType: {
+                label: 'Тип телосложения',
+                type: 'select',
+                options: [
+                    { value: 'normal', label: 'Нормальное' },
+                    { value: 'slim', label: 'Худое' },
+                    { value: 'muscular', label: 'Мускулистое' },
+                    { value: 'chibi', label: 'Чиби' }
+                ],
+                default: 'normal'
+            },
+            accessory: {
+                label: 'Аксессуар',
+                type: 'select',
+                options: [
+                    { value: 'none', label: 'Нет' },
+                    { value: 'glasses', label: 'Очки' },
+                    { value: 'hat', label: 'Шляпа' },
+                    { value: 'crown', label: 'Корона' },
+                    { value: 'cape', label: 'Плащ' },
+                    { value: 'backpack', label: 'Рюкзак' }
+                ],
+                default: 'none'
+            },
+            weapon: {
                 label: 'Оружие',
-                type: 'checkbox',
-                default: false
+                type: 'select',
+                options: [
+                    { value: 'none', label: 'Нет' },
+                    { value: 'sword', label: 'Меч' },
+                    { value: 'staff', label: 'Посох' },
+                    { value: 'bow', label: 'Лук' },
+                    { value: 'gun', label: 'Пистолет' },
+                    { value: 'shield', label: 'Щит' }
+                ],
+                default: 'none'
             },
-            hasArmor: {
-                label: 'Доспехи',
-                type: 'checkbox',
-                default: false
+            pose: {
+                label: 'Поза',
+                type: 'select',
+                options: [
+                    { value: 'standing', label: 'Стоя' },
+                    { value: 'fighting', label: 'Боевая' },
+                    { value: 'magic', label: 'Магия' },
+                    { value: 'relaxed', label: 'Расслабленная' }
+                ],
+                default: 'standing'
             },
-            hasGlasses: {
-                label: 'Очки',
-                type: 'checkbox',
-                default: false
+            bgColor: {
+                label: 'Фон',
+                type: 'select',
+                options: [
+                    { value: 'transparent', label: 'Прозрачный' },
+                    { value: '#0a0a0f', label: 'Темный' },
+                    { value: 'gradient', label: 'Градиент' }
+                ],
+                default: 'transparent'
             },
-            hasHat: {
-                label: 'Шляпа',
-                type: 'checkbox',
-                default: false
-            },
-            accessories: {
-                label: 'Дополнительные аксессуары',
-                type: 'text',
-                default: ''
+            size: {
+                label: 'Размер',
+                type: 'range',
+                min: 100,
+                max: 350,
+                default: 250
             }
         }
     }
