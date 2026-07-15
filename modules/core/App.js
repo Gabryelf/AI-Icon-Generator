@@ -3,6 +3,7 @@
 // =============================================================
 
 import { Router } from './Router.js';
+import { SpriteLoader } from '../SpriteLoader.js';
 import { UIManager } from './UIManager.js';
 import { Storage } from './Storage.js';
 import { CATEGORIES, STYLES, CATEGORY_CONFIGS } from '../presets.js';
@@ -19,6 +20,7 @@ export class App {
         // ===== ИНИЦИАЛИЗАЦИЯ МОДУЛЕЙ =====
         this.storage = new Storage('nif_');
         this.spriteLoader = new SpriteLoader();
+        this.spriteLoader.useTestSprites = false; // тестовый режим
         this.ui = new UIManager();
         this.router = new Router();
         this.shapeLibrary = new ShapeLibrary();
@@ -68,8 +70,17 @@ export class App {
 
     async init() {
         console.log('🚀 Neural Icon Forge v4.0 инициализация...');
-        // Загружаем спрайты
+        console.log('🧪 Режим тестирования спрайтов ВКЛЮЧЕН');
+        
         await this.spriteLoader.init();
+        
+        // Выводим информацию о загруженных спрайтах
+        console.log('📦 Доступные категории спрайтов:');
+        const categories = ['eyes', 'mouths', 'hairs', 'accessories', 'buttons', 'icons', 'weapons'];
+        categories.forEach(cat => {
+            const configs = this.spriteLoader.getSpriteConfigs(cat);
+            console.log(`  - ${cat}: ${configs.length} шт.`);
+        });
         
         this.applyTheme(this.state.theme);
         await this.loadShapeData();
@@ -134,6 +145,20 @@ export class App {
                 }
                 return data;
             });
+    }
+
+     // метод для отладки спрайтов
+     async testSpriteLoading() {
+        const categories = ['eyes', 'mouths', 'hairs', 'accessories'];
+        
+        for (const category of categories) {
+            const configs = this.spriteLoader.getSpriteConfigs(category);
+            if (configs.length > 0) {
+                const random = configs[Math.floor(Math.random() * configs.length)];
+                const img = await this.spriteLoader.loadSprite(random);
+                console.log(`✅ Загружен спрайт: ${category}/${random.id}`, img);
+            }
+        }
     }
 
     // =============================================================

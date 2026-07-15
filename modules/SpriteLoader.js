@@ -6,6 +6,7 @@ export class SpriteLoader {
         this.basePath = '/assets/sprites/';
         this.spriteConfigs = new Map();
         this.isInitialized = false;
+        this.useTestSprites = false; // Флаг для использования тестовых спрайтов
     }
 
     /**
@@ -15,23 +16,65 @@ export class SpriteLoader {
         if (this.isInitialized) return;
         
         try {
-            // Загружаем главный конфиг спрайтов
             const response = await fetch(`${this.basePath}sprites.json`);
             if (!response.ok) throw new Error('Sprite config not found');
             
             const config = await response.json();
-            
-            // Сохраняем конфиги по категориям
             Object.entries(config).forEach(([category, items]) => {
                 this.spriteConfigs.set(category, items);
             });
             
-            this.isInitialized = true;
-            console.log('✅ SpriteLoader инициализирован');
+            console.log('✅ SpriteLoader инициализирован (режим: продакшн)');
         } catch (error) {
-            console.warn('⚠️ Не удалось загрузить sprites.json, используем встроенные конфиги');
-            this.loadDefaultConfigs();
-            this.isInitialized = true;
+            console.warn('⚠️ Не удалось загрузить sprites.json');
+            
+            if (this.useTestSprites) {
+                console.log('🔄 Генерируем тестовые спрайты...');
+                const testSprites = this.spriteGenerator.generateAllTestSprites();
+                Object.entries(testSprites).forEach(([category, items]) => {
+                    this.spriteConfigs.set(category, items);
+                });
+                console.log('✅ Сгенерировано тестовых спрайтов:', 
+                    Array.from(this.spriteConfigs.values()).reduce((acc, arr) => acc + arr.length, 0));
+            } else {
+                this.loadDefaultConfigs();
+            }
+        }
+        
+        this.isInitialized = true;
+    }
+
+    async loadSprite(spriteConfig) {
+        // Если это тестовый спрайт, используем сгенерированное изображение
+        if (spriteConfig.isTest && spriteConfig.image) {
+            return spriteConfig.image;
+        }
+        
+        const cacheKey = spriteConfig.file;
+        if (this.cache.has(cacheKey)) {
+            return this.cache.get(cacheKey);
+        }
+        
+        try {
+            const img = new Image();
+            img.src = `${this.basePath}${spriteConfig.file}`;
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+            this.cache.set(cacheKey, img);
+            return img;
+        } catch (error) {
+            console.warn(`⚠️ Не удалось загрузить спрайт: ${spriteConfig.file}`);
+            // Генерируем тестовый спрайт на лету
+            const testSprite = this.spriteGenerator.generateTestSprite({
+                id: spriteConfig.id || 'fallback',
+                type: 'default',
+                width: spriteConfig.width || 50,
+                height: spriteConfig.height || 50,
+                color: '#7c3aed'
+            });
+            return testSprite.image;
         }
     }
 
