@@ -1,142 +1,52 @@
-// =============================================================
-// ГЕНЕРАТОР КНОПОК - Качественная отрисовка с текстом
-// =============================================================
+// modules/generators/ButtonGenerator.js
 
-import { STYLES } from '../presets.js';
+import { BaseGenerator } from './BaseGenerator.js';
 
-export class ButtonGenerator {
-    constructor(shapeLibrary, colorPalette, fontLibrary) {
-        this.shapeLibrary = shapeLibrary;
-        this.colorPalette = colorPalette;
-        this.fontLibrary = fontLibrary;
-    }
-
-    generate(style, config) {
-        const palette = this.colorPalette.getPalette(style, 'button');
-        const styleData = STYLES[style];
-        const text = config.text || 'Кнопка';
-        const color = config.color || palette.primary || '#7c3aed';
-        const size = config.size || 120;
-        const cornerRadius = config.cornerRadius || 20;
-        const bgColor = config.bgColor || 'transparent';
-        const glow = config.glow !== false;
-        const borderWidth = config.borderWidth || 2;
-
-        const layers = [];
-        
-        // Фон
-        layers.push({
-            type: 'background',
-            style: bgColor === 'gradient' ? 'gradient' : 'solid',
-            color: bgColor === 'transparent' ? 'transparent' : (bgColor || 'transparent'),
-            gradientColor: palette.secondary || '#1a1a3e'
-        });
-
-        // Основная кнопка с текстом
-        layers.push({
-            type: 'button_main',
-            color: color,
-            text: text,
-            size: size,
-            cornerRadius: cornerRadius,
-            x: 250,
-            y: 250,
-            textColor: '#ffffff',
-            font: styleData?.font || 'Arial',
-            glow: glow,
-            borderWidth: borderWidth,
-            borderColor: this.lightenColor(color, 20),
-            shadow: true,
-            style: style
-        });
-
-        // Эффекты в зависимости от стиля
-        if (style === 'neon' || style === 'cyberpunk') {
-            layers.push({
-                type: 'glow_layer',
-                color: color,
-                size: size * 0.7,
-                x: 250,
-                y: 250
-            });
-        }
-
-        if (style === 'fantasy') {
-            // Декоративные элементы для фэнтези
-            for (let i = 0; i < 4; i++) {
-                const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
-                const r = size * 0.5;
-                layers.push({
-                    type: 'decorative_element',
-                    x: 250 + Math.cos(angle) * r,
-                    y: 250 + Math.sin(angle) * r,
-                    size: 6,
-                    color: '#ffd700',
-                    shape: 'diamond'
-                });
-            }
-        }
-
-        if (style === 'pixel') {
-            // Пиксельные уголки
-            const ps = 4;
-            const offset = size * 0.4;
-            for (let dx of [-1, 1]) {
-                for (let dy of [-1, 1]) {
-                    layers.push({
-                        type: 'pixel_corner',
-                        x: 250 + dx * offset,
-                        y: 250 + dy * offset,
-                        size: ps * 3,
-                        color: this.lightenColor(color, 30),
-                        direction: { dx, dy }
-                    });
-                }
-            }
-        }
-
-        if (style === 'cartoon') {
-            // Блик на кнопке
-            layers.push({
-                type: 'highlight',
-                x: 250,
-                y: 230,
-                width: size * 0.4,
-                height: size * 0.15,
-                color: 'rgba(255,255,255,0.3)',
-                rotation: -0.2
-            });
-        }
+export class ButtonGenerator extends BaseGenerator {
+    async generate() {
+        const layers = await this.buildLayers();
+        const size = this.getSize();
 
         return {
             layers: layers,
-            effects: this.getEffects(style, color),
-            style: style,
-            category: 'button',
-            config: config
+            width: 500,
+            height: 500,
+            category: this.category,
+            style: this.style,
+            config: this.config
         };
     }
 
-    getEffects(style, color) {
-        const effects = [];
-        if (style === 'neon' || style === 'cyberpunk') {
-            effects.push({ type: 'glow', color: color, intensity: 0.4 });
-        }
-        if (style === 'fantasy') {
-            effects.push({ type: 'glow', color: '#ffd700', intensity: 0.2 });
-        }
-        if (style === 'cyberpunk') {
-            effects.push({ type: 'scanline', intensity: 0.05 });
-        }
-        return effects;
-    }
+    async buildLayers() {
+        const layers = [];
+        const config = this.config;
+        const size = this.getSize();
 
-    lightenColor(hex, percent) {
-        const num = parseInt(hex.replace('#', ''), 16);
-        const amt = Math.round(2.55 * percent);
-        const R = Math.min(255, (num >> 16) + amt);
-        const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
-        const B = Math.min(255, (num & 0x0000FF) + amt);
-        return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+        // Фон
+        const bg = this.createBackgroundLayer(config.bgColor);
+        if (bg) layers.push(bg);
+
+        // Спрайт кнопки
+        const buttonSprite = await this.createSpriteLayer(
+            'button_sprite',
+            250, 250,
+            size,
+            config.color || '#7c3aed'
+        );
+        if (buttonSprite) layers.push(buttonSprite);
+
+        // Текст на кнопке
+        if (config.text) {
+            const textLayer = this.createTextLayer(
+                config.text,
+                250, 250 + (config.textOffset || 0),
+                config.textColor || '#ffffff',
+                config.textSize || 24,
+                config.font || 'Arial'
+            );
+            if (textLayer) layers.push(textLayer);
+        }
+
+        return layers;
     }
 }
