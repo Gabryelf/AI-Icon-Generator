@@ -1,6 +1,4 @@
-// =============================================================
-// ГЕНЕРАТОР АВАТАРОВ - Качественные портреты
-// =============================================================
+// modules/AvatarGenerator.js (обновленный)
 
 import { STYLES } from '../presets.js';
 
@@ -11,7 +9,7 @@ export class AvatarGenerator {
         this.fontLibrary = fontLibrary;
     }
 
-    generate(style, config) {
+    generate(style, config, spriteLoader) {
         const palette = this.colorPalette.getPalette(style, 'avatar');
         const styleData = STYLES[style];
         const skinColor = config.skinColor || '#f5d0b8';
@@ -34,7 +32,7 @@ export class AvatarGenerator {
             gradientColor: palette.secondary || '#1a1a3e'
         });
 
-        // Основа лица
+        // Основа лица (оставляем как есть — это простой овал)
         layers.push({
             type: 'face_base',
             color: skinColor,
@@ -43,11 +41,26 @@ export class AvatarGenerator {
             y: 250,
             shape: 'ellipse',
             width: size * 0.85,
-            height: size * 0.95,
-            shadow: true
+            height: size * 0.95
         });
 
-        // Брови
+        // ------------------ НОВЫЙ ПОДХОД: ИСПОЛЬЗУЕМ СПРАЙТЫ ------------------
+        
+        // 1. Глаза — загружаем из спрайтов
+        const eyeConfig = this.selectEyeSprite(eyeStyle, spriteLoader);
+        if (eyeConfig) {
+            layers.push({
+                type: 'sprite',
+                spriteConfig: eyeConfig,
+                x: 250,
+                y: 250 - size * 0.1,
+                scale: size / 200,
+                tint: eyeColor // тонируем цветом глаз
+            });
+        }
+
+        // 2. Брови — можно рисовать простыми линиями или тоже спрайтами
+        // Для простоты оставляем как есть, но в будущем можно заменить на спрайты
         layers.push({
             type: 'eyebrows',
             color: hairColor,
@@ -57,95 +70,88 @@ export class AvatarGenerator {
             style: this.getEyebrowStyle(style)
         });
 
-        // Глаза в зависимости от стиля
-        const eyeLayers = this.createEyes(style, eyeStyle, eyeColor, size);
-        layers.push(...eyeLayers);
-
-        // Нос
-        layers.push({
-            type: 'nose',
-            color: this.darkenColor(skinColor, 10),
-            size: size * 0.06,
-            x: 250,
-            y: 250 + size * 0.05,
-            style: this.getNoseStyle(style)
-        });
-
-        // Рот
-        layers.push({
-            type: 'mouth',
-            color: '#e17055',
-            size: size * 0.1,
-            x: 250,
-            y: 250 + size * 0.2,
-            expression: expression,
-            style: this.getMouthStyle(style)
-        });
-
-        // Волосы
-        layers.push(this.createHair(style, hairColor, hairStyle, size));
-
-        // Щеки (румянец) для некоторых стилей
-        if (style === 'chibi' || style === 'anime' || style === 'cartoon') {
+        // 3. Рот — из спрайтов
+        const mouthConfig = this.selectMouthSprite(expression, spriteLoader);
+        if (mouthConfig) {
             layers.push({
-                type: 'blush',
-                color: '#ff6b6b',
-                size: size * 0.12,
+                type: 'sprite',
+                spriteConfig: mouthConfig,
                 x: 250,
-                y: 250 + size * 0.08,
-                opacity: style === 'chibi' ? 0.4 : 0.2
+                y: 250 + size * 0.2,
+                scale: size / 200
             });
         }
 
-        // Аксессуары
+        // 4. Волосы — из спрайтов
+        const hairConfig = this.selectHairSprite(hairStyle, spriteLoader);
+        if (hairConfig) {
+            layers.push({
+                type: 'sprite',
+                spriteConfig: hairConfig,
+                x: 250,
+                y: 250 - size * 0.25,
+                scale: size / 200,
+                color: hairColor // замена цвета
+            });
+        }
+
+        // 5. Аксессуары — из спрайтов
         if (accessory !== 'none') {
-            layers.push(this.createAccessory(accessory, style, size));
+            const accConfig = this.selectAccessorySprite(accessory, spriteLoader);
+            if (accConfig) {
+                layers.push({
+                    type: 'sprite',
+                    spriteConfig: accConfig,
+                    x: 250,
+                    y: 250 - size * 0.25,
+                    scale: size / 200
+                });
+            }
         }
 
-        // Особенности стиля
+        // 6. Щеки (румянец) — из спрайтов
+        if (style === 'chibi' || style === 'anime' || style === 'cartoon') {
+            const blushConfig = this.selectBlushSprite(style, spriteLoader);
+            if (blushConfig) {
+                layers.push({
+                    type: 'sprite',
+                    spriteConfig: blushConfig,
+                    x: 250,
+                    y: 250 + size * 0.08,
+                    scale: size / 200,
+                    opacity: style === 'chibi' ? 0.4 : 0.2
+                });
+            }
+        }
+
+        // 7. Особенности стиля (эльфийские уши, магия и т.д.)
         if (style === 'fantasy') {
-            // Эльфийские уши
-            layers.push({
-                type: 'elven_ears',
-                color: skinColor,
-                size: size * 0.15,
-                x: 250,
-                y: 250 - size * 0.05
-            });
-            
-            // Магический блеск в глазах
-            layers.push({
-                type: 'magic_sparkle',
-                color: '#ffd700',
-                size: size * 0.05,
-                x: 250,
-                y: 250 - size * 0.22,
-                opacity: 0.6
-            });
+            const earConfig = this.selectFantasyEarSprite(spriteLoader);
+            if (earConfig) {
+                layers.push({
+                    type: 'sprite',
+                    spriteConfig: earConfig,
+                    x: 250,
+                    y: 250 - size * 0.05,
+                    scale: size / 200,
+                    color: skinColor
+                });
+            }
         }
 
         if (style === 'pixel') {
-            // Пиксельные детали
-            layers.push({
-                type: 'pixel_details',
-                size: size,
-                pixelSize: 4,
-                x: 250,
-                y: 250,
-                color: '#2d3436',
-                opacity: 0.3
-            });
-        }
-
-        if (style === 'chibi') {
-            // Глаза-звездочки
-            layers.push({
-                type: 'chibi_sparkle',
-                color: '#ffffff',
-                size: size * 0.05,
-                x: 250,
-                y: 250 - size * 0.18
-            });
+            // Пиксельные детали — можно использовать специальные спрайты
+            const pixelConfig = this.selectPixelDetailSprite(spriteLoader);
+            if (pixelConfig) {
+                layers.push({
+                    type: 'sprite',
+                    spriteConfig: pixelConfig,
+                    x: 250,
+                    y: 250,
+                    scale: size / 200,
+                    opacity: 0.3
+                });
+            }
         }
 
         return {
@@ -153,210 +159,90 @@ export class AvatarGenerator {
             effects: this.getEffects(style),
             style: style,
             category: 'avatar',
-            config: config
+            config: config,
+            // Добавляем информацию о спрайтах для отладки
+            spriteInfo: {
+                eye: eyeConfig?.id,
+                mouth: mouthConfig?.id,
+                hair: hairConfig?.id,
+                accessory: accessory
+            }
         };
     }
 
-    createEyes(style, eyeStyle, eyeColor, size) {
-        const layers = [];
-        const eyeSize = size * (style === 'chibi' ? 0.3 : style === 'anime' ? 0.2 : 0.15);
-        const yOffset = size * (style === 'chibi' ? 0.08 : style === 'anime' ? 0.12 : 0.1);
-        const xOffset = eyeSize * (style === 'chibi' ? 1.2 : 1.0);
+    // ===== МЕТОДЫ ВЫБОРА СПРАЙТОВ =====
 
-        // Белки глаз
-        for (let side of [-1, 1]) {
-            layers.push({
-                type: 'eye_white',
-                x: 250 + side * xOffset,
-                y: 250 - yOffset,
-                width: eyeSize * 1.4,
-                height: eyeSize * (style === 'chibi' ? 1.2 : 1.0),
-                color: '#ffffff',
-                style: style
-            });
-        }
-
-        // Радужка
-        for (let side of [-1, 1]) {
-            layers.push({
-                type: 'iris',
-                x: 250 + side * xOffset,
-                y: 250 - yOffset,
-                size: eyeSize * 0.6,
-                color: eyeColor,
-                style: style
-            });
-        }
-
-        // Зрачки
-        for (let side of [-1, 1]) {
-            layers.push({
-                type: 'pupil',
-                x: 250 + side * xOffset,
-                y: 250 - yOffset,
-                size: eyeSize * 0.3,
-                color: '#2d3436'
-            });
-        }
-
-        // Блики в глазах
-        if (style === 'anime' || style === 'chibi') {
-            for (let side of [-1, 1]) {
-                layers.push({
-                    type: 'eye_highlight',
-                    x: 250 + side * (xOffset + eyeSize * 0.3),
-                    y: 250 - yOffset - eyeSize * 0.3,
-                    size: eyeSize * 0.2,
-                    color: '#ffffff',
-                    opacity: 0.8
-                });
-                layers.push({
-                    type: 'eye_highlight',
-                    x: 250 + side * (xOffset - eyeSize * 0.1),
-                    y: 250 - yOffset + eyeSize * 0.2,
-                    size: eyeSize * 0.1,
-                    color: '#ffffff',
-                    opacity: 0.5
-                });
-            }
-        }
-
-        // Ресницы для аниме
-        if (style === 'anime') {
-            for (let side of [-1, 1]) {
-                layers.push({
-                    type: 'eyelashes',
-                    x: 250 + side * xOffset,
-                    y: 250 - yOffset - eyeSize * 0.4,
-                    size: eyeSize * 0.3,
-                    color: '#2d3436',
-                    side: side
-                });
-            }
-        }
-
-        return layers;
-    }
-
-    createHair(style, color, hairStyle, size) {
-        const hairLayers = [];
+    selectEyeSprite(eyeStyle, spriteLoader) {
+        const configs = spriteLoader.getSpriteConfigs('eyes');
+        if (!configs || configs.length === 0) return null;
         
-        // Базовая прическа
-        const baseHair = {
-            type: 'hair_base',
-            color: color,
-            size: size,
-            x: 250,
-            y: 250 - size * 0.2,
-            style: hairStyle,
-            category: style
-        };
-        hairLayers.push(baseHair);
-
-        // Челка
-        if (hairStyle !== 'bald' && hairStyle !== 'short') {
-            hairLayers.push({
-                type: 'hair_bangs',
-                color: this.lightenColor(color, 10),
-                size: size * 0.3,
-                x: 250,
-                y: 250 - size * 0.35,
-                style: hairStyle
-            });
-        }
-
-        // Дополнительные элементы для длинных волос
-        if (hairStyle === 'long' || hairStyle === 'ponytail') {
-            hairLayers.push({
-                type: 'hair_tail',
-                color: this.lightenColor(color, 5),
-                size: size * 0.4,
-                x: 250 + (hairStyle === 'ponytail' ? size * 0.2 : 0),
-                y: 250 + size * 0.1,
-                style: hairStyle
-            });
-        }
-
-        return hairLayers;
+        // Фильтруем по стилю
+        const filtered = configs.filter(c => c.style === eyeStyle || c.style === 'all' || !c.style);
+        if (filtered.length === 0) return null;
+        
+        return filtered[Math.floor(Math.random() * filtered.length)];
     }
 
-    createAccessory(accessory, style, size) {
-        const accessories = {
-            'glasses': {
-                type: 'glasses',
-                color: '#2d3436',
-                size: size * 0.25,
-                x: 250,
-                y: 250 - size * 0.05,
-                style: style
-            },
-            'hat': {
-                type: 'hat',
-                color: '#2d3436',
-                size: size * 0.35,
-                x: 250,
-                y: 250 - size * 0.4,
-                style: style
-            },
-            'crown': {
-                type: 'crown',
-                color: '#ffd700',
-                size: size * 0.3,
-                x: 250,
-                y: 250 - size * 0.42,
-                style: style
-            },
-            'headphones': {
-                type: 'headphones',
-                color: '#2d3436',
-                size: size * 0.3,
-                x: 250,
-                y: 250 - size * 0.2,
-                style: style
-            },
-            'bow': {
-                type: 'bow',
-                color: '#ff6b6b',
-                size: size * 0.15,
-                x: 250 + size * 0.25,
-                y: 250 - size * 0.3,
-                style: style
-            }
-        };
-
-        return accessories[accessory] || accessories['glasses'];
+    selectMouthSprite(expression, spriteLoader) {
+        const configs = spriteLoader.getSpriteConfigs('mouths');
+        if (!configs || configs.length === 0) return null;
+        
+        const filtered = configs.filter(c => c.expression === expression || c.expression === 'all' || !c.expression);
+        if (filtered.length === 0) return null;
+        
+        return filtered[Math.floor(Math.random() * filtered.length)];
     }
 
+    selectHairSprite(hairStyle, spriteLoader) {
+        const configs = spriteLoader.getSpriteConfigs('hairs');
+        if (!configs || configs.length === 0) return null;
+        
+        const filtered = configs.filter(c => c.style === hairStyle || c.style === 'all' || !c.style);
+        if (filtered.length === 0) return null;
+        
+        return filtered[Math.floor(Math.random() * filtered.length)];
+    }
+
+    selectAccessorySprite(accessory, spriteLoader) {
+        const configs = spriteLoader.getSpriteConfigs('accessories');
+        if (!configs || configs.length === 0) return null;
+        
+        const filtered = configs.filter(c => c.id === accessory || c.tags?.includes(accessory));
+        if (filtered.length === 0) return null;
+        
+        return filtered[Math.floor(Math.random() * filtered.length)];
+    }
+
+    selectBlushSprite(style, spriteLoader) {
+        const configs = spriteLoader.getSpriteConfigs('blushes');
+        if (!configs || configs.length === 0) return null;
+        
+        const filtered = configs.filter(c => c.style === style || c.style === 'all' || !c.style);
+        if (filtered.length === 0) return null;
+        
+        return filtered[Math.floor(Math.random() * filtered.length)];
+    }
+
+    selectFantasyEarSprite(spriteLoader) {
+        const configs = spriteLoader.getSpriteConfigs('fantasy_ears');
+        if (!configs || configs.length === 0) return null;
+        return configs[Math.floor(Math.random() * configs.length)];
+    }
+
+    selectPixelDetailSprite(spriteLoader) {
+        const configs = spriteLoader.getSpriteConfigs('pixel_details');
+        if (!configs || configs.length === 0) return null;
+        return configs[Math.floor(Math.random() * configs.length)];
+    }
+
+    // ===== ОСТАВШИЕСЯ МЕТОДЫ (без изменений) =====
+    
     getEyebrowStyle(style) {
         const styles = {
             'anime': 'anime',
             'chibi': 'chibi',
             'cartoon': 'cartoon',
             'fantasy': 'arched',
-            'pixel': 'simple',
-            'casual': 'natural'
-        };
-        return styles[style] || 'natural';
-    }
-
-    getNoseStyle(style) {
-        const styles = {
-            'anime': 'small',
-            'chibi': 'tiny',
-            'cartoon': 'simple',
-            'fantasy': 'delicate',
-            'pixel': 'dot',
-            'casual': 'natural'
-        };
-        return styles[style] || 'natural';
-    }
-
-    getMouthStyle(style) {
-        const styles = {
-            'anime': 'small',
-            'chibi': 'cute',
-            'cartoon': 'wide',
-            'fantasy': 'delicate',
             'pixel': 'simple',
             'casual': 'natural'
         };
@@ -372,23 +258,5 @@ export class AvatarGenerator {
             effects.push({ type: 'glow', color: '#ff6b6b', intensity: 0.1 });
         }
         return effects;
-    }
-
-    lightenColor(hex, percent) {
-        const num = parseInt(hex.replace('#', ''), 16);
-        const amt = Math.round(2.55 * percent);
-        const R = Math.min(255, (num >> 16) + amt);
-        const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
-        const B = Math.min(255, (num & 0x0000FF) + amt);
-        return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
-    }
-
-    darkenColor(hex, percent) {
-        const num = parseInt(hex.replace('#', ''), 16);
-        const amt = Math.round(2.55 * percent);
-        const R = Math.max(0, (num >> 16) - amt);
-        const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
-        const B = Math.max(0, (num & 0x0000FF) - amt);
-        return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
     }
 }

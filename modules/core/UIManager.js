@@ -418,6 +418,44 @@ export class UIManager {
         `;
         document.head.appendChild(style);
     }
+
+    /**
+     * Создание строки конфигурации с кнопкой заморозки
+     */
+    createConfigRowWithLock(field, defaults, onChange) {
+        const row = document.createElement('div');
+        row.className = 'config-row with-lock';
+
+        const label = document.createElement('label');
+        label.textContent = field.label;
+        row.appendChild(label);
+
+        // Создаем обычный input
+        const input = this.createInput(field, defaults);
+        row.appendChild(input);
+
+        // Кнопка заморозки
+        const lockBtn = document.createElement('button');
+        lockBtn.className = 'lock-btn';
+        lockBtn.innerHTML = '🔓';
+        lockBtn.dataset.locked = 'false';
+        lockBtn.title = 'Зафиксировать значение';
+        
+        lockBtn.addEventListener('click', () => {
+            const isLocked = lockBtn.dataset.locked === 'true';
+            lockBtn.dataset.locked = isLocked ? 'false' : 'true';
+            lockBtn.innerHTML = isLocked ? '🔓' : '🔒';
+            
+            // Сохраняем состояние заморозки
+            const configKey = `lock_${field.key}`;
+            if (typeof onChange === 'function') {
+                onChange(configKey, !isLocked);
+            }
+        });
+        
+        row.appendChild(lockBtn);
+        return row;
+    }
 }
 
 // Внедрение анимаций при загрузке

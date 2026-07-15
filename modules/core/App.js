@@ -18,6 +18,7 @@ export class App {
     constructor() {
         // ===== ИНИЦИАЛИЗАЦИЯ МОДУЛЕЙ =====
         this.storage = new Storage('nif_');
+        this.spriteLoader = new SpriteLoader();
         this.ui = new UIManager();
         this.router = new Router();
         this.shapeLibrary = new ShapeLibrary();
@@ -67,6 +68,8 @@ export class App {
 
     async init() {
         console.log('🚀 Neural Icon Forge v4.0 инициализация...');
+        // Загружаем спрайты
+        await this.spriteLoader.init();
         
         this.applyTheme(this.state.theme);
         await this.loadShapeData();
@@ -417,18 +420,19 @@ export class App {
             const params = { category, style, config };
             let iconData = null;
             
+            // Используем генераторы с поддержкой спрайтов
             switch (category) {
                 case 'button':
-                    iconData = this.buttonGenerator.generate(style, config);
+                    iconData = this.buttonGenerator.generate(style, config, this.spriteLoader);
                     break;
                 case 'icon':
-                    iconData = this.iconGenerator.generate(style, config);
+                    iconData = this.iconGenerator.generate(style, config, this.spriteLoader);
                     break;
                 case 'avatar':
-                    iconData = this.avatarGenerator.generate(style, config);
+                    iconData = this.avatarGenerator.generate(style, config, this.spriteLoader);
                     break;
                 case 'character':
-                    iconData = this.characterGenerator.generate(style, config);
+                    iconData = this.characterGenerator.generate(style, config, this.spriteLoader);
                     break;
                 default:
                     throw new Error(`Неизвестная категория: ${category}`);
@@ -473,30 +477,38 @@ export class App {
     // ОТРИСОВКА ИКОНОК
     // =============================================================
 
-    drawIcon(ctx, width, height, data) {
+    // метод для работы со спрайтами
+    async drawIcon(ctx, width, height, data) {
         if (!data?.layers) return;
         
         ctx.clearRect(0, 0, width, height);
         
-        data.layers.forEach(layer => {
+        for (const layer of data.layers) {
             if (Array.isArray(layer)) {
-                layer.forEach(item => this.drawLayer(ctx, item, width, height));
+                for (const item of layer) {
+                    await this.drawLayer(ctx, item, width, height);
+                }
             } else {
-                this.drawLayer(ctx, layer, width, height);
+                await this.drawLayer(ctx, layer, width, height);
             }
-        });
+        }
 
         if (data.effects) {
-            data.effects.forEach(effect => {
+            for (const effect of data.effects) {
                 this.applyEffect(ctx, effect, width, height);
-            });
+            }
         }
     }
 
-    drawLayer(ctx, layer, width, height) {
-        // Защита от undefined/null
+    async drawLayer(ctx, layer, width, height) {
         if (!layer || !layer.type) {
             console.warn('⚠️ Слой без типа:', layer);
+            return;
+        }
+
+        // Новый тип слоя — спрайт
+        if (layer.type === 'sprite') {
+            await this.drawSpriteLayer(ctx, layer);
             return;
         }
         
@@ -656,6 +668,42 @@ export class App {
             default:
                 console.warn('⚠️ Неизвестный тип слоя:', layer.type);
         }
+    }
+
+    async drawSpriteLayer(ctx, layer) {
+        const { spriteConfig, x, y, scale = 1, rotation = 0, opacity = 1, color, tint } = layer;
+        
+        if (!spriteConfig) return;
+        
+        const img = await this.spriteLoader.loadSprite(spriteConfig);
+        if (!img) return;
+        
+        const size = this.spriteLoader.getSpriteSize(spriteConfig);
+        const w = size.width * scale;
+        const h = size.height * scale;
+        
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.translate(x || 250, y || 250);
+        ctx.rotate(rotation || 0);
+        
+        // Применяем цветовую тонировку (если нужно)
+        if (tint) {
+            ctx.drawImage(img, -w/2, -h/2, w, h);
+            ctx.globalCompositeOperation = 'source-atop';
+            ctx.fillStyle = tint;
+            ctx.fillRect(-w/2, -h/2, w, h);
+        } else if (color) {
+            // Замена цвета (для черно-белых спрайтов)
+            ctx.drawImage(img, -w/2, -h/2, w, h);
+            ctx.globalCompositeOperation = 'source-atop';
+            ctx.fillStyle = color;
+            ctx.fillRect(-w/2, -h/2, w, h);
+        } else {
+            ctx.drawImage(img, -w/2, -h/2, w, h);
+        }
+        
+        ctx.restore();
     }
 
     // =============================================================
