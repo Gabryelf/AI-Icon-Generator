@@ -1,9 +1,11 @@
-// modules/generators/BaseGenerator.js
+// ===============================================================
+// БАЗОВЫЙ ГЕНЕРАТОР
+// ===============================================================
 
 export class BaseGenerator {
-    constructor(spriteLoader, configManager) {
-        this.spriteLoader = spriteLoader;
-        this.configManager = configManager;
+    constructor(assetManager, composer) {
+        this.assetManager = assetManager;
+        this.composer = composer;
         this.category = null;
         this.style = null;
         this.config = null;
@@ -20,150 +22,67 @@ export class BaseGenerator {
         throw new Error('Метод generate() должен быть переопределен');
     }
 
-    async buildLayers() {
-        throw new Error('Метод buildLayers() должен быть переопределен');
-    }
-
-    async createSpriteLayer(part, x, y, scale = 1, color = null) {
-        const path = this.getSpritePath(part);
-        if (!path) return null;
-
-        return {
-            type: 'sprite',
-            path: path,
-            x: x || 250,
-            y: y || 250,
-            scale: scale,
-            color: color || null,
-            opacity: 1
-        };
-    }
-
-    getSpritePath(part) {
-        const parts = this.spriteLoader.getParts(this.category, this.style);
-        if (!parts || !parts[part]) return null;
-
-        const sprites = parts[part];
-        if (!sprites || sprites.length === 0) return null;
-
-        const spriteName = sprites[Math.floor(Math.random() * sprites.length)];
-        return `${this.category}/${this.style}/${part}/${spriteName}.png`;
-    }
-
     getConfigValue(key, defaultValue = null) {
         return this.config?.[key] ?? defaultValue;
     }
 
     getSize() {
-        const size = this.getConfigValue('size', 200);
-        const map = this.spriteLoader.getSpriteMap(this.category, this.style);
-        const baseSize = map?.width || 200;
-        return size / baseSize;
+        return this.getConfigValue('size', 200);
     }
 
-    createTextLayer(text, x, y, color = '#ffffff', size = 20, font = 'Arial') {
-        if (!text) return null;
+    createBackgroundLayer(config) {
+        const bgColor = config?.backgroundColor || 'transparent';
+        if (bgColor === 'transparent') return null;
+        
+        return {
+            type: 'background',
+            color: bgColor,
+            gradient: bgColor === 'gradient' ? {
+                colors: [config?.primaryColor || '#7c3aed', config?.secondaryColor || '#4d96ff'],
+                angle: 45
+            } : null
+        };
+    }
 
+    createTextLayer(text, config) {
+        if (!text || config.textPosition === 'none') return null;
+        
+        const size = this.getSize();
+        const positions = {
+            'top': { x: size/2, y: size * 0.1 },
+            'bottom': { x: size/2, y: size * 0.9 },
+            'center': { x: size/2, y: size/2 },
+            'top-left': { x: size * 0.1, y: size * 0.1 },
+            'top-right': { x: size * 0.9, y: size * 0.1 },
+            'bottom-left': { x: size * 0.1, y: size * 0.9 },
+            'bottom-right': { x: size * 0.9, y: size * 0.9 }
+        };
+        
+        const pos = positions[config.textPosition] || positions.bottom;
+        
         return {
             type: 'text',
             text: text,
-            x: x || 250,
-            y: y || 250,
-            color: color,
-            size: size,
-            font: font,
-            align: 'center'
+            x: pos.x,
+            y: pos.y,
+            color: config.textColor || '#ffffff',
+            size: config.textSize || 24,
+            font: config.textFont || 'Arial',
+            align: ['top', 'bottom', 'center'].includes(config.textPosition) ? 'center' : 
+                   ['top-left', 'bottom-left'].includes(config.textPosition) ? 'left' : 'right'
         };
     }
 
-    createBackgroundLayer(color) {
-        if (!color || color === 'transparent') return null;
-
-        return {
-            type: 'background',
-            color: color
-        };
+    randomColor() {
+        const colors = ['#7c3aed', '#4d96ff', '#f59e0b', '#ef4444', '#22c55e', '#ec4899', '#8b5cf6', '#f97316', '#06b6d4', '#10b981'];
+        return colors[Math.floor(Math.random() * colors.length)];
     }
 
-    getRandomFromArray(arr) {
-        if (!arr || arr.length === 0) return null;
-        return arr[Math.floor(Math.random() * arr.length)];
+    randomRange(min, max) {
+        return min + Math.random() * (max - min);
     }
 
-    // Методы для работы с позициями частей
-    getPartPosition(part) {
-        const positions = {
-            // Общие позиции
-            'background': { x: 250, y: 250 },
-            
-            // Для аватаров
-            'face': { x: 250, y: 250 },
-            'eyes': { x: 250, y: 235 },
-            'eyebrows': { x: 250, y: 210 },
-            'nose': { x: 250, y: 265 },
-            'mouth': { x: 250, y: 285 },
-            'hair': { x: 250, y: 185 },
-            'accessories': { x: 250, y: 220 },
-            'frame': { x: 250, y: 250 },
-            'text': { x: 250, y: 440 },
-            
-            // Для персонажей
-            'head': { x: 250, y: 150 },
-            'body': { x: 250, y: 270 },
-            'arms': { x: 250, y: 260 },
-            'legs': { x: 250, y: 370 },
-            'clothes': { x: 250, y: 270 },
-            'weapons': { x: 350, y: 250 },
-            
-            // Для кнопок
-            'button_sprite': { x: 250, y: 250 },
-            'text': { x: 250, y: 250 },
-            
-            // Для иконок
-            'icon_sprite': { x: 250, y: 250 }
-        };
-
-        return positions[part] || { x: 250, y: 250 };
-    }
-
-    // Проверка совместимости частей
-    isPartCompatible(part, config) {
-        // Проверяем, есть ли у персонажа/аватара определенные части
-        const hasEars = this.hasPart('ears');
-        const hasHair = this.hasPart('hair');
-        const hasAccessories = this.hasPart('accessories');
-
-        switch(part) {
-            case 'earrings':
-                return hasEars;
-            case 'hat':
-                return hasHair;
-            case 'glasses':
-                return true;
-            default:
-                return true;
-        }
-    }
-
-    hasPart(part) {
-        const parts = this.spriteLoader.getParts(this.category, this.style);
-        return parts && parts[part] && parts[part].length > 0;
-    }
-
-    // Получение цветов для частей
-    getPartColor(part) {
-        const colorMap = {
-            'face': this.getConfigValue('skinColor'),
-            'head': this.getConfigValue('skinColor'),
-            'body': this.getConfigValue('skinColor'),
-            'eyes': this.getConfigValue('eyeColor'),
-            'eyebrows': this.getConfigValue('hairColor'),
-            'hair': this.getConfigValue('hairColor'),
-            'clothes': this.getConfigValue('outfitColor'),
-            'button_sprite': this.getConfigValue('color'),
-            'icon_sprite': this.getConfigValue('color')
-        };
-
-        return colorMap[part] || null;
+    clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
     }
 }

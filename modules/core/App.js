@@ -1,39 +1,37 @@
-// modules/core/App.js
+// ===============================================================
+// ГЛАВНОЕ ПРИЛОЖЕНИЕ
+// ===============================================================
 
 import { Router } from './Router.js';
 import { ConfigManager } from './ConfigManager.js';
 import { SpriteLoader } from './SpriteLoader.js';
 import { UIManager } from './UIManager.js';
 import { Storage } from './Storage.js';
-import { CATEGORIES, STYLES, CATEGORY_CONFIGS } from '../configs/presets.js';
-import { ButtonGenerator } from '../generators/ButtonGenerator.js';
+import { AssetManager } from './AssetManager.js';
+import { Composer } from './Composer.js';
 import { IconGenerator } from '../generators/IconGenerator.js';
-import { AvatarGenerator } from '../generators/AvatarGenerator.js';
-import { CharacterGenerator } from '../generators/CharacterGenerator.js';
+import { ICON_CATEGORIES, ICON_STYLES, ICON_CONFIG, CONFIG_GROUPS } from '../configs/icon_config.js';
 
 export class App {
     constructor() {
-        // ===== ИНИЦИАЛИЗАЦИЯ МОДУЛЕЙ =====
+        // ===== МОДУЛИ =====
         this.storage = new Storage('nif_');
         this.configManager = new ConfigManager();
         this.spriteLoader = new SpriteLoader();
+        this.assetManager = new AssetManager();
+        this.composer = new Composer(this.assetManager);
         this.ui = new UIManager();
         this.router = new Router();
         
-        // Инициализация генераторов
-        this.generators = {
-            button: new ButtonGenerator(this.spriteLoader, this.configManager),
-            icon: new IconGenerator(this.spriteLoader, this.configManager),
-            avatar: new AvatarGenerator(this.spriteLoader, this.configManager),
-            character: new CharacterGenerator(this.spriteLoader, this.configManager)
-        };
+        // Генератор иконок
+        this.iconGenerator = new IconGenerator(this.assetManager, this.composer);
 
         // ===== СОСТОЯНИЕ =====
         this.state = {
             currentTab: 'dashboard',
             selectedCategory: null,
             selectedStyle: null,
-            config: {},
+            config: { ...ICON_CONFIG.defaults },
             history: this.storage.load('history', []),
             recent: this.storage.load('recent', []),
             saved: this.storage.load('saved', []),
@@ -47,7 +45,7 @@ export class App {
             isGenerating: false
         };
 
-        // ===== РЕГИСТРАЦИЯ МАРШРУТОВ =====
+        // ===== МАРШРУТЫ =====
         this.router
             .register('dashboard', () => this.showDashboard())
             .register('generator', () => this.showGenerator())
@@ -64,15 +62,13 @@ export class App {
     // =============================================================
 
     async init() {
-        console.log('🚀 Neural Icon Forge v4.0 инициализация...');
-        console.log('📦 Загрузка конфигураций и спрайтов...');
+        console.log('🚀 Neural Icon Forge v4.0 (Icon Only)');
         
         try {
-            // Загружаем конфигурации
-            await this.configManager.init();
-            console.log('✅ ConfigManager загружен');
+            // Инициализация модулей
+            await this.assetManager.init();
+            console.log('✅ AssetManager загружен');
             
-            // Загружаем спрайты
             await this.spriteLoader.init();
             console.log('✅ SpriteLoader загружен');
             
@@ -89,30 +85,15 @@ export class App {
             // Переходим на дашборд
             this.router.navigate('dashboard');
 
-            console.log('✅ Neural Icon Forge v4.0 готов к работе');
-            console.log(`📦 Категории: ${Object.keys(CATEGORIES).length}`);
-            console.log(`🎨 Стили: ${Object.keys(STYLES).length}`);
+            console.log('✅ Neural Icon Forge v4.0 готов');
+            console.log(`📦 Категории: ${Object.keys(ICON_CATEGORIES).length}`);
+            console.log(`🎨 Стили: ${Object.keys(ICON_STYLES).length}`);
             console.log(`💾 Сохранено: ${this.state.saved.length}`);
-            
-            // Выводим информацию о доступных спрайтах
-            this.logSpriteInfo();
+            console.log(`🖼️ Ассетов: ${this.assetManager.getTotalAssets()}`);
         } catch (error) {
             console.error('❌ Ошибка инициализации:', error);
             this.ui.showNotification('Ошибка загрузки приложения', 'error');
         }
-    }
-
-    logSpriteInfo() {
-        console.log('📊 Доступные спрайты:');
-        Object.keys(CATEGORIES).forEach(category => {
-            Object.keys(STYLES).forEach(style => {
-                const map = this.spriteLoader.getSpriteMap(category, style);
-                if (map) {
-                    const parts = Object.keys(map.parts || {});
-                    console.log(`  - ${category}/${style}: ${parts.length} частей`);
-                }
-            });
-        });
     }
 
     // =============================================================
@@ -129,12 +110,12 @@ export class App {
         if (!grid) return;
 
         grid.innerHTML = '';
-        Object.entries(CATEGORIES).forEach(([key, category]) => {
+        Object.entries(ICON_CATEGORIES).forEach(([key, category]) => {
             const card = document.createElement('button');
             card.className = 'category-card';
             card.dataset.category = key;
             card.innerHTML = `
-                <i class="${category.icon}"></i>
+                <i class="fas ${category.icon}"></i>
                 <span>${category.name}</span>
                 <small>${category.description}</small>
             `;
@@ -147,28 +128,23 @@ export class App {
         const grid = document.getElementById('style-grid');
         if (!grid) return;
 
-        const category = this.state.selectedCategory;
-        const availableStyles = CATEGORIES[category]?.styles || [];
-
         grid.innerHTML = '';
-        Object.entries(STYLES)
-            .filter(([key]) => availableStyles.includes(key))
-            .forEach(([key, style]) => {
-                const card = document.createElement('button');
-                card.className = 'style-card';
-                card.dataset.style = key;
-                card.innerHTML = `
-                    <i class="${style.icon}"></i>
-                    <span>${style.name}</span>
-                    <small>${style.description}</small>
-                `;
-                card.addEventListener('click', () => this.selectStyle(key));
-                grid.appendChild(card);
-            });
+        Object.entries(ICON_STYLES).forEach(([key, style]) => {
+            const card = document.createElement('button');
+            card.className = 'style-card';
+            card.dataset.style = key;
+            card.innerHTML = `
+                <i class="fas ${style.icon}"></i>
+                <span>${style.name}</span>
+                <small>${style.description}</small>
+            `;
+            card.addEventListener('click', () => this.selectStyle(key));
+            grid.appendChild(card);
+        });
 
         const desc = document.getElementById('style-desc');
         if (desc) {
-            desc.textContent = `Выберите стиль для категории "${CATEGORIES[category]?.name || ''}"`;
+            desc.textContent = 'Выберите стиль для генерации иконок';
         }
     }
 
@@ -180,7 +156,6 @@ export class App {
         this.state.selectedCategory = category;
         document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
         document.querySelector(`.category-card[data-category="${category}"]`)?.classList.add('selected');
-        this.renderStyles();
         this.ui.showStep('step-style');
     }
 
@@ -188,38 +163,31 @@ export class App {
         this.state.selectedStyle = style;
         document.querySelectorAll('.style-card').forEach(c => c.classList.remove('selected'));
         document.querySelector(`.style-card[data-style="${style}"]`)?.classList.add('selected');
-        this.loadCategoryConfig();
+        this.loadConfig();
         this.ui.showStep('step-config');
     }
 
-    loadCategoryConfig() {
-        const category = this.state.selectedCategory;
-        const style = this.state.selectedStyle;
-        
-        if (!category || !style) return;
-
-        const categoryConfig = CATEGORY_CONFIGS[category];
-        if (!categoryConfig) return;
-
+    loadConfig() {
         const container = document.getElementById('config-container');
         if (!container) return;
 
         container.innerHTML = '';
-        const groups = this.ui.groupConfigFields(categoryConfig.config);
 
-        groups.forEach(group => {
+        // Группировка настроек
+        CONFIG_GROUPS.forEach(group => {
             const groupDiv = document.createElement('div');
             groupDiv.className = 'config-group';
             
-            if (group.title) {
-                const title = document.createElement('div');
-                title.className = 'config-group-title';
-                title.innerHTML = `<i class="fas fa-${group.icon || 'sliders'}"></i> ${group.title}`;
-                groupDiv.appendChild(title);
-            }
+            const title = document.createElement('div');
+            title.className = 'config-group-title';
+            title.innerHTML = `<i class="fas fa-${group.icon}"></i> ${group.title}`;
+            groupDiv.appendChild(title);
 
-            group.fields.forEach(field => {
-                const row = this.ui.createConfigRow(field, categoryConfig.defaults, (key, value) => {
+            group.fields.forEach(fieldKey => {
+                const field = ICON_CONFIG.config[fieldKey];
+                if (!field) return;
+                
+                const row = this.ui.createConfigRow(field, ICON_CONFIG.defaults, (key, value) => {
                     this.state.config[key] = value;
                     if (this.state.autoGenerate) this.generateIcon();
                 });
@@ -229,15 +197,15 @@ export class App {
             container.appendChild(groupDiv);
         });
 
-        this.ui.setConfigDefaults(categoryConfig.defaults, this.state.config);
-        this.state.config.category = category;
-        this.state.config.style = style;
+        this.ui.setConfigDefaults(ICON_CONFIG.defaults, this.state.config);
+        this.state.config.category = this.state.selectedCategory;
+        this.state.config.style = this.state.selectedStyle;
 
         const desc = document.getElementById('config-desc');
         if (desc) {
-            const styleName = STYLES[style]?.name || style;
-            const categoryName = CATEGORIES[category]?.name || category;
-            desc.textContent = `Настройка ${categoryName} в стиле "${styleName}"`;
+            const styleName = ICON_STYLES[this.state.selectedStyle]?.name || this.state.selectedStyle;
+            const categoryName = ICON_CATEGORIES[this.state.selectedCategory]?.name || this.state.selectedCategory;
+            desc.textContent = `Генерация иконок в стиле "${styleName}" (${categoryName})`;
         }
 
         if (this.state.autoGenerate) {
@@ -265,17 +233,11 @@ export class App {
         document.getElementById('generate-btn').disabled = true;
 
         try {
-            // Получаем генератор для категории
-            const generator = this.generators[category];
-            if (!generator) {
-                throw new Error(`Генератор для категории "${category}" не найден`);
-            }
-
             // Устанавливаем конфигурацию
-            generator.setConfig(category, style, config);
+            this.iconGenerator.setConfig(category, style, config);
             
             // Генерируем иконку
-            const iconData = await generator.generate();
+            const iconData = await this.iconGenerator.generate();
 
             if (!iconData) throw new Error('Ошибка генерации');
 
@@ -287,21 +249,21 @@ export class App {
             const ctx = canvas.getContext('2d');
             await this.drawIcon(ctx, canvas.width, canvas.height, iconData);
 
-            const categoryName = CATEGORIES[category]?.name || category;
-            const styleName = STYLES[style]?.name || style;
+            const categoryName = ICON_CATEGORIES[category]?.name || category;
+            const styleName = ICON_STYLES[style]?.name || style;
             document.getElementById('preview-settings').textContent = `${categoryName} / ${styleName}`;
 
             // Сохраняем в историю
             this.saveToHistory(iconData, { category, style, config });
             this.updateStats();
 
-            // Авто-сохранение в профиль
+            // Авто-сохранение
             if (this.state.autoSaveProfile) {
                 this.saveToProfile(iconData, { category, style, config });
-                document.getElementById('save-status').textContent = '✅ Авто-сохранено в профиль';
+                document.getElementById('save-status').textContent = '✅ Авто-сохранено';
                 document.getElementById('save-status').style.color = '#10b981';
             } else {
-                document.getElementById('save-status').textContent = '💾 Нажмите "Сохранить в профиль"';
+                document.getElementById('save-status').textContent = '💾 Нажмите "Сохранить"';
                 document.getElementById('save-status').style.color = '#f59e0b';
             }
         } catch (error) {
@@ -324,90 +286,82 @@ export class App {
         
         ctx.clearRect(0, 0, width, height);
         
-        for (const layer of data.layers) {
-            if (Array.isArray(layer)) {
-                for (const item of layer) {
-                    await this.drawLayer(ctx, item, width, height);
-                }
-            } else {
-                await this.drawLayer(ctx, layer, width, height);
-            }
+        // Сортируем слои по zIndex
+        const sortedLayers = [...data.layers].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+        
+        for (const layer of sortedLayers) {
+            await this.drawLayer(ctx, layer, width, height);
         }
     }
 
     async drawLayer(ctx, layer, width, height) {
-        if (!layer || !layer.type) {
-            console.warn('⚠️ Слой без типа:', layer);
-            return;
-        }
+        if (!layer) return;
 
         switch (layer.type) {
-            case 'sprite':
-                await this.drawSpriteLayer(ctx, layer);
-                break;
             case 'background':
                 this.drawBackground(ctx, layer, width, height);
                 break;
+            case 'sprite':
+                await this.drawSprite(ctx, layer);
+                break;
             case 'text':
-                this.drawTextLayer(ctx, layer);
+                this.drawText(ctx, layer);
                 break;
             default:
                 console.warn('⚠️ Неизвестный тип слоя:', layer.type);
         }
     }
 
-    async drawSpriteLayer(ctx, layer) {
-        const { path, x, y, scale = 1, rotation = 0, opacity = 1, color, tint } = layer;
+    drawBackground(ctx, layer, width, height) {
+        if (layer.color === 'transparent') return;
         
-        if (!path) return;
+        if (layer.gradient) {
+            const grad = ctx.createLinearGradient(0, 0, width, height);
+            const colors = layer.gradient.colors || ['#7c3aed', '#4d96ff'];
+            grad.addColorStop(0, colors[0]);
+            grad.addColorStop(1, colors[1] || colors[0]);
+            ctx.fillStyle = grad;
+        } else {
+            ctx.fillStyle = layer.color || '#0a0a0f';
+        }
+        ctx.fillRect(0, 0, width, height);
+    }
+
+    async drawSprite(ctx, layer) {
+        const { image, x, y, width: w, height: h, rotation = 0, opacity = 1, color } = layer;
         
-        const img = await this.spriteLoader.loadSprite(path);
-        if (!img) return;
-        
-        const w = img.width * scale;
-        const h = img.height * scale;
+        if (!image) return;
         
         ctx.save();
         ctx.globalAlpha = opacity;
         ctx.translate(x || 250, y || 250);
-        ctx.rotate(rotation || 0);
+        ctx.rotate((rotation || 0) * Math.PI / 180);
+        
+        const drawW = w || image.width;
+        const drawH = h || image.height;
         
         if (color) {
-            // Для спрайтов с прозрачным фоном меняем цвет
-            ctx.drawImage(img, -w/2, -h/2, w, h);
+            // Рисуем с цветной заливкой
+            ctx.drawImage(image, -drawW/2, -drawH/2, drawW, drawH);
             ctx.globalCompositeOperation = 'source-atop';
             ctx.fillStyle = color;
-            ctx.fillRect(-w/2, -h/2, w, h);
-        } else if (tint) {
-            ctx.drawImage(img, -w/2, -h/2, w, h);
-            ctx.globalCompositeOperation = 'source-atop';
-            ctx.fillStyle = tint;
-            ctx.fillRect(-w/2, -h/2, w, h);
+            ctx.fillRect(-drawW/2, -drawH/2, drawW, drawH);
         } else {
-            ctx.drawImage(img, -w/2, -h/2, w, h);
+            ctx.drawImage(image, -drawW/2, -drawH/2, drawW, drawH);
         }
         
         ctx.restore();
     }
 
-    drawBackground(ctx, layer, width, height) {
-        if (!layer.color || layer.color === 'transparent') return;
+    drawText(ctx, layer) {
+        if (!layer.text) return;
         
-        try {
-            ctx.fillStyle = layer.color;
-            ctx.fillRect(0, 0, width, height);
-        } catch (e) {
-            console.warn('Ошибка отрисовки фона:', e);
-        }
-    }
-
-    drawTextLayer(ctx, layer) {
         ctx.save();
         ctx.fillStyle = layer.color || '#ffffff';
         ctx.font = `${layer.weight || 'bold'} ${layer.size || 24}px ${layer.font || 'Arial'}`;
         ctx.textAlign = layer.align || 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(layer.text || '', layer.x || 250, layer.y || 250);
+        ctx.fillText(layer.text, layer.x || 250, layer.y || 250);
         ctx.restore();
     }
 
@@ -526,8 +480,8 @@ export class App {
         this.state.currentIconData = item.data;
         this.state.currentParams = item.params;
 
-        const categoryName = CATEGORIES[item.params?.category]?.name || item.params?.category || 'unknown';
-        const styleName = STYLES[item.params?.style]?.name || item.params?.style || 'unknown';
+        const categoryName = ICON_CATEGORIES[item.params?.category]?.name || item.params?.category || 'unknown';
+        const styleName = ICON_STYLES[item.params?.style]?.name || item.params?.style || 'unknown';
         document.getElementById('preview-settings').textContent = `${categoryName} / ${styleName}`;
         
         this.router.navigate('generator');
@@ -576,18 +530,7 @@ export class App {
         const p = params || this.state.currentParams;
 
         if (!data || !p) {
-            alert('Сначала сгенерируйте иконку!');
-            return;
-        }
-
-        const isDuplicate = this.state.saved.some(item => 
-            item.params?.category === p.category && 
-            item.params?.style === p.style &&
-            JSON.stringify(item.data) === JSON.stringify(data)
-        );
-
-        if (isDuplicate) {
-            alert('⚠️ Эта иконка уже сохранена в профиле!');
+            this.ui.showNotification('Сначала сгенерируйте иконку!', 'warning');
             return;
         }
 
@@ -603,43 +546,30 @@ export class App {
         this.renderSavedIcons();
         this.updateStats();
         
-        document.getElementById('save-status').textContent = '✅ Сохранено в профиль!';
-        document.getElementById('save-status').style.color = '#10b981';
-        
-        setTimeout(() => {
-            document.getElementById('save-status').textContent = '';
-        }, 3000);
+        this.ui.showNotification('✅ Иконка сохранена в профиль!', 'success');
     }
 
     randomizeConfig() {
-        const category = this.state.selectedCategory;
-        const categoryConfig = CATEGORY_CONFIGS[category];
-        if (!categoryConfig) return;
-
         const config = this.state.config;
-        Object.keys(categoryConfig.config).forEach(key => {
-            const field = categoryConfig.config[key];
-            if (field.type === 'range') {
-                const min = field.min || 0;
-                const max = field.max || 100;
-                config[key] = Math.floor(Math.random() * (max - min + 1)) + min;
-            } else if (field.type === 'color') {
-                const colors = ['#7c3aed', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#f97316', '#22c55e', '#ff6b6b', '#ffd93d', '#4d96ff'];
-                config[key] = colors[Math.floor(Math.random() * colors.length)];
-            } else if (field.type === 'select') {
-                const options = field.options || [];
-                if (options.length) {
-                    config[key] = options[Math.floor(Math.random() * options.length)].value;
-                }
-            } else if (field.type === 'checkbox') {
-                config[key] = Math.random() > 0.5;
-            } else if (field.type === 'text') {
-                const texts = ['Star', 'Hero', 'Pro', 'Max', 'Ultra', 'Prime', 'Core', 'Neon', 'Pixel', 'Magic', 'Cyber', 'Chibi', 'Anime', 'Casual', 'Quantum', 'Nova', 'Apex', 'Zen', 'Void', 'Eclipse'];
-                config[key] = texts[Math.floor(Math.random() * texts.length)];
-            }
-        });
-
-        Object.keys(categoryConfig.config).forEach(key => {
+        
+        // Случайные цвета
+        const colors = ['#7c3aed', '#4d96ff', '#f59e0b', '#ef4444', '#22c55e', '#ec4899', '#8b5cf6', '#f97316', '#06b6d4', '#10b981'];
+        config.primaryColor = colors[Math.floor(Math.random() * colors.length)];
+        config.secondaryColor = colors[Math.floor(Math.random() * colors.length)];
+        config.accentColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        // Случайный размер
+        config.size = Math.floor(Math.random() * 200) + 100;
+        
+        // Случайная сложность
+        config.complexity = Math.floor(Math.random() * 4) + 1;
+        
+        // Случайная композиция
+        const compositions = ['centered', 'top', 'bottom', 'left', 'right', 'diagonal', 'scattered'];
+        config.composition = compositions[Math.floor(Math.random() * compositions.length)];
+        
+        // Обновляем UI
+        Object.keys(ICON_CONFIG.config).forEach(key => {
             const input = document.getElementById(`config-${key}`);
             if (input) {
                 const val = config[key];
@@ -665,7 +595,7 @@ export class App {
     updateStats() {
         const stats = {
             total: this.state.history.length,
-            styles: Object.keys(STYLES).length,
+            styles: Object.keys(ICON_STYLES).length,
             saved: this.state.saved.length
         };
         this.ui.updateStats(stats);
@@ -729,43 +659,13 @@ export class App {
         document.getElementById('export-quality').value = this.state.exportQuality || 512;
     }
 
-    exportAll() {
-        if (this.state.saved.length === 0) {
-            alert('Нет сохраненных иконок для экспорта');
-            return;
-        }
-
-        // Создаем ZIP архив с иконками
-        const zip = { files: [] };
-        zip.add = function(name, data) { this.files.push({ name, data }); };
-        zip.generate = function() { return JSON.stringify(this.files); };
-
-        this.state.saved.forEach((item, index) => {
-            const canvas = document.createElement('canvas');
-            const size = this.state.exportQuality || 512;
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            this.drawIcon(ctx, size, size, item.data);
-            const dataUrl = canvas.toDataURL('image/png');
-            zip.add(`icon-${index + 1}.png`, dataUrl);
-        });
-
-        const blob = new Blob([zip.generate()], {type: 'application/json'});
-        const link = document.createElement('a');
-        link.download = `icons-${Date.now()}.json`;
-        link.href = URL.createObjectURL(blob);
-        link.click();
-        alert('✅ Экспорт завершен!');
-    }
-
     // =============================================================
     // ЭКСПОРТ
     // =============================================================
 
     download(format, data) {
         const canvas = document.createElement('canvas');
-        const size = 512;
+        const size = this.state.exportQuality || 512;
         canvas.width = size;
         canvas.height = size;
         const ctx = canvas.getContext('2d');
@@ -790,22 +690,32 @@ export class App {
     copySVG(data) {
         const svg = this.toSVG(data, 512);
         navigator.clipboard.writeText(svg).then(() => {
-            alert('✅ SVG код скопирован в буфер обмена!');
+            this.ui.showNotification('✅ SVG скопирован в буфер обмена!', 'success');
         }).catch(() => {
-            alert('❌ Не удалось скопировать SVG');
+            this.ui.showNotification('❌ Не удалось скопировать SVG', 'error');
         });
     }
 
     toSVG(data, size) {
-        // Простая конвертация в SVG (только для базовых слоев)
         let shapes = '';
-        data.layers.forEach(layer => {
-            if (Array.isArray(layer)) {
-                layer.forEach(item => {
-                    shapes += this.layerToSVG(item, size);
-                });
-            } else {
-                shapes += this.layerToSVG(layer, size);
+        const layers = data.layers || [];
+        
+        layers.forEach(layer => {
+            if (layer.type === 'background') {
+                if (layer.color && layer.color !== 'transparent') {
+                    shapes += `<rect width="100%" height="100%" fill="${layer.color}" />`;
+                }
+            }
+            if (layer.type === 'text') {
+                shapes += `<text x="${layer.x || size/2}" y="${layer.y || size/2}" fill="${layer.color || '#ffffff'}" font-size="${layer.size || 24}" font-family="${layer.font || 'Arial'}" text-anchor="${layer.align || 'center'}" dominant-baseline="middle">${layer.text || ''}</text>`;
+            }
+            if (layer.type === 'sprite') {
+                // Для спрайтов используем цветной прямоугольник как placeholder
+                const w = layer.width || size * 0.4;
+                const h = layer.height || size * 0.4;
+                const x = (layer.x || size/2) - w/2;
+                const y = (layer.y || size/2) - h/2;
+                shapes += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${layer.color || '#7c3aed'}" opacity="${layer.opacity || 1}" transform="rotate(${layer.rotation || 0}, ${layer.x || size/2}, ${layer.y || size/2})" />`;
             }
         });
 
@@ -814,19 +724,26 @@ export class App {
         </svg>`;
     }
 
-    layerToSVG(item, size) {
-        if (item.type === 'background') {
-            if (!item.color || item.color === 'transparent') return '';
-            return `<rect width="100%" height="100%" fill="${item.color}" />`;
+    exportAll() {
+        if (this.state.saved.length === 0) {
+            this.ui.showNotification('Нет сохраненных иконок', 'warning');
+            return;
         }
-        if (item.type === 'sprite') {
-            // Для спрайтов сложно сделать SVG, поэтому возвращаем placeholder
-            return `<rect x="${(item.x || 250) - 50}" y="${(item.y || 250) - 50}" width="100" height="100" fill="${item.color || '#7c3aed'}" opacity="${item.opacity || 1}" />`;
-        }
-        if (item.type === 'text') {
-            return `<text x="${item.x || 250}" y="${item.y || 250}" fill="${item.color || '#ffffff'}" font-size="${item.size || 24}" text-anchor="middle" dominant-baseline="middle">${item.text || ''}</text>`;
-        }
-        return '';
+
+        // Создаем архив с иконками
+        const data = this.state.saved.map((item, index) => ({
+            name: `icon-${index + 1}`,
+            data: item.data,
+            params: item.params
+        }));
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const link = document.createElement('a');
+        link.download = `icons-export-${Date.now()}.json`;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        
+        this.ui.showNotification(`✅ Экспортировано ${data.length} иконок`, 'success');
     }
 
     // =============================================================
@@ -924,35 +841,16 @@ export class App {
             this.storage.save('exportQuality', parseInt(e.target.value));
         });
 
-        document.addEventListener('click', (e) => {
-            const target = e.target.closest('[data-action]');
-            if (target) {
-                const action = target.dataset.action;
-                if (action === 'download-png' || action === 'download-svg') {
-                    try {
-                        const data = JSON.parse(decodeURIComponent(target.dataset.icon));
-                        const format = action === 'download-png' ? 'png' : 'svg';
-                        this.download(format, data);
-                    } catch (error) {
-                        console.error('Ошибка скачивания:', error);
-                    }
-                }
-            }
-        });
-
-        // Обработка клавиш
+        // Горячие клавиши
         document.addEventListener('keydown', (e) => {
-            // Ctrl+Enter - генерация
             if (e.ctrlKey && e.key === 'Enter') {
                 e.preventDefault();
                 this.generateIcon();
             }
-            // Ctrl+R - рандомизация
             if (e.ctrlKey && e.key === 'r') {
                 e.preventDefault();
                 this.randomizeConfig();
             }
-            // Ctrl+S - сохранение
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 this.saveToProfile();
