@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Генератор ассетов</title>
+</head>
+<body>
+    <button onclick="generateAll()">Сгенерировать все ассеты</button>
+    <div id="output"></div>
+    
+    <script>
+    function generateShapes() {
+        const shapes = {
+            circle: (ctx, size) => {
+                ctx.beginPath();
+                ctx.arc(size/2, size/2, size/2 - 4, 0, Math.PI * 2);
+                ctx.fill();
+            },
+            square: (ctx, size) => {
+                ctx.fillRect(4, 4, size - 8, size - 8);
+            },
+            triangle: (ctx, size) => {
+                ctx.beginPath();
+                ctx.moveTo(size/2, 4);
+                ctx.lineTo(4, size - 4);
+                ctx.lineTo(size - 4, size - 4);
+                ctx.closePath();
+                ctx.fill();
+            },
+            star: (ctx, size) => {
+                const cx = size/2, cy = size/2;
+                const outer = size/2 - 4;
+                const inner = outer * 0.4;
+                ctx.beginPath();
+                for (let i = 0; i < 10; i++) {
+                    const radius = i % 2 === 0 ? outer : inner;
+                    const angle = (i * Math.PI) / 5 - Math.PI/2;
+                    const x = cx + Math.cos(angle) * radius;
+                    const y = cy + Math.sin(angle) * radius;
+                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+            },
+            hexagon: (ctx, size) => {
+                const cx = size/2, cy = size/2;
+                const radius = size/2 - 4;
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI) / 3 - Math.PI/2;
+                    const x = cx + Math.cos(angle) * radius;
+                    const y = cy + Math.sin(angle) * radius;
+                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+            },
+            diamond: (ctx, size) => {
+                ctx.beginPath();
+                ctx.moveTo(size/2, 4);
+                ctx.lineTo(size - 4, size/2);
+                ctx.lineTo(size/2, size - 4);
+                ctx.lineTo(4, size/2);
+                ctx.closePath();
+                ctx.fill();
+            },
+            arrow: (ctx, size) => {
+                ctx.beginPath();
+                ctx.moveTo(size/2, 4);
+                ctx.lineTo(size - 8, size/2);
+                ctx.lineTo(size/2 + 4, size/2);
+                ctx.lineTo(size/2 + 4, size - 4);
+                ctx.lineTo(size/2 - 4, size - 4);
+                ctx.lineTo(size/2 - 4, size/2);
+                ctx.lineTo(8, size/2);
+                ctx.closePath();
+                ctx.fill();
+            },
+            cross: (ctx, size) => {
+                const w = 12;
+                const h = size - 8;
+                ctx.fillRect(size/2 - w/2, 4, w, h);
+                ctx.fillRect(4, size/2 - w/2, size - 8, w);
+            },
+            heart: (ctx, size) => {
+                const cx = size/2, cy = size/2;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy + size/3);
+                ctx.bezierCurveTo(cx - size/3, cy - size/4, cx - size/2, cy + size/6, cx, cy + size/2);
+                ctx.bezierCurveTo(cx + size/2, cy + size/6, cx + size/3, cy - size/4, cx, cy + size/3);
+                ctx.fill();
+            },
+            moon: (ctx, size) => {
+                const cx = size/2, cy = size/2;
+                const radius = size/2 - 4;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(cx + radius * 0.4, cy - radius * 0.3, radius * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
+            }
+        };
+        return shapes;
+    }
+
+    function generateSprites() {
+        const sprites = {
+            sword: (ctx, size) => {
+                ctx.fillRect(size/2 - 2, 4, 4, size * 0.5);
+                ctx.beginPath();
+                ctx.moveTo(size/2 - 6, size * 0.5);
+                ctx.lineTo(size/2, size * 0.6);
+                ctx.lineTo(size/2 + 6, size * 0.5);
+                ctx.fill();
+                ctx.fillRect(size/2 - 8, size * 0.5, 16, 4);
+            },
+            shield: (ctx, size) => {
+                ctx.beginPath();
+                ctx.moveTo(size/2, 4);
+                ctx.quadraticCurveTo(size - 4, size/4, size - 4, size/2);
+                ctx.quadraticCurveTo(size - 4, size * 0.8, size/2, size - 4);
+                ctx.quadraticCurveTo(4, size * 0.8, 4, size/2);
+                ctx.quadraticCurveTo(4, size/4, size/2, 4);
+                ctx.fill();
+            },
+            crown: (ctx, size) => {
+                const w = size * 0.6;
+                const h = size * 0.5;
+                ctx.beginPath();
+                ctx.moveTo(size/2 - w/2, size/2 + h/2);
+                ctx.lineTo(size/2 - w/2, size/2 - h/4);
+                ctx.lineTo(size/2 - w/4, size/2 - h/4 + 4);
+                ctx.lineTo(size/2, size/2 - h/2);
+                ctx.lineTo(size/2 + w/4, size/2 - h/4 + 4);
+                ctx.lineTo(size/2 + w/2, size/2 - h/4);
+                ctx.lineTo(size/2 + w/2, size/2 + h/2);
+                ctx.closePath();
+                ctx.fill();
+            },
+            gear: (ctx, size) => {
+                const cx = size/2, cy = size/2;
+                const r = size/2 - 4;
+                // Круг
+                ctx.beginPath();
+                ctx.arc(cx, cy, r * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+                // Зубцы
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i * Math.PI) / 4;
+                    ctx.save();
+                    ctx.translate(cx, cy);
+                    ctx.rotate(angle);
+                    ctx.fillRect(-3, -r * 0.7, 6, r * 0.4);
+                    ctx.restore();
+                }
+                // Отверстие
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(cx, cy, r * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
+            },
+            lightning: (ctx, size) => {
+                ctx.beginPath();
+                ctx.moveTo(size/2 - 4, 4);
+                ctx.lineTo(size/2 + 8, size/2 - 8);
+                ctx.lineTo(size/2 - 2, size/2 - 4);
+                ctx.lineTo(size/2 + 6, size - 4);
+                ctx.lineTo(size/2 - 8, size/2 + 8);
+                ctx.lineTo(size/2 + 2, size/2 + 4);
+                ctx.closePath();
+                ctx.fill();
+            },
+            flame: (ctx, size) => {
+                const cx = size/2, cy = size * 0.4;
+                ctx.beginPath();
+                ctx.moveTo(cx, 4);
+                ctx.quadraticCurveTo(cx + size/4, size/4, cx + size/6, size/2);
+                ctx.quadraticCurveTo(cx + size/3, size * 0.7, cx, size - 4);
+                ctx.quadraticCurveTo(cx - size/3, size * 0.7, cx - size/6, size/2);
+                ctx.quadraticCurveTo(cx - size/4, size/4, cx, 4);
+                ctx.fill();
+            },
+            leaf: (ctx, size) => {
+                ctx.beginPath();
+                ctx.moveTo(size/2, 4);
+                ctx.quadraticCurveTo(size - 4, size/3, size * 0.7, size/2);
+                ctx.quadraticCurveTo(size - 4, size * 0.7, size/2, size - 4);
+                ctx.quadraticCurveTo(4, size * 0.7, size * 0.3, size/2);
+                ctx.quadraticCurveTo(4, size/3, size/2, 4);
+                ctx.fill();
+                // Жилка
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(size/2, 4);
+                ctx.lineTo(size/2, size - 4);
+                ctx.stroke();
+            },
+            paw: (ctx, size) => {
+                // Основная подушечка
+                ctx.beginPath();
+                ctx.ellipse(size/2, size * 0.55, size * 0.2, size * 0.15, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Пальцы
+                for (let i = -1; i <= 1; i++) {
+                    ctx.beginPath();
+                    ctx.ellipse(size/2 + i * size * 0.12, size * 0.35, size * 0.06, size * 0.08, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            },
+            feather: (ctx, size) => {
+                ctx.beginPath();
+                ctx.moveTo(size/2, 4);
+                ctx.quadraticCurveTo(size - 4, size/3, size * 0.6, size/2);
+                ctx.quadraticCurveTo(size - 4, size * 0.7, size/2, size - 4);
+                ctx.quadraticCurveTo(4, size * 0.7, size * 0.4, size/2);
+                ctx.quadraticCurveTo(4, size/3, size/2, 4);
+                ctx.fill();
+            },
+            crystal: (ctx, size) => {
+                const cx = size/2, cy = size/2;
+                ctx.beginPath();
+                ctx.moveTo(cx, 4);
+                ctx.lineTo(cx + size/3, size/2 - 8);
+                ctx.lineTo(cx + size/4, size/2 + 8);
+                ctx.lineTo(cx, size - 4);
+                ctx.lineTo(cx - size/4, size/2 + 8);
+                ctx.lineTo(cx - size/3, size/2 - 8);
+                ctx.closePath();
+                ctx.fill();
+            }
+        };
+        return sprites;
+    }
+
+    function generateTextures() {
+        const textures = {
+            metal: (ctx, size) => {
+                const grad = ctx.createLinearGradient(0, 0, size, size);
+                grad.addColorStop(0, '#666');
+                grad.addColorStop(0.3, '#999');
+                grad.addColorStop(0.5, '#aaa');
+                grad.addColorStop(0.7, '#888');
+                grad.addColorStop(1, '#555');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, size, size);
+                // Добавляем полосы
+                for (let i = 0; i < 10; i++) {
+                    const y = Math.random() * size;
+                    ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.1})`;
+                    ctx.fillRect(0, y, size, 1 + Math.random() * 2);
+                }
+            },
+            wood: (ctx, size) => {
+                ctx.fillStyle = '#8B7355';
+                ctx.fillRect(0, 0, size, size);
+                for (let i = 0; i < 20; i++) {
+                    const y = Math.random() * size;
+                    ctx.fillStyle = `rgba(139, 115, 85, ${0.1 + Math.random() * 0.3})`;
+                    ctx.fillRect(0, y, size, 1 + Math.random() * 3);
+                }
+            },
+            stone: (ctx, size) => {
+                ctx.fillStyle = '#888';
+                ctx.fillRect(0, 0, size, size);
+                for (let i = 0; i < 100; i++) {
+                    const x = Math.random() * size;
+                    const y = Math.random() * size;
+                    const brightness = 100 + Math.random() * 100;
+                    ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
+                    ctx.fillRect(x, y, 1 + Math.random() * 2, 1 + Math.random() * 2);
+                }
+            },
+            fabric: (ctx, size) => {
+                const colors = ['#c0392b', '#e74c3c', '#d35400', '#e67e22'];
+                ctx.fillStyle = colors[0];
+                ctx.fillRect(0, 0, size, size);
+                for (let i = 0; i < 50; i++) {
+                    const x = Math.random() * size;
+                    const y = Math.random() * size;
+                    ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                    ctx.globalAlpha = 0.1 + Math.random() * 0.2;
+                    ctx.fillRect(x, y, 2 + Math.random() * 4, 2 + Math.random() * 4);
+                }
+                ctx.globalAlpha = 1;
+            }
+        };
+        return textures;
+    }
+
+    function generateMasks() {
+        const masks = {
+            glow: (ctx, size) => {
+                const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+                grad.addColorStop(0, 'rgba(255,255,255,1)');
+                grad.addColorStop(0.5, 'rgba(255,255,255,0.5)');
+                grad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, size, size);
+            },
+            shadow: (ctx, size) => {
+                const grad = ctx.createRadialGradient(size/2 + 10, size/2 + 10, 0, size/2 + 10, size/2 + 10, size/2);
+                grad.addColorStop(0, 'rgba(255,255,255,1)');
+                grad.addColorStop(0.7, 'rgba(255,255,255,0.3)');
+                grad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, size, size);
+            },
+            grain: (ctx, size) => {
+                for (let i = 0; i < 1000; i++) {
+                    const x = Math.random() * size;
+                    const y = Math.random() * size;
+                    const alpha = Math.random() * 0.3;
+                    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            },
+            vignette: (ctx, size) => {
+                const grad = ctx.createRadialGradient(size/2, size/2, size * 0.3, size/2, size/2, size/2);
+                grad.addColorStop(0, 'rgba(255,255,255,1)');
+                grad.addColorStop(0.7, 'rgba(255,255,255,0.5)');
+                grad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, size, size);
+            }
+        };
+        return masks;
+    }
+
+    function downloadImage(dataUrl, filename) {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function generateAll() {
+        const size = 64;
+        const output = document.getElementById('output');
+        output.innerHTML = 'Генерация...';
+        
+        let count = 0;
+        const total = 10 + 10 + 4 + 4; // shapes + sprites + textures + masks
+        
+        // Генерируем shapes
+        const shapes = generateShapes();
+        for (const [name, draw] of Object.entries(shapes)) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            draw(ctx, size);
+            const dataUrl = canvas.toDataURL('image/png');
+            downloadImage(dataUrl, `shapes/${name}.png`);
+            count++;
+            output.innerHTML = `Генерация... ${count}/${total}`;
+        }
+        
+        // Генерируем sprites
+        const sprites = generateSprites();
+        for (const [name, draw] of Object.entries(sprites)) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            draw(ctx, size);
+            const dataUrl = canvas.toDataURL('image/png');
+            downloadImage(dataUrl, `sprites/${name}.png`);
+            count++;
+            output.innerHTML = `Генерация... ${count}/${total}`;
+        }
+        
+        // Генерируем textures (128x128)
+        const textureSize = 128;
+        const textures = generateTextures();
+        for (const [name, draw] of Object.entries(textures)) {
+            const canvas = document.createElement('canvas');
+            canvas.width = textureSize;
+            canvas.height = textureSize;
+            const ctx = canvas.getContext('2d');
+            draw(ctx, textureSize);
+            const dataUrl = canvas.toDataURL('image/png');
+            downloadImage(dataUrl, `textures/${name}.png`);
+            count++;
+            output.innerHTML = `Генерация... ${count}/${total}`;
+        }
+        
+        // Генерируем masks
+        const masks = generateMasks();
+        for (const [name, draw] of Object.entries(masks)) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            draw(ctx, size);
+            const dataUrl = canvas.toDataURL('image/png');
+            downloadImage(dataUrl, `masks/${name}.png`);
+            count++;
+            output.innerHTML = `Генерация... ${count}/${total}`;
+        }
+        
+        output.innerHTML = `✅ Готово! Сгенерировано ${count} файлов.`;
+    }
+    </script>
+</body>
+</html>

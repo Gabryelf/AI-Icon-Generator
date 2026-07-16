@@ -1,0 +1,38 @@
+{
+    "shapes": [
+        { "id": "circle", "name": "Круг", "path": "shapes/circle.png" },
+        { "id": "square", "name": "Квадрат", "path": "shapes/square.png" },
+        { "id": "triangle", "name": "Треугольник", "path": "shapes/triangle.png" },
+        { "id": "star", "name": "Звезда", "path": "shapes/star.png" },
+        { "id": "hexagon", "name": "Шестиугольник", "path": "shapes/hexagon.png" },
+        { "id": "diamond", "name": "Ромб", "path": "shapes/diamond.png" },
+        { "id": "arrow", "name": "Стрелка", "path": "shapes/arrow.png" },
+        { "id": "cross", "name": "Крест", "path": "shapes/cross.png" },
+        { "id": "heart", "name": "Сердце", "path": "shapes/heart.png" },
+        { "id": "moon", "name": "Полумесяц", "path": "shapes/moon.png" }
+    ],
+    "sprites": [
+        { "id": "sword", "name": "Меч", "path": "sprites/sword.png" },
+        { "id": "shield", "name": "Щит", "path": "sprites/shield.png" },
+        { "id": "crown", "name": "Корона", "path": "sprites/crown.png" },
+        { "id": "gear", "name": "Шестерня", "path": "sprites/gear.png" },
+        { "id": "lightning", "name": "Молния", "path": "sprites/lightning.png" },
+        { "id": "flame", "name": "Пламя", "path": "sprites/flame.png" },
+        { "id": "leaf", "name": "Лист", "path": "sprites/leaf.png" },
+        { "id": "paw", "name": "Лапа", "path": "sprites/paw.png" },
+        { "id": "feather", "name": "Перо", "path": "sprites/feather.png" },
+        { "id": "crystal", "name": "Кристалл", "path": "sprites/crystal.png" }
+    ],
+    "textures": [
+        { "id": "metal", "name": "Металл", "path": "textures/metal.png" },
+        { "id": "wood", "name": "Дерево", "path": "textures/wood.png" },
+        { "id": "stone", "name": "Камень", "path": "textures/stone.png" },
+        { "id": "fabric", "name": "Ткань", "path": "textures/fabric.png" }
+    ],
+    "masks": [
+        { "id": "glow", "name": "Свечение", "path": "masks/glow.png" },
+        { "id": "shadow", "name": "Тень", "path": "masks/shadow.png" },
+        { "id": "grain", "name": "Зерно", "path": "masks/grain.png" },
+        { "id": "vignette", "name": "Виньетка", "path": "masks/vignette.png" }
+    ]
+}

@@ -224,7 +224,74 @@ neural-icon-forge/
 
 Расширенные настройки персонажей — Прическа, цвет кожи, аксессуары
 
+### 🎯 Версия в v0.0.6 Реструктуризация проекта под генерацию только иконок, логотипов, эмблем и прочего:
 
+```
+src/
+├── modules/
+│   ├── core/
+│   │   ├── App.js                 ✅ основная логика приложения
+│   │   ├── ConfigManager.js       ✅ менеджер конфигураций
+│   │   ├── SpriteLoader.js        ✅ загрузчик фрагментов
+│   │   ├── Router.js              ✅ менеджер путей
+│   │   ├── Storage.js             ✅ менеджер сохрнанений
+│   │   ├── UIManager.js           ✅ менеджер пользовательского интерфейса
+│   │   ├── AssetManager.js        ✨ управление фрагментами и текстурами
+│   │   └── Composer.js            ✨ компоновщик иконок
+│   ├── generators/
+│   │   ├── BaseGenerator.js       ✅ основной генератор
+│   │   └──IconGenerator.js        ✅ генератор для иконок
+│   │   
+│   └── configs/
+│       ├── icon_config.js         ✨ конфигурации иконок
+│       └── algorithm_config.js    ✨ набор алгоритмов
+
+├── assets/
+│   ├── shapes/                    📁 Фрагменты форм
+│   ├── textures/                  📁 Текстуры
+│   ├── sprites/                   📁 Спрайты
+│   └── masks/                     📁 Маски
+├── style.css                      ✅ стили пользовательского интерфейса
+└── index.html                     ✅ страничка для пользователя
+```
+
+### 🎯 Версия в v0.0.6 Структура файлов для тестирования:
+```
+assets/
+├── manifest.json          # Описание всех ассетов
+├── shapes/                # Геометрические фигуры (белые PNG)
+│   ├── circle.png
+│   ├── square.png
+│   ├── triangle.png
+│   ├── star.png
+│   ├── hexagon.png
+│   ├── diamond.png
+│   ├── arrow.png
+│   ├── cross.png
+│   ├── heart.png
+│   └── moon.png
+├── sprites/               # Сложные спрайты (белые PNG)
+│   ├── sword.png
+│   ├── shield.png
+│   ├── crown.png
+│   ├── gear.png
+│   ├── lightning.png
+│   ├── flame.png
+│   ├── leaf.png
+│   ├── paw.png
+│   ├── feather.png
+│   └── crystal.png
+├── textures/              # Текстуры (цветные или градиентные PNG)
+│   ├── metal.png
+│   ├── wood.png
+│   ├── stone.png
+│   └── fabric.png
+└── masks/                 # Маски для эффектов
+    ├── glow.png
+    ├── shadow.png
+    ├── grain.png
+    └── vignette.png
+```
 
 ## Деплой
 Проект полностью статический. Достаточно загрузить папку на GitHub и включить GitHub Pages в настройках репозитория (ветка main, папка /).
