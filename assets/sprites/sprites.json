@@ -1,0 +1,21 @@
+{
+    "eyes": [
+        { "id": "anime_eye_1", "file": "eyes/anime_1.png", "width": 40, "height": 30, "style": "anime", "tags": ["big", "sparkle"] },
+        { "id": "anime_eye_2", "file": "eyes/anime_2.png", "width": 40, "height": 30, "style": "anime", "tags": ["big"] },
+        { "id": "cartoon_eye", "file": "eyes/cartoon_eye.png", "width": 30, "height": 30, "style": "cartoon", "tags": ["round"] },
+        { "id": "pixel_eye", "file": "eyes/pixel_eye.png", "width": 16, "height": 16, "style": "pixel" }
+    ],
+    "hairs": [
+        { "id": "short_hair_1", "file": "hairs/short_1.png", "width": 80, "height": 40, "style": "short" },
+        { "id": "long_hair_1", "file": "hairs/long_1.png", "width": 80, "height": 60, "style": "long" },
+        { "id": "ponytail", "file": "hairs/ponytail.png", "width": 80, "height": 50, "style": "ponytail" }
+    ],
+    "mouths": [
+        { "id": "smile_1", "file": "mouths/smile.png", "width": 20, "height": 10, "expression": "smile" },
+        { "id": "happy_1", "file": "mouths/happy.png", "width": 20, "height": 12, "expression": "happy" }
+    ],
+    "accessories": [
+        { "id": "glasses", "file": "accessories/glasses.png", "width": 60, "height": 20, "tags": ["glasses"] },
+        { "id": "crown", "file": "accessories/crown.png", "width": 40, "height": 30, "tags": ["crown", "royal"] }
+    ]
+}

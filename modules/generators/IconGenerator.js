@@ -1,192 +1,185 @@
-// =============================================================
-// ГЕНЕРАТОР ИКОНОК - Качественная отрисовка с деталями
-// =============================================================
+// ===============================================================
+// ГЕНЕРАТОР ИКОНОК
+// ===============================================================
 
-import { STYLES } from '../presets.js';
+import { BaseGenerator } from './BaseGenerator.js';
+import { getAlgorithm } from '../configs/algorithm_config.js';
 
-export class IconGenerator {
-    constructor(shapeLibrary, colorPalette, fontLibrary) {
-        this.shapeLibrary = shapeLibrary;
-        this.colorPalette = colorPalette;
-        this.fontLibrary = fontLibrary;
+export class IconGenerator extends BaseGenerator {
+    constructor(assetManager, composer) {
+        super(assetManager, composer);
+        this.lastSeed = null;
     }
 
-    generate(style, config) {
-        const palette = this.colorPalette.getPalette(style, 'icon');
-        const styleData = STYLES[style];
-        const color = config.color || palette.primary || '#7c3aed';
-        const shape = config.shape || 'circle';
-        const size = config.size || 120;
-        const bgColor = config.bgColor || 'transparent';
-        const glow = config.glow !== false;
-        const complexity = config.complexity || 5;
-        const strokeWidth = config.strokeWidth || 2;
-
+    async generate() {
+        const config = this.config;
+        const size = this.getSize();
         const layers = [];
-
-        // Фон
-        layers.push({
-            type: 'background',
-            style: bgColor === 'gradient' ? 'gradient' : 'solid',
-            color: bgColor === 'transparent' ? 'transparent' : (bgColor || 'transparent'),
-            gradientColor: palette.secondary || '#1a1a3e'
-        });
-
-        // Основная форма с контуром
-        layers.push({
-            type: 'icon_main',
-            shape: shape,
-            color: color,
+        
+        // Генерируем случайный сид для воспроизводимости
+        this.lastSeed = Math.random();
+        
+        // 1. Фон
+        const bg = this.createBackgroundLayer(config);
+        if (bg) layers.push(bg);
+        
+        // 2. Получаем элементы для композиции
+        const elements = this.selectElements(config);
+        
+        // 3. Компонуем элементы
+        const composedLayers = await this.composer.compose(elements, {
             size: size,
-            x: 250,
-            y: 250,
-            strokeWidth: strokeWidth,
-            strokeColor: this.darkenColor(color, 30),
-            glow: glow,
-            style: style
+            composition: config.composition || 'centered',
+            primaryColor: config.primaryColor,
+            secondaryColor: config.secondaryColor,
+            accentColor: config.accentColor
         });
-
-        // Детали в зависимости от сложности и стиля
-        if (complexity > 3 && style !== 'pixel') {
-            // Внутренние элементы
-            const innerSize = size * 0.5;
-            layers.push({
-                type: 'icon_inner',
-                shape: this.getInnerShape(shape),
-                color: this.lightenColor(color, 30),
-                size: innerSize,
-                x: 250,
-                y: 250,
-                opacity: 0.6
-            });
-
-            // Дополнительные декоративные элементы
-            const count = Math.min(complexity, 8);
-            for (let i = 0; i < count; i++) {
-                const angle = (i / count) * Math.PI * 2;
-                const r = size * 0.5 + 10;
-                layers.push({
-                    type: 'decorative_dot',
-                    x: 250 + Math.cos(angle) * r,
-                    y: 250 + Math.sin(angle) * r,
-                    size: 3 + (i / count) * 4,
-                    color: this.lightenColor(color, 20 + i * 5),
-                    opacity: 0.3 + (i / count) * 0.4
-                });
+        
+        // 4. Добавляем эффекты к слоям
+        composedLayers.forEach((layer, index) => {
+            // Применяем цвета
+            if (layer.color) {
+                // Используем уже установленный цвет
             }
-        }
-
-        // Стилистические особенности
-        if (style === 'pixel') {
-            // Пиксельная сетка
-            const ps = 4;
-            const gridSize = Math.floor(size / ps);
-            layers.push({
-                type: 'pixel_grid',
-                size: size,
-                pixelSize: ps,
-                gridSize: gridSize,
-                color: color,
-                x: 250,
-                y: 250,
-                complexity: complexity
-            });
-        }
-
-        if (style === 'cartoon') {
-            // Мультяшные глаза
-            layers.push({
-                type: 'cartoon_face',
-                color: '#ffffff',
-                pupilColor: '#2d3436',
-                size: size * 0.25,
-                x: 250,
-                y: 250
-            });
-        }
-
-        if (style === 'fantasy') {
-            // Магические руны
-            for (let i = 0; i < 6; i++) {
-                const angle = (i / 6) * Math.PI * 2;
-                const r = size * 0.65;
-                layers.push({
-                    type: 'rune',
-                    x: 250 + Math.cos(angle) * r,
-                    y: 250 + Math.sin(angle) * r,
-                    size: 8 + (i % 3) * 4,
-                    color: '#ffd700',
-                    opacity: 0.3 + (i / 6) * 0.3
-                });
+            
+            // Добавляем прозрачность
+            layer.opacity = layer.opacity || (0.7 + Math.random() * 0.3);
+            
+            // Случайный поворот для некоторых элементов
+            if (config.composition === 'scattered' && Math.random() > 0.5) {
+                layer.rotation = (layer.rotation || 0) + Math.random() * 90 - 45;
             }
+            
+            layers.push(layer);
+        });
+        
+        // 5. Текст
+        if (config.text && config.textPosition !== 'none') {
+            const textLayer = this.createTextLayer(config.text, config);
+            if (textLayer) layers.push(textLayer);
         }
-
-        if (style === 'cyberpunk') {
-            // Неоновые линии
-            for (let i = 0; i < 4; i++) {
-                const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
-                const r = size * 0.5;
-                layers.push({
-                    type: 'neon_line',
-                    x1: 250,
-                    y1: 250,
-                    x2: 250 + Math.cos(angle) * r,
-                    y2: 250 + Math.sin(angle) * r,
-                    color: '#00ffff',
-                    width: 2,
-                    opacity: 0.3 + i * 0.1
-                });
-            }
+        
+        // 6. Дополнительные декоративные элементы
+        if (config.complexity > 3) {
+            const decorLayers = await this.createDecorLayers(config);
+            layers.push(...decorLayers);
         }
-
+        
         return {
             layers: layers,
-            effects: this.getEffects(style, color),
-            style: style,
-            category: 'icon',
-            config: config
+            width: size,
+            height: size,
+            category: this.category,
+            style: this.style,
+            config: config,
+            seed: this.lastSeed,
+            metadata: {
+                algorithm: config.composition || 'centered',
+                elements: elements.length,
+                complexity: config.complexity || 3
+            }
         };
     }
 
-    getInnerShape(shape) {
-        const map = {
-            'circle': 'circle',
-            'square': 'circle',
-            'hexagon': 'circle',
-            'shield': 'circle',
-            'diamond': 'circle',
-            'star': 'circle'
-        };
-        return map[shape] || 'circle';
-    }
-
-    getEffects(style, color) {
-        const effects = [];
-        if (style === 'neon' || style === 'cyberpunk') {
-            effects.push({ type: 'glow', color: color, intensity: 0.5 });
+    /**
+     * Выбор элементов для иконки
+     */
+    selectElements(config) {
+        const count = Math.min(
+            config.complexity || 3,
+            5
+        );
+        
+        const elements = [];
+        const types = ['shape', 'sprite', 'shape', 'sprite', 'shape'];
+        
+        for (let i = 0; i < count; i++) {
+            const type = types[i % types.length];
+            const asset = this.assetManager.getRandomAsset(type === 'shape' ? 'shapes' : 'sprites');
+            
+            if (asset) {
+                const element = {
+                    type: type,
+                    id: asset.id,
+                    opacity: 0.7 + Math.random() * 0.3,
+                    blendMode: Math.random() > 0.7 ? 'multiply' : 'normal'
+                };
+                
+                // Цвета
+                if (i === 0) {
+                    element.color = config.primaryColor || this.randomColor();
+                } else if (i === 1) {
+                    element.color = config.secondaryColor || this.randomColor();
+                } else {
+                    element.color = config.accentColor || this.randomColor();
+                }
+                
+                // Случайное масштабирование
+                if (Math.random() > 0.5) {
+                    element.scale = 0.7 + Math.random() * 0.6;
+                }
+                
+                elements.push(element);
+            }
         }
-        if (style === 'fantasy') {
-            effects.push({ type: 'glow', color: '#ffd700', intensity: 0.2 });
-            effects.push({ type: 'particles', count: 8 });
+        
+        // Убедимся, что есть хотя бы один элемент
+        if (elements.length === 0) {
+            const fallback = this.assetManager.getRandomAsset('shapes');
+            if (fallback) {
+                elements.push({
+                    type: 'shape',
+                    id: fallback.id,
+                    color: config.primaryColor || '#7c3aed',
+                    opacity: 1.0
+                });
+            }
         }
-        return effects;
+        
+        return elements;
     }
 
-    lightenColor(hex, percent) {
-        const num = parseInt(hex.replace('#', ''), 16);
-        const amt = Math.round(2.55 * percent);
-        const R = Math.min(255, (num >> 16) + amt);
-        const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
-        const B = Math.min(255, (num & 0x0000FF) + amt);
-        return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+    /**
+     * Создание декоративных слоев
+     */
+    async createDecorLayers(config) {
+        const layers = [];
+        const size = this.getSize();
+        
+        // Добавляем декоративные элементы
+        if (config.complexity > 3 && Math.random() > 0.5) {
+            const decors = ['circle', 'square', 'triangle', 'star'];
+            const decor = decors[Math.floor(Math.random() * decors.length)];
+            
+            // Загружаем декоративный элемент
+            const img = await this.assetManager.loadImage(`shapes/${decor}.png`);
+            if (img) {
+                layers.push({
+                    type: 'sprite',
+                    image: img,
+                    x: size * (0.1 + Math.random() * 0.8),
+                    y: size * (0.1 + Math.random() * 0.8),
+                    width: size * 0.08,
+                    height: size * 0.08,
+                    opacity: 0.3,
+                    color: config.accentColor || '#f59e0b',
+                    zIndex: -1
+                });
+            }
+        }
+        
+        return layers;
     }
 
-    darkenColor(hex, percent) {
-        const num = parseInt(hex.replace('#', ''), 16);
-        const amt = Math.round(2.55 * percent);
-        const R = Math.max(0, (num >> 16) - amt);
-        const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
-        const B = Math.max(0, (num & 0x0000FF) - amt);
-        return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+    /**
+     * Сгенерировать с определенным сидом
+     */
+    async generateWithSeed(seed) {
+        if (seed !== undefined) {
+            this.lastSeed = seed;
+            // Используем seed для воспроизводимости
+            // В реальном приложении здесь можно использовать PRNG
+        }
+        return this.generate();
     }
 }
