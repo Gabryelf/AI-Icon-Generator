@@ -10,4 +10,4 @@ const app = new App();
 // Экспорт для отладки
 window.app = app;
 
-console.log('🚀 Neural Icon Forge v4.0 запущен');
+console.log('Neural Icon Forge v7.0 запущен');

@@ -3,7 +3,6 @@
 // ===============================================================
 
 import { BaseGenerator } from './BaseGenerator.js';
-import { getAlgorithm } from '../configs/algorithm_config.js';
 
 export class IconGenerator extends BaseGenerator {
     constructor(assetManager, composer) {
@@ -19,6 +18,10 @@ export class IconGenerator extends BaseGenerator {
         // Генерируем случайный сид для воспроизводимости
         this.lastSeed = Math.random();
         
+        // Центр холста
+        const centerX = size / 2;
+        const centerY = size / 2;
+        
         // 1. Фон
         const bg = this.createBackgroundLayer(config);
         if (bg) layers.push(bg);
@@ -26,28 +29,36 @@ export class IconGenerator extends BaseGenerator {
         // 2. Получаем элементы для композиции
         const elements = this.selectElements(config);
         
-        // 3. Компонуем элементы
+        // 3. Компонуем элементы с центрированием
         const composedLayers = await this.composer.compose(elements, {
             size: size,
+            centerX: centerX,
+            centerY: centerY,
             composition: config.composition || 'centered',
             primaryColor: config.primaryColor,
             secondaryColor: config.secondaryColor,
-            accentColor: config.accentColor
+            accentColor: config.accentColor,
+            scale: config.scale || 1.0,
+            rotation: config.rotation || 0,
+            opacity: config.opacity || 1.0
         });
         
-        // 4. Добавляем эффекты к слоям
+        // 4. Добавляем слои
         composedLayers.forEach((layer, index) => {
-            // Применяем цвета
-            if (layer.color) {
-                // Используем уже установленный цвет
+            // Применяем глобальный масштаб
+            if (config.scale && config.scale !== 1.0) {
+                layer.width = (layer.width || 100) * config.scale;
+                layer.height = (layer.height || 100) * config.scale;
             }
             
-            // Добавляем прозрачность
-            layer.opacity = layer.opacity || (0.7 + Math.random() * 0.3);
+            // Применяем глобальный поворот
+            if (config.rotation && config.rotation !== 0) {
+                layer.rotation = (layer.rotation || 0) + config.rotation;
+            }
             
-            // Случайный поворот для некоторых элементов
-            if (config.composition === 'scattered' && Math.random() > 0.5) {
-                layer.rotation = (layer.rotation || 0) + Math.random() * 90 - 45;
+            // Применяем глобальную прозрачность
+            if (config.opacity && config.opacity !== 1.0) {
+                layer.opacity = (layer.opacity || 1.0) * config.opacity;
             }
             
             layers.push(layer);
@@ -105,7 +116,7 @@ export class IconGenerator extends BaseGenerator {
                     blendMode: Math.random() > 0.7 ? 'multiply' : 'normal'
                 };
                 
-                // Цвета
+                // Цвета - используем настройки пользователя
                 if (i === 0) {
                     element.color = config.primaryColor || this.randomColor();
                 } else if (i === 1) {
@@ -145,6 +156,8 @@ export class IconGenerator extends BaseGenerator {
     async createDecorLayers(config) {
         const layers = [];
         const size = this.getSize();
+        const centerX = size / 2;
+        const centerY = size / 2;
         
         // Добавляем декоративные элементы
         if (config.complexity > 3 && Math.random() > 0.5) {
@@ -154,16 +167,19 @@ export class IconGenerator extends BaseGenerator {
             // Загружаем декоративный элемент
             const img = await this.assetManager.loadImage(`shapes/${decor}.png`);
             if (img) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = size * 0.3;
                 layers.push({
                     type: 'sprite',
                     image: img,
-                    x: size * (0.1 + Math.random() * 0.8),
-                    y: size * (0.1 + Math.random() * 0.8),
+                    x: centerX + Math.cos(angle) * radius,
+                    y: centerY + Math.sin(angle) * radius,
                     width: size * 0.08,
                     height: size * 0.08,
                     opacity: 0.3,
                     color: config.accentColor || '#f59e0b',
-                    zIndex: -1
+                    zIndex: -1,
+                    rotation: Math.random() * 360
                 });
             }
         }
@@ -177,8 +193,6 @@ export class IconGenerator extends BaseGenerator {
     async generateWithSeed(seed) {
         if (seed !== undefined) {
             this.lastSeed = seed;
-            // Используем seed для воспроизводимости
-            // В реальном приложении здесь можно использовать PRNG
         }
         return this.generate();
     }

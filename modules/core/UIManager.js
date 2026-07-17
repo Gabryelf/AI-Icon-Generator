@@ -251,88 +251,88 @@ export class UIManager {
      * @param {Function} onChange - Обработчик изменения
      * @returns {HTMLElement}
      */
-    createConfigRow(field, defaults, onChange) {
+     createConfigRow(field, currentValue, onChange) {
         const row = document.createElement('div');
         row.className = 'config-row';
 
         const label = document.createElement('label');
-        label.textContent = field.label;
+        label.textContent = field.label || field.key || 'Параметр';
         row.appendChild(label);
 
-        const value = field.default || defaults[field.key] || '';
-
         let input;
+        
+        // Определяем тип и создаем элемент
         switch (field.type) {
             case 'select':
                 input = document.createElement('select');
-                field.options.forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt.value;
-                    option.textContent = opt.label;
-                    if (opt.value === value) option.selected = true;
-                    input.appendChild(option);
-                });
+                input.className = 'config-input';
+                if (field.options) {
+                    field.options.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt.value;
+                        option.textContent = opt.label || opt.value;
+                        if (opt.value === currentValue) option.selected = true;
+                        input.appendChild(option);
+                    });
+                }
                 input.addEventListener('change', () => {
-                    if (onChange) {
-                        onChange(field.key, input.value);
-                    }
+                    if (onChange) onChange(field.key, input.value);
                 });
                 break;
+                
             case 'color':
                 input = document.createElement('input');
                 input.type = 'color';
-                input.value = value;
+                input.className = 'config-input';
+                input.value = currentValue || field.default || '#7c3aed';
                 input.addEventListener('input', () => {
-                    if (onChange) {
-                        onChange(field.key, input.value);
-                    }
+                    if (onChange) onChange(field.key, input.value);
                 });
                 break;
+                
             case 'range':
                 input = document.createElement('input');
                 input.type = 'range';
+                input.className = 'config-input';
                 input.min = field.min || 0;
                 input.max = field.max || 100;
                 input.step = field.step || 1;
-                input.value = value;
+                input.value = currentValue || field.default || 0;
                 
                 const display = document.createElement('span');
                 display.className = 'config-value';
-                display.textContent = value;
+                display.textContent = input.value;
                 row.appendChild(display);
                 
                 input.addEventListener('input', () => {
                     display.textContent = input.value;
-                    if (onChange) {
-                        onChange(field.key, parseFloat(input.value));
-                    }
+                    if (onChange) onChange(field.key, parseFloat(input.value));
                 });
                 break;
+                
             case 'checkbox':
                 input = document.createElement('input');
                 input.type = 'checkbox';
-                input.checked = value === true || value === 'true';
+                input.className = 'config-input';
+                input.checked = currentValue === true || currentValue === 'true';
                 input.addEventListener('change', () => {
-                    if (onChange) {
-                        onChange(field.key, input.checked);
-                    }
+                    if (onChange) onChange(field.key, input.checked);
                 });
                 break;
+                
             case 'text':
             default:
                 input = document.createElement('input');
                 input.type = 'text';
-                input.value = value;
+                input.className = 'config-input';
+                input.value = currentValue || field.default || '';
                 input.addEventListener('input', () => {
-                    if (onChange) {
-                        onChange(field.key, input.value);
-                    }
+                    if (onChange) onChange(field.key, input.value);
                 });
                 break;
         }
 
         input.id = `config-${field.key}`;
-        input.className = 'config-input';
         row.appendChild(input);
         
         return row;

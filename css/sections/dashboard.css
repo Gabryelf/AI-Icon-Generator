@@ -1,0 +1,34 @@
+/* ============================================================
+   DASHBOARD - Дашборд
+   ============================================================ */
+
+   .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.recent-section { margin-top: 24px; }
+.recent-section h3 { margin-bottom: 12px; }
+
+.recent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 16px;
+    margin-top: 12px;
+}
+.recent-item {
+    aspect-ratio: 1;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.recent-item:hover { border-color: var(--accent); transform: scale(1.05); }
+.recent-item canvas, .recent-item img { width: 100%; height: 100%; object-fit: contain; }

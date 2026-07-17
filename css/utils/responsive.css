@@ -1,0 +1,171 @@
+/* ============================================================
+   RESPONSIVE - Адаптивность
+   ============================================================ */
+
+/* Основные адаптивные правила */
+@media (max-width: 1200px) {
+    .config-layout { 
+        grid-template-columns: 1fr; 
+    }
+    .config-panel { 
+        max-height: none; 
+    }
+}
+
+@media (max-width: 992px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .category-grid,
+    .style-grid,
+    .component-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 72px;
+        min-width: 72px;
+    }
+    .sidebar .logo span,
+    .sidebar .nav-item span,
+    .sidebar .user-status span {
+        display: none;
+    }
+    .sidebar .nav-item {
+        justify-content: center;
+        padding: 12px;
+    }
+    .sidebar .nav-item i {
+        margin: 0;
+        font-size: 20px;
+    }
+    .main-content {
+        padding: 16px;
+    }
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .stat-card {
+        padding: 12px;
+    }
+    .stat-card span {
+        font-size: 20px;
+    }
+    .category-grid,
+    .style-grid,
+    .component-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .category-card,
+    .style-card,
+    .component-card {
+        padding: 16px;
+    }
+    .category-card i,
+    .style-card i,
+    .component-card i {
+        font-size: 32px;
+    }
+    .top-bar h1 {
+        font-size: 18px;
+    }
+    .config-row {
+        flex-wrap: wrap;
+    }
+    .config-row label {
+        min-width: 60px;
+        font-size: 12px;
+    }
+    .config-actions {
+        flex-direction: column;
+    }
+    .config-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        width: 56px;
+        min-width: 56px;
+    }
+    .sidebar .logo {
+        padding: 0 10px 20px 10px;
+        justify-content: center;
+    }
+    .sidebar .logo i {
+        font-size: 24px;
+    }
+    .sidebar .logo span {
+        display: none;
+    }
+    .sidebar .nav-item {
+        padding: 10px;
+    }
+    .sidebar .nav-item i {
+        font-size: 18px;
+    }
+    .sidebar .user-status {
+        padding: 12px 10px;
+        justify-content: center;
+    }
+    .sidebar .user-status span {
+        display: none;
+    }
+    .main-content {
+        padding: 12px;
+    }
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .stat-card {
+        padding: 10px;
+    }
+    .stat-card span {
+        font-size: 18px;
+    }
+    .category-grid,
+    .style-grid,
+    .component-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .category-card,
+    .style-card,
+    .component-card {
+        padding: 12px 8px;
+    }
+    .category-card span,
+    .style-card span,
+    .component-card span {
+        font-size: 14px;
+    }
+    .top-bar {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .top-bar h1 {
+        font-size: 16px;
+    }
+    .config-panel {
+        padding: 12px;
+    }
+    .config-group {
+        padding: 12px;
+    }
+}
+
+/* Скрытие скролла для некоторых элементов при необходимости */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

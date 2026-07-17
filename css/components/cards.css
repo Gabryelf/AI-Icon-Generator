@@ -1,0 +1,58 @@
+/* ============================================================
+   CARDS - Карточки компонентов
+   ============================================================ */
+
+   .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+}
+.stat-card i { font-size: 28px; color: var(--accent); margin-bottom: 8px; }
+.stat-card span { font-size: 28px; font-weight: 700; display: block; }
+.stat-card p { color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
+
+.category-card, .style-card, .component-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+}
+.category-card i, .style-card i, .component-card i {
+    font-size: 48px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 16px;
+}
+.category-card span, .style-card span, .component-card span {
+    font-size: 20px;
+    font-weight: 600;
+    display: block;
+}
+.category-card small, .style-card small, .component-card small {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-top: 8px;
+    display: block;
+}
+.category-card:hover, .style-card:hover, .component-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px var(--accent-glow);
+}
+.category-card.selected, .style-card.selected, .component-card.selected {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+}
+.category-card.selected i, .style-card.selected i, .component-card.selected i {
+    color: #fff;
+}
+.category-card.selected small, .style-card.selected small, .component-card.selected small {
+    color: rgba(255,255,255,0.8);
+}

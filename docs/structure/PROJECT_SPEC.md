@@ -228,6 +228,29 @@ neural-icon-forge/
 
 ```
 src/
+├── css/
+│   ├── main.css                   📜  основной файл стилей
+│   ├── base/
+│   │   ├── reset.css
+│   │   ├── variables.css
+│   │   └── typography.css
+│   ├── components/
+│   │   ├── sidebar.css
+│   │   ├── topbar.css
+│   │   ├── cards.css
+│   │   ├── buttons.css
+│   │   ├── forms.css
+│   │   └── modals.css
+│   ├── sections/
+│   │   ├── dashboard.css
+│   │   ├── generator.css
+│   │   ├── history.css
+│   │   ├── profile.css
+│   │   └── settings.css
+│   └── utils/
+│       ├── animations.css
+│       ├── responsive.css
+│       └── themes.css
 ├── modules/
 │   ├── core/
 │   │   ├── App.js                 ✅ основная логика приложения
@@ -255,7 +278,7 @@ src/
 └── index.html                     ✅ страничка для пользователя
 ```
 
-### 🎯 Версия в v0.0.6 Структура файлов для тестирования:
+### 🎯 Версия в v0.0.6 Структура файлов для тестирования и редакирования:
 ```
 assets/
 ├── manifest.json          # Описание всех ассетов
@@ -292,6 +315,36 @@ assets/
     ├── grain.png
     └── vignette.png
 ```
+
+
+## 📁 Краткое описание изменений версии 0.0.7
+
+### 1. Реструктуризация CSS ✅
+>Создана модульная структура /css/ с разделением на:
+>base/ - базовые стили (reset, variables, typography)
+>components/ - компоненты (sidebar, buttons, cards, forms)
+>sections/ - секции страниц (dashboard, generator, history, profile, settings)
+>utils/ - утилиты (animations, responsive, themes)
+>Главный файл main.css импортирует все модули через @import
+
+### 2. Исправление работы настроек ✅
+>В App.js метод loadConfig() теперь правильно устанавливает значения из состояния
+>Изменения параметров сразу обновляют this.state.config
+>При нажатии "Сгенерировать" используются текущие значения из состояния
+>randomizeConfig() теперь генерирует совершенно случайные значения, игнорируя текущие настройки
+
+### 3. Исправление центрирования ✅
+>В drawIcon() передаются centerX и centerY
+>Все спрайты рисуются относительно центра холста
+>В IconGenerator и Composer добавлена поддержка центрирования
+>Алгоритмы в algorithm_config.js используют centerX и centerY
+
+### 4. Дополнительные исправления ✅
+>Исправлена работа UIManager.createConfigRow() - теперь корректно создает все типы полей
+>Добавлены недостающие методы в App.js (removeHistoryItem, loadHistoryItem, loadRecentItem)
+>Исправлен экспорт из app.js - теперь экспортируется экземпляр класса
+
+
 
 ## Деплой
 Проект полностью статический. Достаточно загрузить папку на GitHub и включить GitHub Pages в настройках репозитория (ветка main, папка /).

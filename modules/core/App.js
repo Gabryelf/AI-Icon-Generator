@@ -1,6 +1,6 @@
-// ===============================================================
-// ГЛАВНОЕ ПРИЛОЖЕНИЕ
-// ===============================================================
+// =======================================================================
+// ГЛАВНОЕ ПРИЛОЖЕНИЕ - ВЕРСИЯ ДВИЖКА IF v1.0 --> 0.0.7 версия приложения
+// =======================================================================
 
 import { Router } from './Router.js';
 import { ConfigManager } from './ConfigManager.js';
@@ -62,15 +62,15 @@ export class App {
     // =============================================================
 
     async init() {
-        console.log('🚀 Neural Icon Forge v4.0 (Icon Only)');
+        console.log('Neural Icon Forge v1.0 (version app 0.0.7)');
         
         try {
             // Инициализация модулей
             await this.assetManager.init();
-            console.log('✅ AssetManager загружен');
+            console.log('AssetManager загружен');
             
             await this.spriteLoader.init();
-            console.log('✅ SpriteLoader загружен');
+            console.log('SpriteLoader загружен');
             
             // Применяем тему
             this.applyTheme(this.state.theme);
@@ -85,7 +85,7 @@ export class App {
             // Переходим на дашборд
             this.router.navigate('dashboard');
 
-            console.log('✅ Neural Icon Forge v4.0 готов');
+            console.log('✅ Neural Icon Forge v0.0.7 готов');
             console.log(`📦 Категории: ${Object.keys(ICON_CATEGORIES).length}`);
             console.log(`🎨 Стили: ${Object.keys(ICON_STYLES).length}`);
             console.log(`💾 Сохранено: ${this.state.saved.length}`);
@@ -167,6 +167,10 @@ export class App {
         this.ui.showStep('step-config');
     }
 
+    // =============================================================
+    // ЗАГРУЗКА КОНФИГУРАЦИИ
+    // =============================================================
+
     loadConfig() {
         const container = document.getElementById('config-container');
         if (!container) return;
@@ -187,9 +191,19 @@ export class App {
                 const field = ICON_CONFIG.config[fieldKey];
                 if (!field) return;
                 
-                const row = this.ui.createConfigRow(field, ICON_CONFIG.defaults, (key, value) => {
+                // Получаем текущее значение из состояния
+                const currentValue = this.state.config[fieldKey] !== undefined 
+                    ? this.state.config[fieldKey] 
+                    : field.default;
+                
+                const row = this.ui.createConfigRow(field, currentValue, (key, value) => {
+                    // Обновляем состояние при изменении
                     this.state.config[key] = value;
-                    if (this.state.autoGenerate) this.generateIcon();
+                    
+                    // Авто-генерация, если включена
+                    if (this.state.autoGenerate) {
+                        this.generateIcon();
+                    }
                 });
                 groupDiv.appendChild(row);
             });
@@ -197,10 +211,11 @@ export class App {
             container.appendChild(groupDiv);
         });
 
-        this.ui.setConfigDefaults(ICON_CONFIG.defaults, this.state.config);
+        // Устанавливаем категорию и стиль в конфиг
         this.state.config.category = this.state.selectedCategory;
         this.state.config.style = this.state.selectedStyle;
 
+        // Обновляем описание
         const desc = document.getElementById('config-desc');
         if (desc) {
             const styleName = ICON_STYLES[this.state.selectedStyle]?.name || this.state.selectedStyle;
@@ -208,6 +223,7 @@ export class App {
             desc.textContent = `Генерация иконок в стиле "${styleName}" (${categoryName})`;
         }
 
+        // Если авто-генерация включена, генерируем сразу
         if (this.state.autoGenerate) {
             setTimeout(() => this.generateIcon(), 300);
         }
@@ -230,7 +246,8 @@ export class App {
         }
 
         this.state.isGenerating = true;
-        document.getElementById('generate-btn').disabled = true;
+        const generateBtn = document.getElementById('generate-btn');
+        if (generateBtn) generateBtn.disabled = true;
 
         try {
             // Устанавливаем конфигурацию
@@ -244,9 +261,19 @@ export class App {
             this.state.currentIconData = iconData;
             this.state.currentParams = { category, style, config };
 
-            // Отрисовка
+            // Отрисовка - передаем размеры холста для центрирования
             const canvas = document.getElementById('generation-canvas');
+            const size = config.size || 200;
+            
+            // Устанавливаем размеры холста
+            canvas.width = size;
+            canvas.height = size;
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            
             const ctx = canvas.getContext('2d');
+            
+            // Передаем размер для центрирования
             await this.drawIcon(ctx, canvas.width, canvas.height, iconData);
 
             const categoryName = ICON_CATEGORIES[category]?.name || category;
@@ -273,7 +300,7 @@ export class App {
             document.getElementById('save-status').style.color = '#ef4444';
         } finally {
             this.state.isGenerating = false;
-            document.getElementById('generate-btn').disabled = false;
+            if (generateBtn) generateBtn.disabled = false;
         }
     }
 
@@ -284,17 +311,28 @@ export class App {
     async drawIcon(ctx, width, height, data) {
         if (!data?.layers) return;
         
+        // Очищаем холст
         ctx.clearRect(0, 0, width, height);
+        
+        // Устанавливаем центр координат
+        const centerX = width / 2;
+        const centerY = height / 2;
+        
+        // Сохраняем состояние
+        ctx.save();
         
         // Сортируем слои по zIndex
         const sortedLayers = [...data.layers].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
         
         for (const layer of sortedLayers) {
-            await this.drawLayer(ctx, layer, width, height);
+            // Передаем центр для правильного позиционирования
+            await this.drawLayer(ctx, layer, width, height, centerX, centerY);
         }
+        
+        ctx.restore();
     }
 
-    async drawLayer(ctx, layer, width, height) {
+    async drawLayer(ctx, layer, width, height, centerX, centerY) {
         if (!layer) return;
 
         switch (layer.type) {
@@ -302,10 +340,10 @@ export class App {
                 this.drawBackground(ctx, layer, width, height);
                 break;
             case 'sprite':
-                await this.drawSprite(ctx, layer);
+                await this.drawSprite(ctx, layer, centerX, centerY);
                 break;
             case 'text':
-                this.drawText(ctx, layer);
+                this.drawText(ctx, layer, centerX, centerY);
                 break;
             default:
                 console.warn('⚠️ Неизвестный тип слоя:', layer.type);
@@ -327,18 +365,23 @@ export class App {
         ctx.fillRect(0, 0, width, height);
     }
 
-    async drawSprite(ctx, layer) {
+    async drawSprite(ctx, layer, centerX, centerY) {
         const { image, x, y, width: w, height: h, rotation = 0, opacity = 1, color } = layer;
         
         if (!image) return;
         
         ctx.save();
-        ctx.globalAlpha = opacity;
-        ctx.translate(x || 250, y || 250);
+        ctx.globalAlpha = opacity || 1;
+        
+        // Используем переданные координаты или центр
+        const posX = x !== undefined ? x : centerX;
+        const posY = y !== undefined ? y : centerY;
+        
+        ctx.translate(posX, posY);
         ctx.rotate((rotation || 0) * Math.PI / 180);
         
-        const drawW = w || image.width;
-        const drawH = h || image.height;
+        const drawW = w || image.width || 100;
+        const drawH = h || image.height || 100;
         
         if (color) {
             // Рисуем с цветной заливкой
@@ -353,7 +396,7 @@ export class App {
         ctx.restore();
     }
 
-    drawText(ctx, layer) {
+    drawText(ctx, layer, centerX, centerY) {
         if (!layer.text) return;
         
         ctx.save();
@@ -361,8 +404,155 @@ export class App {
         ctx.font = `${layer.weight || 'bold'} ${layer.size || 24}px ${layer.font || 'Arial'}`;
         ctx.textAlign = layer.align || 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(layer.text, layer.x || 250, layer.y || 250);
+        
+        const posX = layer.x !== undefined ? layer.x : centerX;
+        const posY = layer.y !== undefined ? layer.y : centerY;
+        
+        ctx.fillText(layer.text, posX, posY);
         ctx.restore();
+    }
+
+    // =============================================================
+    // РАНДОМИЗАЦИЯ
+    // =============================================================
+
+    randomizeConfig() {
+        const config = this.state.config;
+        
+        // Случайные цвета
+        const colors = ['#7c3aed', '#4d96ff', '#f59e0b', '#ef4444', '#22c55e', '#ec4899', '#8b5cf6', '#f97316', '#06b6d4', '#10b981'];
+        config.primaryColor = colors[Math.floor(Math.random() * colors.length)];
+        config.secondaryColor = colors[Math.floor(Math.random() * colors.length)];
+        config.accentColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        // Случайные параметры
+        config.size = Math.floor(Math.random() * 200) + 100;
+        config.complexity = Math.floor(Math.random() * 4) + 1;
+        config.rotation = Math.floor(Math.random() * 360);
+        config.scale = 0.5 + Math.random() * 1.0;
+        config.opacity = 0.6 + Math.random() * 0.4;
+        
+        // Случайная композиция
+        const compositions = ['centered', 'top', 'bottom', 'left', 'right', 'diagonal', 'scattered'];
+        config.composition = compositions[Math.floor(Math.random() * compositions.length)];
+        
+        // Случайный текст
+        const texts = ['', '★', '♦', '♥', '⚡', '☯', '✦', '✧', '⚔', '🛡'];
+        config.text = texts[Math.floor(Math.random() * texts.length)];
+        
+        // Случайные эффекты
+        config.glow = Math.random() > 0.6;
+        config.shadow = Math.random() > 0.6;
+        config.outline = Math.random() > 0.7;
+        
+        // Обновляем UI
+        this.updateConfigUI();
+        
+        // Генерируем с новыми случайными параметрами
+        this.generateIcon();
+    }
+
+    // =============================================================
+    // ОБНОВЛЕНИЕ UI КОНФИГУРАЦИИ
+    // =============================================================
+
+    updateConfigUI() {
+        const config = this.state.config;
+        Object.keys(ICON_CONFIG.config).forEach(key => {
+            const input = document.getElementById(`config-${key}`);
+            if (input) {
+                const val = config[key];
+                if (input.type === 'checkbox') {
+                    input.checked = val || false;
+                } else if (input.type === 'range') {
+                    input.value = val || 0;
+                    const display = input.parentElement.querySelector('.config-value');
+                    if (display) display.textContent = val || 0;
+                } else if (input.type === 'color') {
+                    input.value = val || '#7c3aed';
+                } else {
+                    input.value = val || '';
+                }
+            }
+        });
+    }
+
+    // =============================================================
+    // СОХРАНЕНИЕ В ИСТОРИЮ
+    // =============================================================
+
+    saveToHistory(iconData, params) {
+        const entry = {
+            id: Date.now(),
+            timestamp: new Date().toLocaleString(),
+            data: iconData,
+            params: params
+        };
+
+        this.state.history.unshift(entry);
+        if (this.state.history.length > 50) {
+            this.state.history = this.state.history.slice(0, 50);
+        }
+        this.storage.save('history', this.state.history);
+
+        this.state.recent.unshift(entry);
+        if (this.state.recent.length > 6) {
+            this.state.recent = this.state.recent.slice(0, 6);
+        }
+        this.storage.save('recent', this.state.recent);
+
+        this.ui.renderHistory(this.state.history);
+        this.ui.renderRecent(this.state.recent);
+        this.renderDashboardPreview();
+    }
+
+    // =============================================================
+    // СОХРАНЕНИЕ В ПРОФИЛЬ
+    // =============================================================
+
+    saveToProfile(iconData = null, params = null) {
+        const data = iconData || this.state.currentIconData;
+        const p = params || this.state.currentParams;
+
+        if (!data || !p) {
+            this.ui.showNotification('Сначала сгенерируйте иконку!', 'warning');
+            return;
+        }
+
+        const entry = {
+            id: Date.now(),
+            timestamp: new Date().toLocaleString(),
+            data: data,
+            params: p
+        };
+
+        this.state.saved.push(entry);
+        this.storage.save('saved', this.state.saved);
+        this.renderSavedIcons();
+        this.updateStats();
+        
+        this.ui.showNotification('✅ Иконка сохранена в профиль!', 'success');
+    }
+
+    // =============================================================
+    // СТАТИСТИКА
+    // =============================================================
+
+    updateStats() {
+        const stats = {
+            total: this.state.history.length,
+            styles: Object.keys(ICON_STYLES).length,
+            saved: this.state.saved.length
+        };
+        this.ui.updateStats(stats);
+        
+        document.getElementById('stat-saved').textContent = stats.saved;
+        document.getElementById('profile-saved').textContent = stats.saved;
+        document.getElementById('profile-total').textContent = stats.total;
+        
+        if (this.state.history.length > 0) {
+            document.getElementById('profile-last').textContent = this.state.history[0].timestamp;
+        }
     }
 
     // =============================================================
@@ -409,11 +599,7 @@ export class App {
             item.addEventListener('click', () => {
                 try {
                     const data = JSON.parse(decodeURIComponent(item.dataset.icon));
-                    const canvas = document.getElementById('generation-canvas');
-                    const ctx = canvas.getContext('2d');
-                    this.drawIcon(ctx, canvas.width, canvas.height, data);
-                    this.state.currentIconData = data;
-                    this.router.navigate('generator');
+                    this.loadRecentItem(data);
                 } catch (e) {
                     console.error('Ошибка загрузки иконки:', e);
                 }
@@ -470,13 +656,20 @@ export class App {
         document.getElementById('profile-total').textContent = this.state.history.length;
     }
 
+    // =============================================================
+    // ЗАГРУЗКА СОХРАНЕННЫХ ИКОНОК
+    // =============================================================
+
     loadSavedIcon(index) {
         const item = this.state.saved[index];
         if (!item?.data) return;
 
         const canvas = document.getElementById('generation-canvas');
         const ctx = canvas.getContext('2d');
-        this.drawIcon(ctx, canvas.width, canvas.height, item.data);
+        const size = this.state.config.size || 200;
+        canvas.width = size;
+        canvas.height = size;
+        this.drawIcon(ctx, size, size, item.data);
         this.state.currentIconData = item.data;
         this.state.currentParams = item.params;
 
@@ -493,124 +686,48 @@ export class App {
             this.storage.save('saved', this.state.saved);
             this.renderSavedIcons();
             this.updateStats();
+            this.ui.showNotification('Иконка удалена', 'info');
         }
     }
 
     // =============================================================
-    // СОХРАНЕНИЕ
+    // РАБОТА С ИСТОРИЕЙ
     // =============================================================
 
-    saveToHistory(iconData, params) {
-        const entry = {
-            id: Date.now(),
-            timestamp: new Date().toLocaleString(),
-            data: iconData,
-            params: params
-        };
-
-        this.state.history.unshift(entry);
-        if (this.state.history.length > 50) {
-            this.state.history = this.state.history.slice(0, 50);
-        }
-        this.storage.save('history', this.state.history);
-
-        this.state.recent.unshift(entry);
-        if (this.state.recent.length > 6) {
-            this.state.recent = this.state.recent.slice(0, 6);
-        }
-        this.storage.save('recent', this.state.recent);
-
-        this.ui.renderHistory(this.state.history);
-        this.ui.renderRecent(this.state.recent);
-        this.renderDashboardPreview();
-    }
-
-    saveToProfile(iconData = null, params = null) {
-        const data = iconData || this.state.currentIconData;
-        const p = params || this.state.currentParams;
-
-        if (!data || !p) {
-            this.ui.showNotification('Сначала сгенерируйте иконку!', 'warning');
-            return;
-        }
-
-        const entry = {
-            id: Date.now(),
-            timestamp: new Date().toLocaleString(),
-            data: data,
-            params: p
-        };
-
-        this.state.saved.push(entry);
-        this.storage.save('saved', this.state.saved);
-        this.renderSavedIcons();
-        this.updateStats();
-        
-        this.ui.showNotification('✅ Иконка сохранена в профиль!', 'success');
-    }
-
-    randomizeConfig() {
-        const config = this.state.config;
-        
-        // Случайные цвета
-        const colors = ['#7c3aed', '#4d96ff', '#f59e0b', '#ef4444', '#22c55e', '#ec4899', '#8b5cf6', '#f97316', '#06b6d4', '#10b981'];
-        config.primaryColor = colors[Math.floor(Math.random() * colors.length)];
-        config.secondaryColor = colors[Math.floor(Math.random() * colors.length)];
-        config.accentColor = colors[Math.floor(Math.random() * colors.length)];
-        
-        // Случайный размер
-        config.size = Math.floor(Math.random() * 200) + 100;
-        
-        // Случайная сложность
-        config.complexity = Math.floor(Math.random() * 4) + 1;
-        
-        // Случайная композиция
-        const compositions = ['centered', 'top', 'bottom', 'left', 'right', 'diagonal', 'scattered'];
-        config.composition = compositions[Math.floor(Math.random() * compositions.length)];
-        
-        // Обновляем UI
-        Object.keys(ICON_CONFIG.config).forEach(key => {
-            const input = document.getElementById(`config-${key}`);
-            if (input) {
-                const val = config[key];
-                if (input.type === 'checkbox') {
-                    input.checked = val;
-                } else if (input.type === 'range') {
-                    input.value = val;
-                    const display = input.parentElement.querySelector('.config-value');
-                    if (display) display.textContent = val;
-                } else {
-                    input.value = val;
-                }
-            }
-        });
-
-        this.generateIcon();
-    }
-
-    // =============================================================
-    // СТАТИСТИКА
-    // =============================================================
-
-    updateStats() {
-        const stats = {
-            total: this.state.history.length,
-            styles: Object.keys(ICON_STYLES).length,
-            saved: this.state.saved.length
-        };
-        this.ui.updateStats(stats);
-        
-        document.getElementById('stat-saved').textContent = stats.saved;
-        document.getElementById('profile-saved').textContent = stats.saved;
-        document.getElementById('profile-total').textContent = stats.total;
-        
-        if (this.state.history.length > 0) {
-            document.getElementById('profile-last').textContent = this.state.history[0].timestamp;
+    removeHistoryItem(index) {
+        if (confirm('Удалить эту иконку из истории?')) {
+            this.state.history.splice(index, 1);
+            this.storage.save('history', this.state.history);
+            this.ui.renderHistory(this.state.history);
+            this.updateStats();
+            this.renderDashboardPreview();
         }
     }
 
+    loadHistoryItem(data) {
+        const canvas = document.getElementById('generation-canvas');
+        const ctx = canvas.getContext('2d');
+        const size = this.state.config.size || 200;
+        canvas.width = size;
+        canvas.height = size;
+        this.drawIcon(ctx, size, size, data);
+        this.state.currentIconData = data;
+        this.router.navigate('generator');
+    }
+
+    loadRecentItem(data) {
+        const canvas = document.getElementById('generation-canvas');
+        const ctx = canvas.getContext('2d');
+        const size = this.state.config.size || 200;
+        canvas.width = size;
+        canvas.height = size;
+        this.drawIcon(ctx, size, size, data);
+        this.state.currentIconData = data;
+        this.router.navigate('generator');
+    }
+
     // =============================================================
-    // НАВИГАЦИЯ
+    // НАВИГАЦИЯ ПО СТРАНИЦАМ
     // =============================================================
 
     showDashboard() {
@@ -677,6 +794,7 @@ export class App {
             link.download = `icon-${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
+            this.ui.showNotification('✅ PNG скачан', 'success');
         } else if (format === 'svg') {
             const svg = this.toSVG(data, size);
             const blob = new Blob([svg], {type: 'image/svg+xml'});
@@ -684,6 +802,7 @@ export class App {
             link.download = `icon-${Date.now()}.svg`;
             link.href = URL.createObjectURL(blob);
             link.click();
+            this.ui.showNotification('✅ SVG скачан', 'success');
         }
     }
 
@@ -703,7 +822,21 @@ export class App {
         layers.forEach(layer => {
             if (layer.type === 'background') {
                 if (layer.color && layer.color !== 'transparent') {
-                    shapes += `<rect width="100%" height="100%" fill="${layer.color}" />`;
+                    if (layer.gradient) {
+                        const colors = layer.gradient.colors || ['#7c3aed', '#4d96ff'];
+                        const gradId = `grad-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+                        shapes += `
+                            <defs>
+                                <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="${colors[0]}" />
+                                    <stop offset="100%" stop-color="${colors[1] || colors[0]}" />
+                                </linearGradient>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#${gradId})" />
+                        `;
+                    } else {
+                        shapes += `<rect width="100%" height="100%" fill="${layer.color}" />`;
+                    }
                 }
             }
             if (layer.type === 'text') {
@@ -715,7 +848,15 @@ export class App {
                 const h = layer.height || size * 0.4;
                 const x = (layer.x || size/2) - w/2;
                 const y = (layer.y || size/2) - h/2;
-                shapes += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${layer.color || '#7c3aed'}" opacity="${layer.opacity || 1}" transform="rotate(${layer.rotation || 0}, ${layer.x || size/2}, ${layer.y || size/2})" />`;
+                const color = layer.color || '#7c3aed';
+                const opacity = layer.opacity || 1;
+                const rotation = layer.rotation || 0;
+                
+                if (rotation !== 0) {
+                    shapes += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color}" opacity="${opacity}" transform="rotate(${rotation}, ${layer.x || size/2}, ${layer.y || size/2})" />`;
+                } else {
+                    shapes += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color}" opacity="${opacity}" />`;
+                }
             }
         });
 
@@ -734,7 +875,8 @@ export class App {
         const data = this.state.saved.map((item, index) => ({
             name: `icon-${index + 1}`,
             data: item.data,
-            params: item.params
+            params: item.params,
+            timestamp: item.timestamp
         }));
 
         const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
@@ -747,10 +889,11 @@ export class App {
     }
 
     // =============================================================
-    // СОБЫТИЯ
+    // НАСТРОЙКА СОБЫТИЙ
     // =============================================================
 
     setupEventListeners() {
+        // Навигация по вкладкам
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const tab = item.dataset.tab;
@@ -758,6 +901,7 @@ export class App {
             });
         });
 
+        // Кнопки генератора
         document.getElementById('generate-btn')?.addEventListener('click', () => {
             this.generateIcon();
         });
@@ -770,6 +914,7 @@ export class App {
             this.saveToProfile();
         });
 
+        // Кнопки "Назад"
         document.querySelectorAll('.back-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const target = btn.dataset.back;
@@ -779,21 +924,28 @@ export class App {
             });
         });
 
+        // Экспорт
         document.getElementById('download-png-btn')?.addEventListener('click', () => {
             if (this.state.currentIconData) {
                 this.download('png', this.state.currentIconData);
+            } else {
+                this.ui.showNotification('Сначала сгенерируйте иконку', 'warning');
             }
         });
 
         document.getElementById('download-svg-btn')?.addEventListener('click', () => {
             if (this.state.currentIconData) {
                 this.download('svg', this.state.currentIconData);
+            } else {
+                this.ui.showNotification('Сначала сгенерируйте иконку', 'warning');
             }
         });
 
         document.getElementById('copy-svg-btn')?.addEventListener('click', () => {
             if (this.state.currentIconData) {
                 this.copySVG(this.state.currentIconData);
+            } else {
+                this.ui.showNotification('Сначала сгенерируйте иконку', 'warning');
             }
         });
 
@@ -801,8 +953,9 @@ export class App {
             this.exportAll();
         });
 
+        // Очистка данных
         document.getElementById('clear-storage-btn')?.addEventListener('click', () => {
-            if (confirm('Очистить все данные?')) {
+            if (confirm('Очистить все данные? Это действие нельзя отменить.')) {
                 this.storage.clear();
                 this.state.history = [];
                 this.state.recent = [];
@@ -817,6 +970,7 @@ export class App {
             }
         });
 
+        // Настройки
         document.getElementById('username-input')?.addEventListener('change', (e) => {
             this.state.username = e.target.value;
             this.storage.save('username', e.target.value);
@@ -843,18 +997,53 @@ export class App {
 
         // Горячие клавиши
         document.addEventListener('keydown', (e) => {
+            // Ctrl+Enter - генерация
             if (e.ctrlKey && e.key === 'Enter') {
                 e.preventDefault();
                 this.generateIcon();
             }
+            // Ctrl+R - рандомизация
             if (e.ctrlKey && e.key === 'r') {
                 e.preventDefault();
                 this.randomizeConfig();
             }
+            // Ctrl+S - сохранение
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 this.saveToProfile();
             }
+            // Escape - закрыть модалки/уведомления
+            if (e.key === 'Escape') {
+                const notification = document.querySelector('.notification');
+                if (notification) {
+                    notification.remove();
+                }
+            }
         });
+
+        // Обработка изменения размера окна
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                // Перерисовка при изменении размера
+                if (this.state.currentIconData) {
+                    const canvas = document.getElementById('generation-canvas');
+                    const size = this.state.config.size || 200;
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    this.drawIcon(ctx, size, size, this.state.currentIconData);
+                }
+            }, 300);
+        });
+
+        // Обработка ошибок
+        window.addEventListener('error', (e) => {
+            console.error('Глобальная ошибка:', e);
+            this.ui.showNotification('Произошла ошибка, проверьте консоль', 'error');
+        });
+
+        console.log('✅ События настроены');
     }
 }

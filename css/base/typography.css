@@ -1,0 +1,19 @@
+/* ============================================================
+   TYPOGRAPHY - Типографика
+   ============================================================ */
+
+   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&family=MedievalSharp&family=Quicksand:wght@400;600;700&family=Creepster&family=Fredoka+One&family=Righteous&display=swap');
+
+   /* Базовые стили текста */
+   h1 { font-size: 24px; font-weight: 600; }
+   h2 { font-size: 28px; font-weight: 600; }
+   h3 { font-size: 18px; font-weight: 600; }
+   
+   p { color: var(--text-secondary); }
+   a { color: var(--accent); text-decoration: none; }
+   a:hover { color: var(--accent-light); }
+   
+   /* Утилиты текста */
+   .text-center { text-align: center; }
+   .text-muted { color: var(--text-secondary); }
+   .text-accent { color: var(--accent); }

@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neural Icon Forge v4.0 — Генератор иконок</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Подключение шрифтов через CDN -->
+    <title>AI Icon Generator v0.0.7 — Генератор иконок</title>
+    
+    <!-- CSS модули -->
+    <link rel="stylesheet" href="css/main.css">
+    
+    <!-- Шрифты -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&family=MedievalSharp&family=Quicksand:wght@400;600;700&family=Creepster&family=Fredoka+One&family=Righteous&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -15,7 +18,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <i class="fas fa-brain"></i>
-                <span>IconForge v4.0</span>
+                <span>Icon Forge v0.0.7</span>
             </div>
             <nav class="nav-menu">
                 <button class="nav-item active" data-tab="dashboard">
@@ -56,8 +59,8 @@
                 <section id="page-dashboard" class="page active-page">
                     <div class="stats-grid">
                         <div class="stat-card"><i class="fas fa-icons"></i><span id="stat-total">0</span><p>Сгенерировано</p></div>
-                        <div class="stat-card"><i class="fas fa-palette"></i><span id="stat-styles">6</span><p>Стилей в библиотеке</p></div>
-                        <div class="stat-card"><i class="fas fa-microchip"></i><span>v4.0</span><p>Версия ядра</p></div>
+                        <div class="stat-card"><i class="fas fa-palette"></i><span id="stat-styles">18</span><p>Стилей в библиотеке</p></div>
+                        <div class="stat-card"><i class="fas fa-microchip"></i><span>v1.0</span><p>Версия ядра</p></div>
                         <div class="stat-card"><i class="fas fa-star"></i><span id="stat-saved">0</span><p>Сохранено</p></div>
                     </div>
                     <div class="recent-section">
@@ -70,21 +73,17 @@
                 <section id="page-generator" class="page">
                     <div class="generator-container">
                         <!-- ШАГ 1: ВЫБОР КАТЕГОРИИ -->
-                        <div class="setup-step" id="step-category">
+                        <div class="setup-step" id="step-category" style="display:block;">
                             <h2><i class="fas fa-cube"></i> Выберите категорию</h2>
                             <p class="step-desc">Определите, что вы хотите создать</p>
-                            <div class="category-grid" id="category-grid">
-                                <!-- Динамически заполняется -->
-                            </div>
+                            <div class="category-grid" id="category-grid"></div>
                         </div>
 
                         <!-- ШАГ 2: ВЫБОР СТИЛЯ -->
                         <div class="setup-step" id="step-style" style="display:none;">
                             <h2><i class="fas fa-palette"></i> Выберите стиль</h2>
                             <p class="step-desc" id="style-desc">Выберите стилистическое направление</p>
-                            <div class="style-grid" id="style-grid">
-                                <!-- Динамически заполняется -->
-                            </div>
+                            <div class="style-grid" id="style-grid"></div>
                             <button class="back-btn" data-back="step-category">← Назад</button>
                         </div>
 
@@ -95,9 +94,7 @@
                                     <h2><i class="fas fa-sliders-h"></i> Настройка</h2>
                                     <p class="step-desc" id="config-desc">Настройте детали для идеального результата</p>
                                     
-                                    <div id="config-container">
-                                        <!-- Динамические настройки -->
-                                    </div>
+                                    <div id="config-container"></div>
 
                                     <div class="config-actions">
                                         <button id="generate-btn" class="primary-btn">
@@ -107,7 +104,7 @@
                                             <i class="fas fa-dice"></i> Рандомизировать
                                         </button>
                                         <button id="save-to-profile-btn" class="secondary-btn">
-                                            <i class="fas fa-bookmark"></i> Сохранить в профиль
+                                            <i class="fas fa-bookmark"></i> Сохранить
                                         </button>
                                         <button class="back-btn" data-back="step-style">← Назад</button>
                                     </div>
@@ -177,13 +174,13 @@
                     <div class="settings-group">
                         <label>Авто-генерация при изменении</label>
                         <input type="checkbox" id="auto-generate" checked>
-                        <small style="color:var(--text-secondary);display:block;margin-top:4px;">Автоматически генерировать при изменении параметров</small>
+                        <small>Автоматически генерировать при изменении параметров</small>
                     </div>
                     
                     <div class="settings-group">
                         <label>Авто-сохранение в профиль</label>
                         <input type="checkbox" id="auto-save-profile">
-                        <small style="color:var(--text-secondary);display:block;margin-top:4px;">Автоматически сохранять все сгенерированные иконки в профиль</small>
+                        <small>Автоматически сохранять все сгенерированные иконки в профиль</small>
                     </div>
                     
                     <div class="settings-group">

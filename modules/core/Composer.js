@@ -22,7 +22,11 @@ export class Composer {
         // Создаем слои для каждого элемента
         for (let i = 0; i < elements.length; i++) {
             const element = elements[i];
-            const pos = positions[i] || positions[0] || { x: config.size/2, y: config.size/2, scale: 0.4 };
+            const pos = positions[i] || positions[0] || { 
+                x: config.centerX || config.size/2, 
+                y: config.centerY || config.size/2, 
+                scale: 0.4 
+            };
             
             const layer = await this.createElementLayer(element, pos, config);
             if (layer) {
@@ -42,17 +46,21 @@ export class Composer {
         
         if (!img) return null;
         
-        const size = config.size * pos.scale;
-        const x = pos.x || config.size / 2;
-        const y = pos.y || config.size / 2;
+        // Используем центр из конфига
+        const centerX = config.centerX || config.size / 2;
+        const centerY = config.centerY || config.size / 2;
+        const size = config.size || 200;
+        const scale = (element.scale || 1.0) * (pos.scale || 0.4);
+        
+        const drawSize = size * scale;
         
         return {
             type: 'sprite',
             image: img,
-            x: x,
-            y: y,
-            width: size,
-            height: size,
+            x: pos.x || centerX,
+            y: pos.y || centerY,
+            width: drawSize,
+            height: drawSize,
             rotation: pos.rotation || 0,
             opacity: element.opacity || 1.0,
             zIndex: pos.zIndex || 0,
@@ -76,7 +84,6 @@ export class Composer {
      * Получить путь к ассету
      */
     getAssetPath(type, id) {
-        // В зависимости от типа и ID формируем путь
         const paths = {
             shape: `shapes/${id}.png`,
             texture: `textures/${id}.png`,

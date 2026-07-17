@@ -1,0 +1,34 @@
+/* ============================================================
+   VARIABLES - CSS Переменные
+   ============================================================ */
+
+   :root {
+    --bg-primary: #0f0f1a;
+    --bg-secondary: #1a1a2e;
+    --bg-card: #16162a;
+    --border-color: #2a2a4a;
+    --accent: #7c3aed;
+    --accent-glow: #7c3aed80;
+    --accent-light: #8b5cf6;
+    --accent-dark: #6d28d9;
+    --text-primary: #f0f0ff;
+    --text-secondary: #a0a0c0;
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+}
+
+[data-theme="orange"] {
+    --accent: #f97316;
+    --accent-glow: #f9731680;
+    --accent-light: #fb923c;
+    --accent-dark: #ea580c;
+}
+
+[data-theme="green"] {
+    --accent: #22c55e;
+    --accent-glow: #22c55e80;
+    --accent-light: #4ade80;
+    --accent-dark: #16a34a;
+}
