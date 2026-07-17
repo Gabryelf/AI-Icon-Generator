@@ -1,413 +1,418 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Генератор ассетов</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧩 Генератор ассетов — по секциям</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        body {
+            background: #12121c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+        .card {
+            background: #1e1e32;
+            border-radius: 36px;
+            padding: 32px 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            color: #eaeef5;
+            margin-bottom: 24px;
+        }
+        h1 {
+            font-weight: 500;
+            font-size: 2rem;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .sub {
+            color: #8f8fb0;
+            margin-bottom: 28px;
+            padding-left: 14px;
+            border-left: 3px solid #6d5fd3;
+            font-weight: 300;
+            font-size: 0.95rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 640px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .section {
+            background: #141424;
+            border-radius: 24px;
+            padding: 20px 22px;
+            border: 1px solid #2e2e48;
+            transition: 0.2s;
+        }
+        .section:hover {
+            border-color: #4b4b72;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .section-title {
+            font-weight: 600;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .badge {
+            background: #2d2d50;
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            color: #b0b8e8;
+            letter-spacing: 0.3px;
+        }
+        .section-desc {
+            color: #9a9abb;
+            font-size: 0.85rem;
+            margin: 6px 0 14px 0;
+            line-height: 1.4;
+        }
+        .btn-section {
+            background: #3a3a5c;
+            border: none;
+            color: #f0f0ff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 10px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.15s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-section:hover {
+            background: #4f4f7a;
+            transform: scale(1.02);
+        }
+        .btn-section:active {
+            transform: scale(0.97);
+        }
+        .btn-primary {
+            background: #6d5fd3;
+        }
+        .btn-primary:hover {
+            background: #5e51c0;
+        }
+        .btn-all {
+            background: #2d3a5e;
+            border: 1px solid #4a5a8a;
+        }
+        .btn-all:hover {
+            background: #3d4f7a;
+        }
+        #output {
+            margin-top: 18px;
+            background: #0f0f1a;
+            padding: 16px 20px;
+            border-radius: 20px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.9rem;
+            min-height: 60px;
+            border: 1px solid #2c2c48;
+            color: #c8cce8;
+            line-height: 1.6;
+        }
+        .stats-line {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #282840;
+        }
+        .stat-item {
+            color: #9a9ac0;
+            font-size: 0.85rem;
+        }
+        .stat-item span {
+            color: #fff;
+            font-weight: 600;
+        }
+        .footer {
+            text-align: center;
+            color: #5a5a7a;
+            font-size: 0.75rem;
+            margin-top: 12px;
+        }
+        .tag {
+            background: #2d2d4a;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            color: #b0b8e0;
+        }
+        .flex {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    </style>
 </head>
 <body>
-    <button onclick="generateAll()">Сгенерировать все ассеты</button>
-    <div id="output"></div>
-    
-    <script>
-    function generateShapes() {
-        const shapes = {
-            circle: (ctx, size) => {
-                ctx.beginPath();
-                ctx.arc(size/2, size/2, size/2 - 4, 0, Math.PI * 2);
-                ctx.fill();
-            },
-            square: (ctx, size) => {
-                ctx.fillRect(4, 4, size - 8, size - 8);
-            },
-            triangle: (ctx, size) => {
-                ctx.beginPath();
-                ctx.moveTo(size/2, 4);
-                ctx.lineTo(4, size - 4);
-                ctx.lineTo(size - 4, size - 4);
-                ctx.closePath();
-                ctx.fill();
-            },
-            star: (ctx, size) => {
-                const cx = size/2, cy = size/2;
-                const outer = size/2 - 4;
-                const inner = outer * 0.4;
-                ctx.beginPath();
-                for (let i = 0; i < 10; i++) {
-                    const radius = i % 2 === 0 ? outer : inner;
-                    const angle = (i * Math.PI) / 5 - Math.PI/2;
-                    const x = cx + Math.cos(angle) * radius;
-                    const y = cy + Math.sin(angle) * radius;
-                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                }
-                ctx.closePath();
-                ctx.fill();
-            },
-            hexagon: (ctx, size) => {
-                const cx = size/2, cy = size/2;
-                const radius = size/2 - 4;
-                ctx.beginPath();
-                for (let i = 0; i < 6; i++) {
-                    const angle = (i * Math.PI) / 3 - Math.PI/2;
-                    const x = cx + Math.cos(angle) * radius;
-                    const y = cy + Math.sin(angle) * radius;
-                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                }
-                ctx.closePath();
-                ctx.fill();
-            },
-            diamond: (ctx, size) => {
-                ctx.beginPath();
-                ctx.moveTo(size/2, 4);
-                ctx.lineTo(size - 4, size/2);
-                ctx.lineTo(size/2, size - 4);
-                ctx.lineTo(4, size/2);
-                ctx.closePath();
-                ctx.fill();
-            },
-            arrow: (ctx, size) => {
-                ctx.beginPath();
-                ctx.moveTo(size/2, 4);
-                ctx.lineTo(size - 8, size/2);
-                ctx.lineTo(size/2 + 4, size/2);
-                ctx.lineTo(size/2 + 4, size - 4);
-                ctx.lineTo(size/2 - 4, size - 4);
-                ctx.lineTo(size/2 - 4, size/2);
-                ctx.lineTo(8, size/2);
-                ctx.closePath();
-                ctx.fill();
-            },
-            cross: (ctx, size) => {
-                const w = 12;
-                const h = size - 8;
-                ctx.fillRect(size/2 - w/2, 4, w, h);
-                ctx.fillRect(4, size/2 - w/2, size - 8, w);
-            },
-            heart: (ctx, size) => {
-                const cx = size/2, cy = size/2;
-                ctx.beginPath();
-                ctx.moveTo(cx, cy + size/3);
-                ctx.bezierCurveTo(cx - size/3, cy - size/4, cx - size/2, cy + size/6, cx, cy + size/2);
-                ctx.bezierCurveTo(cx + size/2, cy + size/6, cx + size/3, cy - size/4, cx, cy + size/3);
-                ctx.fill();
-            },
-            moon: (ctx, size) => {
-                const cx = size/2, cy = size/2;
-                const radius = size/2 - 4;
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.beginPath();
-                ctx.arc(cx + radius * 0.4, cy - radius * 0.3, radius * 0.8, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalCompositeOperation = 'source-over';
-            }
+<div class="container">
+    <div class="card">
+        <h1>🧩 Генератор ассетов</h1>
+        <div class="sub">Скачивайте по секциям — каждая кнопка загружает свою группу файлов</div>
+
+        <div class="grid">
+            <!-- SHAPES -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">⬡ Фигуры</div>
+                    <span class="badge">16 шт</span>
+                </div>
+                <div class="section-desc">Геометрические фигуры: звезда, круг, сердце, кольцо и др. (белые, прозрачный фон)</div>
+                <button class="btn-section btn-primary" data-category="shapes">⬇ Скачать фигуры</button>
+            </div>
+
+            <!-- SPRITES -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">⚔️ Спрайты</div>
+                    <span class="badge">13 шт</span>
+                </div>
+                <div class="section-desc">Игровые объекты: меч, корона, молния, череп, ключ и др. (белые, прозрачный фон)</div>
+                <button class="btn-section btn-primary" data-category="sprites">⬇ Скачать спрайты</button>
+            </div>
+
+            <!-- TEXTURES -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">🧶 Текстуры</div>
+                    <span class="badge">6 шт</span>
+                </div>
+                <div class="section-desc">Материалы: металл, дерево, камень, ткань, мрамор, трава (цветные).</div>
+                <button class="btn-section btn-primary" data-category="textures">⬇ Скачать текстуры</button>
+            </div>
+
+            <!-- MASKS -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">🎭 Маски</div>
+                    <span class="badge">5 шт</span>
+                </div>
+                <div class="section-desc">Эффекты: свечение, тень, зерно, виньетка, мягкое кольцо (полупрозрачные).</div>
+                <button class="btn-section btn-primary" data-category="masks">⬇ Скачать маски</button>
+            </div>
+        </div>
+
+        <!-- Кнопка "все сразу" -->
+        <div style="margin-top: 18px;">
+            <button class="btn-section btn-all" id="generateAllBtn">🌀 Скачать все категории (по очереди)</button>
+        </div>
+
+        <div id="output">💡 Нажмите кнопку нужной секции, чтобы начать скачивание.</div>
+
+        <div class="stats-line">
+            <div class="stat-item">📁 Всего файлов: <span id="totalCount">40</span></div>
+            <div class="stat-item">📐 Размер: <span>64–128 px</span></div>
+            <div class="stat-item">📦 Формат: <span>PNG</span></div>
+        </div>
+        <div class="footer">Каждый файл скачивается с именем вида <span class="tag">имя.png</span> в папку категории</div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+
+        // ---------- ОПРЕДЕЛЕНИЯ ВСЕХ ГЕНЕРАТОРОВ ----------
+        // Фигуры (16) — белые на прозрачном фоне
+        const shapeGenerators = {
+            circle: (ctx, s) => { ctx.beginPath(); ctx.arc(s/2, s/2, s/2-4, 0, Math.PI*2); ctx.fill(); },
+            square: (ctx, s) => { ctx.fillRect(4, 4, s-8, s-8); },
+            triangle: (ctx, s) => { ctx.beginPath(); ctx.moveTo(s/2,4); ctx.lineTo(4,s-4); ctx.lineTo(s-4,s-4); ctx.closePath(); ctx.fill(); },
+            star: (ctx, s) => { const cx=s/2, cy=s/2, outer=s/2-4, inner=outer*0.4; ctx.beginPath(); for(let i=0;i<10;i++){ const r=i%2===0?outer:inner, a=(i*Math.PI)/5-Math.PI/2; const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); } ctx.closePath(); ctx.fill(); },
+            hexagon: (ctx, s) => { const cx=s/2, cy=s/2, r=s/2-4; ctx.beginPath(); for(let i=0;i<6;i++){ const a=(i*Math.PI)/3-Math.PI/2; const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); } ctx.closePath(); ctx.fill(); },
+            diamond: (ctx, s) => { ctx.beginPath(); ctx.moveTo(s/2,4); ctx.lineTo(s-4,s/2); ctx.lineTo(s/2,s-4); ctx.lineTo(4,s/2); ctx.closePath(); ctx.fill(); },
+            arrow: (ctx, s) => { ctx.beginPath(); ctx.moveTo(s/2,4); ctx.lineTo(s-8,s/2); ctx.lineTo(s/2+4,s/2); ctx.lineTo(s/2+4,s-4); ctx.lineTo(s/2-4,s-4); ctx.lineTo(s/2-4,s/2); ctx.lineTo(8,s/2); ctx.closePath(); ctx.fill(); },
+            cross: (ctx, s) => { const w=12; ctx.fillRect(s/2-w/2,4,w,s-8); ctx.fillRect(4,s/2-w/2,s-8,w); },
+            heart: (ctx, s) => { const cx=s/2, cy=s/2; ctx.beginPath(); ctx.moveTo(cx, cy+s/3); ctx.bezierCurveTo(cx-s/3, cy-s/4, cx-s/2, cy+s/6, cx, cy+s/2); ctx.bezierCurveTo(cx+s/2, cy+s/6, cx+s/3, cy-s/4, cx, cy+s/3); ctx.fill(); },
+            moon: (ctx, s) => { const cx=s/2, cy=s/2, r=s/2-4; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill(); ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(cx+r*0.4, cy-r*0.3, r*0.8, 0, Math.PI*2); ctx.fill(); ctx.globalCompositeOperation='source-over'; },
+            ring: (ctx, s) => { const cx=s/2, cy=s/2; ctx.beginPath(); ctx.arc(cx, cy, s/2-6, 0, Math.PI*2); ctx.fill(); ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(cx, cy, s/2-14, 0, Math.PI*2); ctx.fill(); ctx.globalCompositeOperation='source-over'; },
+            droplet: (ctx, s) => { ctx.beginPath(); ctx.moveTo(s/2,4); ctx.quadraticCurveTo(s-4,s/2, s/2, s-4); ctx.quadraticCurveTo(4,s/2, s/2,4); ctx.fill(); },
+            spiral: (ctx, s) => { const cx=s/2, cy=s/2; ctx.beginPath(); for(let i=0;i<200;i++){ const t=i/200*4*Math.PI, r=4+t*2; const x=cx+Math.cos(t)*r, y=cy+Math.sin(t)*r; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); } ctx.closePath(); ctx.fill(); },
+            pentagon: (ctx, s) => { const cx=s/2, cy=s/2, r=s/2-4; ctx.beginPath(); for(let i=0;i<5;i++){ const a=(i*Math.PI*2)/5 - Math.PI/2; const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); } ctx.closePath(); ctx.fill(); },
+            cloud: (ctx, s) => { const cx=s/2, cy=s/2; ctx.beginPath(); ctx.arc(cx-12, cy-4, 12, 0, Math.PI*2); ctx.arc(cx+12, cy-4, 12, 0, Math.PI*2); ctx.arc(cx-20, cy+6, 10, 0, Math.PI*2); ctx.arc(cx+20, cy+6, 10, 0, Math.PI*2); ctx.arc(cx, cy-12, 16, 0, Math.PI*2); ctx.fill(); },
+            infinity: (ctx, s) => { ctx.beginPath(); const cx=s/2, cy=s/2; for(let t=0; t<=Math.PI*2; t+=0.05){ const x = cx + 16*Math.cos(t)/(1+Math.sin(t)*Math.sin(t)); const y = cy + 16*Math.sin(t)*Math.cos(t)/(1+Math.sin(t)*Math.sin(t)); t===0?ctx.moveTo(x,y):ctx.lineTo(x,y); } ctx.closePath(); ctx.fill(); }
         };
-        return shapes;
-    }
 
-    function generateSprites() {
-        const sprites = {
-            sword: (ctx, size) => {
-                ctx.fillRect(size/2 - 2, 4, 4, size * 0.5);
-                ctx.beginPath();
-                ctx.moveTo(size/2 - 6, size * 0.5);
-                ctx.lineTo(size/2, size * 0.6);
-                ctx.lineTo(size/2 + 6, size * 0.5);
-                ctx.fill();
-                ctx.fillRect(size/2 - 8, size * 0.5, 16, 4);
-            },
-            shield: (ctx, size) => {
-                ctx.beginPath();
-                ctx.moveTo(size/2, 4);
-                ctx.quadraticCurveTo(size - 4, size/4, size - 4, size/2);
-                ctx.quadraticCurveTo(size - 4, size * 0.8, size/2, size - 4);
-                ctx.quadraticCurveTo(4, size * 0.8, 4, size/2);
-                ctx.quadraticCurveTo(4, size/4, size/2, 4);
-                ctx.fill();
-            },
-            crown: (ctx, size) => {
-                const w = size * 0.6;
-                const h = size * 0.5;
-                ctx.beginPath();
-                ctx.moveTo(size/2 - w/2, size/2 + h/2);
-                ctx.lineTo(size/2 - w/2, size/2 - h/4);
-                ctx.lineTo(size/2 - w/4, size/2 - h/4 + 4);
-                ctx.lineTo(size/2, size/2 - h/2);
-                ctx.lineTo(size/2 + w/4, size/2 - h/4 + 4);
-                ctx.lineTo(size/2 + w/2, size/2 - h/4);
-                ctx.lineTo(size/2 + w/2, size/2 + h/2);
-                ctx.closePath();
-                ctx.fill();
-            },
-            gear: (ctx, size) => {
-                const cx = size/2, cy = size/2;
-                const r = size/2 - 4;
-                // Круг
-                ctx.beginPath();
-                ctx.arc(cx, cy, r * 0.6, 0, Math.PI * 2);
-                ctx.fill();
-                // Зубцы
-                for (let i = 0; i < 8; i++) {
-                    const angle = (i * Math.PI) / 4;
-                    ctx.save();
-                    ctx.translate(cx, cy);
-                    ctx.rotate(angle);
-                    ctx.fillRect(-3, -r * 0.7, 6, r * 0.4);
-                    ctx.restore();
-                }
-                // Отверстие
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.beginPath();
-                ctx.arc(cx, cy, r * 0.3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalCompositeOperation = 'source-over';
-            },
-            lightning: (ctx, size) => {
-                ctx.beginPath();
-                ctx.moveTo(size/2 - 4, 4);
-                ctx.lineTo(size/2 + 8, size/2 - 8);
-                ctx.lineTo(size/2 - 2, size/2 - 4);
-                ctx.lineTo(size/2 + 6, size - 4);
-                ctx.lineTo(size/2 - 8, size/2 + 8);
-                ctx.lineTo(size/2 + 2, size/2 + 4);
-                ctx.closePath();
-                ctx.fill();
-            },
-            flame: (ctx, size) => {
-                const cx = size/2, cy = size * 0.4;
-                ctx.beginPath();
-                ctx.moveTo(cx, 4);
-                ctx.quadraticCurveTo(cx + size/4, size/4, cx + size/6, size/2);
-                ctx.quadraticCurveTo(cx + size/3, size * 0.7, cx, size - 4);
-                ctx.quadraticCurveTo(cx - size/3, size * 0.7, cx - size/6, size/2);
-                ctx.quadraticCurveTo(cx - size/4, size/4, cx, 4);
-                ctx.fill();
-            },
-            leaf: (ctx, size) => {
-                ctx.beginPath();
-                ctx.moveTo(size/2, 4);
-                ctx.quadraticCurveTo(size - 4, size/3, size * 0.7, size/2);
-                ctx.quadraticCurveTo(size - 4, size * 0.7, size/2, size - 4);
-                ctx.quadraticCurveTo(4, size * 0.7, size * 0.3, size/2);
-                ctx.quadraticCurveTo(4, size/3, size/2, 4);
-                ctx.fill();
-                // Жилка
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(size/2, 4);
-                ctx.lineTo(size/2, size - 4);
-                ctx.stroke();
-            },
-            paw: (ctx, size) => {
-                // Основная подушечка
-                ctx.beginPath();
-                ctx.ellipse(size/2, size * 0.55, size * 0.2, size * 0.15, 0, 0, Math.PI * 2);
-                ctx.fill();
-                // Пальцы
-                for (let i = -1; i <= 1; i++) {
-                    ctx.beginPath();
-                    ctx.ellipse(size/2 + i * size * 0.12, size * 0.35, size * 0.06, size * 0.08, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            },
-            feather: (ctx, size) => {
-                ctx.beginPath();
-                ctx.moveTo(size/2, 4);
-                ctx.quadraticCurveTo(size - 4, size/3, size * 0.6, size/2);
-                ctx.quadraticCurveTo(size - 4, size * 0.7, size/2, size - 4);
-                ctx.quadraticCurveTo(4, size * 0.7, size * 0.4, size/2);
-                ctx.quadraticCurveTo(4, size/3, size/2, 4);
-                ctx.fill();
-            },
-            crystal: (ctx, size) => {
-                const cx = size/2, cy = size/2;
-                ctx.beginPath();
-                ctx.moveTo(cx, 4);
-                ctx.lineTo(cx + size/3, size/2 - 8);
-                ctx.lineTo(cx + size/4, size/2 + 8);
-                ctx.lineTo(cx, size - 4);
-                ctx.lineTo(cx - size/4, size/2 + 8);
-                ctx.lineTo(cx - size/3, size/2 - 8);
-                ctx.closePath();
-                ctx.fill();
-            }
+        // Спрайты (13) — белые на прозрачном фоне
+        const spriteGenerators = {
+            sword: (ctx, s) => { ctx.fillRect(s/2-2,4,4,s*0.5); ctx.beginPath(); ctx.moveTo(s/2-6,s*0.5); ctx.lineTo(s/2,s*0.6); ctx.lineTo(s/2+6,s*0.5); ctx.fill(); ctx.fillRect(s/2-8,s*0.5,16,4); },
+            shield: (ctx, s) => { ctx.beginPath(); ctx.moveTo(s/2,4); ctx.quadraticCurveTo(s-4,s/4, s-4,s/2); ctx.quadraticCurveTo(s-4,s*0.8, s/2,s-4); ctx.quadraticCurveTo(4,s*0.8, 4,s/2); ctx.quadraticCurveTo(4,s/4, s/2,4); ctx.fill(); },
+            crown: (ctx, s) => { const w=s*0.6, h=s*0.5; ctx.beginPath(); ctx.moveTo(s/2-w/2, s/2+h/2); ctx.lineTo(s/2-w/2, s/2-h/4); ctx.lineTo(s/2-w/4, s/2-h/4+4); ctx.lineTo(s/2, s/2-h/2); ctx.lineTo(s/2+w/4, s/2-h/4+4); ctx.lineTo(s/2+w/2, s/2-h/4); ctx.lineTo(s/2+w/2, s/2+h/2); ctx.closePath(); ctx.fill(); },
+            gear: (ctx, s) => { const cx=s/2, cy=s/2, r=s/2-4; ctx.beginPath(); ctx.arc(cx,cy,r*0.6,0,Math.PI*2); ctx.fill(); for(let i=0;i<8;i++){ const a=(i*Math.PI)/4; ctx.save(); ctx.translate(cx,cy); ctx.rotate(a); ctx.fillRect(-3,-r*0.7,6,r*0.4); ctx.restore(); } ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(cx,cy,r*0.3,0,Math.PI*2); ctx.fill(); ctx.globalCompositeOperation='source-over'; },
+            lightning: (ctx, s) => { ctx.beginPath(); ctx.moveTo(s/2-4,4); ctx.lineTo(s/2+8,s/2-8); ctx.lineTo(s/2-2,s/2-4); ctx.lineTo(s/2+6,s-4); ctx.lineTo(s/2-8,s/2+8); ctx.lineTo(s/2+2,s/2+4); ctx.closePath(); ctx.fill(); },
+            flame: (ctx, s) => { const cx=s/2, cy=s*0.4; ctx.beginPath(); ctx.moveTo(cx,4); ctx.quadraticCurveTo(cx+s/4,s/4, cx+s/6,s/2); ctx.quadraticCurveTo(cx+s/3,s*0.7, cx,s-4); ctx.quadraticCurveTo(cx-s/3,s*0.7, cx-s/6,s/2); ctx.quadraticCurveTo(cx-s/4,s/4, cx,4); ctx.fill(); },
+            leaf: (ctx, s) => { ctx.beginPath(); ctx.moveTo(s/2,4); ctx.quadraticCurveTo(s-4,s/3, s*0.7,s/2); ctx.quadraticCurveTo(s-4,s*0.7, s/2,s-4); ctx.quadraticCurveTo(4,s*0.7, s*0.3,s/2); ctx.quadraticCurveTo(4,s/3, s/2,4); ctx.fill(); ctx.strokeStyle='#000'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(s/2,4); ctx.lineTo(s/2,s-4); ctx.stroke(); },
+            paw: (ctx, s) => { ctx.beginPath(); ctx.ellipse(s/2,s*0.55,s*0.2,s*0.15,0,0,Math.PI*2); ctx.fill(); for(let i=-1;i<=1;i++){ ctx.beginPath(); ctx.ellipse(s/2+i*s*0.12,s*0.35,s*0.06,s*0.08,0,0,Math.PI*2); ctx.fill(); } },
+            feather: (ctx, s) => { ctx.beginPath(); ctx.moveTo(s/2,4); ctx.quadraticCurveTo(s-4,s/3, s*0.6,s/2); ctx.quadraticCurveTo(s-4,s*0.7, s/2,s-4); ctx.quadraticCurveTo(4,s*0.7, s*0.4,s/2); ctx.quadraticCurveTo(4,s/3, s/2,4); ctx.fill(); },
+            crystal: (ctx, s) => { const cx=s/2, cy=s/2; ctx.beginPath(); ctx.moveTo(cx,4); ctx.lineTo(cx+s/3,s/2-8); ctx.lineTo(cx+s/4,s/2+8); ctx.lineTo(cx,s-4); ctx.lineTo(cx-s/4,s/2+8); ctx.lineTo(cx-s/3,s/2-8); ctx.closePath(); ctx.fill(); },
+            anchor: (ctx, s) => { const cx=s/2, cy=s/2; ctx.beginPath(); ctx.arc(cx,cy+8,12,0,Math.PI,true); ctx.fill(); ctx.fillRect(cx-2,4,4,28); ctx.beginPath(); ctx.arc(cx,8,6,0,Math.PI*2); ctx.fill(); },
+            key: (ctx, s) => { const cx=s/2, cy=s/2; ctx.beginPath(); ctx.arc(cx-8,cy,10,0,Math.PI*2); ctx.fill(); ctx.fillRect(cx-2,cy-4,20,8); for(let i=0;i<3;i++){ ctx.fillRect(cx+14+i*4,cy-2-i*2,4,2+i*2); } },
+            skull: (ctx, s) => { const cx=s/2, cy=s/2; ctx.beginPath(); ctx.arc(cx,cy-2,20,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(cx-8,cy-6,4,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+8,cy-6,4,0,Math.PI*2); ctx.fill(); ctx.fillRect(cx-6,cy+4,12,6); }
         };
-        return sprites;
-    }
 
-    function generateTextures() {
-        const textures = {
-            metal: (ctx, size) => {
-                const grad = ctx.createLinearGradient(0, 0, size, size);
-                grad.addColorStop(0, '#666');
-                grad.addColorStop(0.3, '#999');
-                grad.addColorStop(0.5, '#aaa');
-                grad.addColorStop(0.7, '#888');
-                grad.addColorStop(1, '#555');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, size, size);
-                // Добавляем полосы
-                for (let i = 0; i < 10; i++) {
-                    const y = Math.random() * size;
-                    ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.1})`;
-                    ctx.fillRect(0, y, size, 1 + Math.random() * 2);
-                }
-            },
-            wood: (ctx, size) => {
-                ctx.fillStyle = '#8B7355';
-                ctx.fillRect(0, 0, size, size);
-                for (let i = 0; i < 20; i++) {
-                    const y = Math.random() * size;
-                    ctx.fillStyle = `rgba(139, 115, 85, ${0.1 + Math.random() * 0.3})`;
-                    ctx.fillRect(0, y, size, 1 + Math.random() * 3);
-                }
-            },
-            stone: (ctx, size) => {
-                ctx.fillStyle = '#888';
-                ctx.fillRect(0, 0, size, size);
-                for (let i = 0; i < 100; i++) {
-                    const x = Math.random() * size;
-                    const y = Math.random() * size;
-                    const brightness = 100 + Math.random() * 100;
-                    ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
-                    ctx.fillRect(x, y, 1 + Math.random() * 2, 1 + Math.random() * 2);
-                }
-            },
-            fabric: (ctx, size) => {
-                const colors = ['#c0392b', '#e74c3c', '#d35400', '#e67e22'];
-                ctx.fillStyle = colors[0];
-                ctx.fillRect(0, 0, size, size);
-                for (let i = 0; i < 50; i++) {
-                    const x = Math.random() * size;
-                    const y = Math.random() * size;
-                    ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-                    ctx.globalAlpha = 0.1 + Math.random() * 0.2;
-                    ctx.fillRect(x, y, 2 + Math.random() * 4, 2 + Math.random() * 4);
-                }
-                ctx.globalAlpha = 1;
-            }
+        // Текстуры (6) — цветные, непрозрачные
+        const textureGenerators = {
+            metal: (ctx, s) => { const g=ctx.createLinearGradient(0,0,s,s); g.addColorStop(0,'#666'); g.addColorStop(0.3,'#999'); g.addColorStop(0.5,'#aaa'); g.addColorStop(0.7,'#888'); g.addColorStop(1,'#555'); ctx.fillStyle=g; ctx.fillRect(0,0,s,s); for(let i=0;i<20;i++){ const y=Math.random()*s; ctx.fillStyle=`rgba(255,255,255,${Math.random()*0.15})`; ctx.fillRect(0,y,s,1+Math.random()*3); } },
+            wood: (ctx, s) => { ctx.fillStyle='#8B7355'; ctx.fillRect(0,0,s,s); for(let i=0;i<30;i++){ const y=Math.random()*s; ctx.fillStyle=`rgba(139,115,85,${0.1+Math.random()*0.4})`; ctx.fillRect(0,y,s,1+Math.random()*4); } },
+            stone: (ctx, s) => { ctx.fillStyle='#888'; ctx.fillRect(0,0,s,s); for(let i=0;i<200;i++){ const x=Math.random()*s, y=Math.random()*s, b=100+Math.random()*100; ctx.fillStyle=`rgb(${b},${b},${b})`; ctx.fillRect(x,y,1+Math.random()*3,1+Math.random()*3); } },
+            fabric: (ctx, s) => { const c=['#c0392b','#e74c3c','#d35400','#e67e22']; ctx.fillStyle=c[0]; ctx.fillRect(0,0,s,s); for(let i=0;i<80;i++){ const x=Math.random()*s, y=Math.random()*s; ctx.fillStyle=c[Math.floor(Math.random()*c.length)]; ctx.globalAlpha=0.1+Math.random()*0.25; ctx.fillRect(x,y,2+Math.random()*6,2+Math.random()*6); } ctx.globalAlpha=1; },
+            marble: (ctx, s) => { ctx.fillStyle='#e0dcc8'; ctx.fillRect(0,0,s,s); for(let i=0;i<60;i++){ const x=Math.random()*s, y=Math.random()*s; ctx.fillStyle=`rgba(180,170,150,${0.1+Math.random()*0.3})`; ctx.beginPath(); ctx.ellipse(x,y,6+Math.random()*14,4+Math.random()*8,Math.random()*Math.PI,0,Math.PI*2); ctx.fill(); } },
+            grass: (ctx, s) => { ctx.fillStyle='#3a7d44'; ctx.fillRect(0,0,s,s); for(let i=0;i<300;i++){ const x=Math.random()*s, y=Math.random()*s; ctx.fillStyle=`rgba(70,140,80,${0.2+Math.random()*0.5})`; ctx.fillRect(x,y,1,2+Math.random()*4); } }
         };
-        return textures;
-    }
 
-    function generateMasks() {
-        const masks = {
-            glow: (ctx, size) => {
-                const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-                grad.addColorStop(0, 'rgba(255,255,255,1)');
-                grad.addColorStop(0.5, 'rgba(255,255,255,0.5)');
-                grad.addColorStop(1, 'rgba(255,255,255,0)');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, size, size);
-            },
-            shadow: (ctx, size) => {
-                const grad = ctx.createRadialGradient(size/2 + 10, size/2 + 10, 0, size/2 + 10, size/2 + 10, size/2);
-                grad.addColorStop(0, 'rgba(255,255,255,1)');
-                grad.addColorStop(0.7, 'rgba(255,255,255,0.3)');
-                grad.addColorStop(1, 'rgba(255,255,255,0)');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, size, size);
-            },
-            grain: (ctx, size) => {
-                for (let i = 0; i < 1000; i++) {
-                    const x = Math.random() * size;
-                    const y = Math.random() * size;
-                    const alpha = Math.random() * 0.3;
-                    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-                    ctx.fillRect(x, y, 1, 1);
-                }
-            },
-            vignette: (ctx, size) => {
-                const grad = ctx.createRadialGradient(size/2, size/2, size * 0.3, size/2, size/2, size/2);
-                grad.addColorStop(0, 'rgba(255,255,255,1)');
-                grad.addColorStop(0.7, 'rgba(255,255,255,0.5)');
-                grad.addColorStop(1, 'rgba(255,255,255,0)');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, size, size);
-            }
+        // Маски (5) — полупрозрачные градиенты
+        const maskGenerators = {
+            glow: (ctx, s) => { const g=ctx.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.5,'rgba(255,255,255,0.5)'); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,s,s); },
+            shadow: (ctx, s) => { const g=ctx.createRadialGradient(s/2+10,s/2+10,0,s/2+10,s/2+10,s/2); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.7,'rgba(255,255,255,0.3)'); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,s,s); },
+            grain: (ctx, s) => { for(let i=0;i<1500;i++){ const x=Math.random()*s, y=Math.random()*s; ctx.fillStyle=`rgba(255,255,255,${Math.random()*0.4})`; ctx.fillRect(x,y,1,1); } },
+            vignette: (ctx, s) => { const g=ctx.createRadialGradient(s/2,s/2,s*0.3,s/2,s/2,s/2); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.7,'rgba(255,255,255,0.5)'); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,s,s); },
+            soft_ring: (ctx, s) => { const g=ctx.createRadialGradient(s/2,s/2,s*0.2,s/2,s/2,s*0.8); g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(0.5,'rgba(255,255,255,0.8)'); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,s,s); }
         };
-        return masks;
-    }
 
-    function downloadImage(dataUrl, filename) {
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
+        // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------
+        function downloadImage(dataUrl, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
 
-    function generateAll() {
-        const size = 64;
+        function generateCategory(generators, categoryName, size, transparentBg = true) {
+            let count = 0;
+            for (const [name, draw] of Object.entries(generators)) {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                
+                // Если прозрачный фон — ничего не заливаем, иначе заливаем белым
+                if (!transparentBg) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, size, size);
+                }
+                
+                // Устанавливаем белый цвет для фигур и спрайтов
+                if (categoryName === 'shapes' || categoryName === 'sprites') {
+                    ctx.fillStyle = '#ffffff';
+                }
+                
+                draw(ctx, size);
+                const dataUrl = canvas.toDataURL('image/png');
+                downloadImage(dataUrl, `${categoryName}/${name}.png`);
+                count++;
+            }
+            return count;
+        }
+
+        // ---------- ОБНОВЛЕНИЕ СТАТУСА ----------
         const output = document.getElementById('output');
-        output.innerHTML = 'Генерация...';
-        
-        let count = 0;
-        const total = 10 + 10 + 4 + 4; // shapes + sprites + textures + masks
-        
-        // Генерируем shapes
-        const shapes = generateShapes();
-        for (const [name, draw] of Object.entries(shapes)) {
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
-            draw(ctx, size);
-            const dataUrl = canvas.toDataURL('image/png');
-            downloadImage(dataUrl, `shapes/${name}.png`);
-            count++;
-            output.innerHTML = `Генерация... ${count}/${total}`;
+
+        function setStatus(msg) {
+            output.innerHTML = msg;
         }
-        
-        // Генерируем sprites
-        const sprites = generateSprites();
-        for (const [name, draw] of Object.entries(sprites)) {
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
-            draw(ctx, size);
-            const dataUrl = canvas.toDataURL('image/png');
-            downloadImage(dataUrl, `sprites/${name}.png`);
-            count++;
-            output.innerHTML = `Генерация... ${count}/${total}`;
-        }
-        
-        // Генерируем textures (128x128)
-        const textureSize = 128;
-        const textures = generateTextures();
-        for (const [name, draw] of Object.entries(textures)) {
-            const canvas = document.createElement('canvas');
-            canvas.width = textureSize;
-            canvas.height = textureSize;
-            const ctx = canvas.getContext('2d');
-            draw(ctx, textureSize);
-            const dataUrl = canvas.toDataURL('image/png');
-            downloadImage(dataUrl, `textures/${name}.png`);
-            count++;
-            output.innerHTML = `Генерация... ${count}/${total}`;
-        }
-        
-        // Генерируем masks
-        const masks = generateMasks();
-        for (const [name, draw] of Object.entries(masks)) {
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            draw(ctx, size);
-            const dataUrl = canvas.toDataURL('image/png');
-            downloadImage(dataUrl, `masks/${name}.png`);
-            count++;
-            output.innerHTML = `Генерация... ${count}/${total}`;
-        }
-        
-        output.innerHTML = `✅ Готово! Сгенерировано ${count} файлов.`;
-    }
-    </script>
+
+        // ---------- ОБРАБОТЧИКИ КНОПОК ----------
+        document.querySelectorAll('[data-category]').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const cat = this.dataset.category;
+                let generators, size, transparent = true;
+                let label = '';
+                switch(cat) {
+                    case 'shapes': generators = shapeGenerators; size = 64; label = 'Фигуры'; break;
+                    case 'sprites': generators = spriteGenerators; size = 64; label = 'Спрайты'; break;
+                    case 'textures': generators = textureGenerators; size = 128; transparent = false; label = 'Текстуры'; break;
+                    case 'masks': generators = maskGenerators; size = 64; transparent = false; label = 'Маски'; break;
+                    default: return;
+                }
+                const count = Object.keys(generators).length;
+                setStatus(`⏳ Скачивание ${label} (${count} файлов)...`);
+                setTimeout(() => {
+                    const generated = generateCategory(generators, cat, size, transparent);
+                    setStatus(`✅ ${label} скачаны: ${generated} файлов. Имена: <span class="tag">имя.png</span>`);
+                }, 50);
+            });
+        });
+
+        // Кнопка "все категории" — последовательно
+        document.getElementById('generateAllBtn').addEventListener('click', function() {
+            const allCats = [
+                { gen: shapeGenerators, cat: 'shapes', size: 64, transparent: true, label: 'Фигуры' },
+                { gen: spriteGenerators, cat: 'sprites', size: 64, transparent: true, label: 'Спрайты' },
+                { gen: textureGenerators, cat: 'textures', size: 128, transparent: false, label: 'Текстуры' },
+                { gen: maskGenerators, cat: 'masks', size: 64, transparent: false, label: 'Маски' }
+            ];
+            let total = 0;
+            allCats.forEach(c => total += Object.keys(c.gen).length);
+            setStatus(`⏳ Запуск скачивания всех ${total} файлов...`);
+
+            let index = 0;
+            function nextCategory() {
+                if (index >= allCats.length) {
+                    setStatus(`✅ Все категории скачаны! Всего ${total} файлов.`);
+                    return;
+                }
+                const { gen, cat, size, transparent, label } = allCats[index];
+                const count = Object.keys(gen).length;
+                setStatus(`⏳ Скачивание ${label} (${count} файлов)... [${index+1}/${allCats.length}]`);
+                setTimeout(() => {
+                    generateCategory(gen, cat, size, transparent);
+                    index++;
+                    setTimeout(nextCategory, 300);
+                }, 100);
+            }
+            nextCategory();
+        });
+
+        // ---------- ПОДСЧЁТ ОБЩЕГО КОЛИЧЕСТВА ----------
+        const totalShapes = Object.keys(shapeGenerators).length;
+        const totalSprites = Object.keys(spriteGenerators).length;
+        const totalTextures = Object.keys(textureGenerators).length;
+        const totalMasks = Object.keys(maskGenerators).length;
+        document.getElementById('totalCount').textContent = totalShapes + totalSprites + totalTextures + totalMasks;
+
+        // Обновляем бейджи
+        document.querySelectorAll('.badge').forEach((b, i) => {
+            const counts = [totalShapes, totalSprites, totalTextures, totalMasks];
+            if (i < counts.length) b.textContent = counts[i] + ' шт';
+        });
+
+    })();
+</script>
 </body>
 </html>
